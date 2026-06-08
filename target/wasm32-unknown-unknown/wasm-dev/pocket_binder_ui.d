@@ -1,1 +1,0 @@
-/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/wasm32-unknown-unknown/wasm-dev/pocket_binder_ui.wasm: /home/xero/code/projects/pocket-binder/pocket_binder_ui/src/main.rs

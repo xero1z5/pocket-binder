@@ -1,0 +1,10 @@
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/wasm-dev/deps/manganis_macro-2b26d9da842f35ad.d: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/asset.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/css_module.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/ffi.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/linker.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/../README.md
+
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/wasm-dev/deps/libmanganis_macro-2b26d9da842f35ad.so: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/asset.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/css_module.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/ffi.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/linker.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/../README.md
+
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/lib.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/asset.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/css_module.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/ffi.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/linker.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/manganis-macro-0.7.9/src/../README.md:

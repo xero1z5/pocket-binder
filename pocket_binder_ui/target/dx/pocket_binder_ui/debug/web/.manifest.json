@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.7.9 (3e43ffa)",
+  "assets": {
+    "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/favicon.ico": [
+      {
+        "absolute_source_path": "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/favicon.ico",
+        "bundled_path": "favicon-dxh5cc8f9344a5180e8.ico",
+        "options": {
+          "add_hash": true,
+          "variant": "Unknown"
+        }
+      }
+    ],
+    "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/header.svg": [
+      {
+        "absolute_source_path": "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/header.svg",
+        "bundled_path": "header-dxh5d7d5f8bb0bc9d2c.svg",
+        "options": {
+          "add_hash": true,
+          "variant": "Unknown"
+        }
+      }
+    ],
+    "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/main.css": [
+      {
+        "absolute_source_path": "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/main.css",
+        "bundled_path": "main-dxh68b969b8bc6b8c3c.css",
+        "options": {
+          "add_hash": true,
+          "variant": "Unknown"
+        }
+      }
+    ],
+    "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/tailwind.css": [
+      {
+        "absolute_source_path": "/home/xero/code/projects/pocket-binder/pocket_binder_ui/assets/tailwind.css",
+        "bundled_path": "tailwind-dxh4b1ab0852b197d3.css",
+        "options": {
+          "add_hash": true,
+          "variant": "Unknown"
+        }
+      }
+    ]
+  },
+  "android_artifacts": [],
+  "swift_sources": []
+}

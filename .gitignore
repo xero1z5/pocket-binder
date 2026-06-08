@@ -1,7 +1,6 @@
 # Rust & Cargo Artifacts
 /target/
 **/*.rs.bk
-Cargo.lock
 
 # Dioxus & Web Build Artifacts
 /dist/

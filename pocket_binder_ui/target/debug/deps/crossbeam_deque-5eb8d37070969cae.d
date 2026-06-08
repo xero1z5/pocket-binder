@@ -1,6 +1,0 @@
-/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/crossbeam_deque-5eb8d37070969cae.d: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crossbeam-deque-0.8.6/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crossbeam-deque-0.8.6/src/deque.rs
-
-/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/libcrossbeam_deque-5eb8d37070969cae.rmeta: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crossbeam-deque-0.8.6/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crossbeam-deque-0.8.6/src/deque.rs
-
-/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crossbeam-deque-0.8.6/src/lib.rs:
-/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crossbeam-deque-0.8.6/src/deque.rs:

@@ -1,0 +1,12 @@
+# Rust & Cargo Artifacts
+/pocket_binder_ui/target/
+**/*.rs.bk
+Cargo.lock
+
+# Dioxus & Web Build Artifacts
+/pocket_binder_ui/dist/
+/pocket_binder_ui/.dioxus/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db

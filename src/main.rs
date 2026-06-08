@@ -1,8 +1,7 @@
 use dioxus::{html::{a::target, meta::content, script::r#async}, prelude::*};
-use core::sync;
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
-use base64::Engine;
+use gloo_storage::{LocalStorage, Storage};
 
 //=================== APP ====================
 
@@ -123,26 +122,45 @@ fn main() {
 #[component]
 fn App() -> Element {
     // =========================================================================
-    // STATE SIGNALS
-    let mut github_username = use_signal(|| String::new());
-    let mut github_token = use_signal(|| String::new());
-    let mut show_login_modal = use_signal(|| false);
-
-    let mut selected_account_filter = use_signal(|| String::from("All"));
+    // 1. STATE SIGNALS (All restored and aligned!)
+    // =========================================================================
+    
+    // Core Data
+    let mut collection = use_signal(|| CardCollection { accounts: Vec::new(), inventory: Vec::new() });
+    let mut sync_status = use_signal(|| String::new());
+    
+    // UI Toggles & Search
     let mut search_query = use_signal(|| String::new());
-    let mut collection = use_signal(|| CardCollection {
-        accounts: Vec::new(),
-        inventory: Vec::new(),
-    });
-
-    // State for the Add Card Modal
+    let mut selected_account_filter = use_signal(|| String::from("All"));
     let mut show_add_modal = use_signal(|| false);
     let mut add_search_query = use_signal(|| String::new());
-    let mut add_target_account = use_signal(|| String::from("kurapika"));
+    let mut add_target_account = use_signal(|| String::new());
 
-    // state for syncing
-    let mut sync_status = use_signal(|| String::from(""));
+    // Supabase Auth Signals
+    let mut show_login_modal = use_signal(|| true);
+    let mut user_email = use_signal(|| LocalStorage::get::<String>("user_email").unwrap_or_default());
+    let mut user_password = use_signal(|| String::new());
+    let mut auth_token = use_signal(|| LocalStorage::get::<String>("supabase_token").unwrap_or_default());
 
+    // Automatically bypass modal if token exists on startup
+    use_effect(move || {
+        if !auth_token.read().is_empty() {
+            show_login_modal.set(false);
+            
+            // Auto-fetch collection on load
+            let token = auth_token.read().clone();
+            spawn(async move {
+                sync_status.set("🔄 Syncing collection...".to_string());
+                if let Ok(data) = load_from_supabase(&token).await {
+                    collection.set(data);
+                    sync_status.set("✅ Cloud Synced!".to_string());
+                } else {
+                    sync_status.set("❌ Session expired. Please log in again.".to_string());
+                    show_login_modal.set(true);
+                }
+            });
+        }
+    });
 
     // =========================================================================
     // 2. FETCH OFFICIAL API DATABASE
@@ -177,25 +195,24 @@ fn App() -> Element {
                     "🧬 POCKET TCG BINDER" 
                 }
                 
-                // NEW: Login Button / User Profile
+                // Login Button / User Profile
                 div { class: "flex items-center gap-4",
-                    // If no token is entered, show the Login button
-                    if github_token.read().is_empty() {
+                    if auth_token.read().is_empty() {
                         button {
                             class: "bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600 font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2 shadow-lg",
                             onclick: move |_| show_login_modal.set(true),
-                            "🔑 GitHub Login"
+                            "🔑 Cloud Login"
                         }
                     } else {
-                        // If logged in, show the username and a logout link
                         div { class: "flex items-center gap-3 bg-gray-800/50 py-1.5 px-4 rounded-full border border-gray-700",
-                            span { class: "text-sm text-green-400 font-mono font-bold", "👤 {github_username}" }
+                            span { class: "text-sm text-green-400 font-mono font-bold", "👤 {user_email}" }
                             button {
                                 class: "text-xs text-gray-500 hover:text-red-400 hover:underline transition-colors ml-2",
                                 onclick: move |_| {
-                                    // Logging out just clears the in-memory state
-                                    github_token.set(String::new());
-                                    github_username.set(String::new());
+                                    auth_token.set(String::new());
+                                    user_email.set(String::new());
+                                    LocalStorage::delete("supabase_token");
+                                    LocalStorage::delete("user_email");
                                 },
                                 "Logout"
                             }
@@ -231,26 +248,23 @@ fn App() -> Element {
                     "➕ Add Card"
                 }
 
-                // save to GtiHub Button
+                // Save to Supabase Button
                 button {
-                    class: "bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform active:scale-95 flex items-center gap-2",
+                    class: "bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-transform active:scale-95 flex items-center gap-2",
                     onclick: move |_| {
-                        sync_status.set("⏳ Saving...".to_string());
-
-                        // capture all current states
+                        sync_status.set("⏳ Saving to Cloud...".to_string());
+                        
                         let current_collection = collection.read().clone();
-                        let user_to_use = github_username.read().clone();
-                        let token_to_use = github_token.read().clone();
-
-                        // spawn the async background task
+                        let token_to_use = auth_token.read().clone();
+                        
                         spawn(async move {
-                            match save_to_github(current_collection, user_to_use, token_to_use).await {
-                                Ok(_) => sync_status.set("✅ Saved!".to_string()),
-                                Err(e) => sync_status.set(format!("❌ {}",e)),
+                            match save_to_supabase(current_collection, token_to_use).await {
+                                Ok(_) => sync_status.set("✅ Cloud Synced!".to_string()),
+                                Err(e) => sync_status.set(format!("❌ {}", e)),
                             }
                         });
                     },
-                    "💾 Save to GitHub",
+                    "☁️ Sync to Cloud"
                 }
 
                 // status indicator
@@ -285,7 +299,8 @@ fn App() -> Element {
                                     img {
                                         src: "{url}",
                                         alt: "{entry.card.name}",
-                                        class: "w-full rounded-lg mb-3 shadow-md border border-gray-600 aspect-[63/88] object-cover"
+                                        class: "w-full rounded-lg mb-3 shadow-md border border-gray-600 aspect-[63/88] object-cover",
+                                        loading: "lazy"
                                     }
                                 }
                             } else {
@@ -373,7 +388,7 @@ fn App() -> Element {
                                         display_cards.push(card.clone());
                                         count += 1;
 
-                                        if count>=32{
+                                        if count >= 32 {
                                             break;
                                         }
                                     }
@@ -430,170 +445,198 @@ fn App() -> Element {
         // =========================================================================
         if *show_login_modal.read() {
             div { class: "fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
-                div { class: "bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 transform transition-all",
+                div { class: "bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-4",
                     
-                    h2 { class: "text-2xl font-black text-white", "Connect to GitHub" }
-                    p { class: "text-xs text-gray-400 mb-2 leading-relaxed", 
-                        "Your Personal Access Token stays in your browser's local memory and is used purely to communicate directly with the GitHub API." 
-                    }
+                    h2 { class: "text-2xl font-black text-white", "Welcome to Pocket Binder" }
                     
                     div { class: "flex flex-col gap-1.5",
-                        label { class: "text-xs text-gray-400 font-bold uppercase tracking-wider", "GitHub Username" }
+                        label { class: "text-xs text-gray-400 font-bold uppercase", "Email Address" }
                         input {
-                            r#type: "text",
-                            class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 transition-colors",
-                            placeholder: "e.g., KunalBisht",
-                            value: "{github_username}",
-                            oninput: move |evt| github_username.set(evt.value())
+                            r#type: "email",
+                            class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:border-blue-500",
+                            placeholder: "you@example.com",
+                            value: "{user_email}",
+                            oninput: move |evt| user_email.set(evt.value())
                         }
                     }
 
                     div { class: "flex flex-col gap-1.5",
-                        label { class: "text-xs text-gray-400 font-bold uppercase tracking-wider", "Personal Access Token" }
+                        label { class: "text-xs text-gray-400 font-bold uppercase", "Password" }
                         input {
                             r#type: "password",
-                            class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 transition-colors font-mono text-sm",
-                            placeholder: "ghp_xxxxxxxxxxxxxxxxx",
-                            value: "{github_token}",
-                            oninput: move |evt| github_token.set(evt.value())
+                            class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:border-blue-500",
+                            placeholder: "••••••••",
+                            value: "{user_password}",
+                            oninput: move |evt| user_password.set(evt.value())
                         }
                     }
 
-                    button {
-                        class: "mt-4 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-lg w-full transition-transform active:scale-95 shadow-lg",
-                        onclick: move |_| {
-                            let user = github_username.read().clone();
-                            let token = github_token.read().clone();
-                            
-                            if !user.is_empty() && !token.is_empty() {
-                                show_login_modal.set(false);
-                                sync_status.set("🔄 Downloading collection...".to_string());
-                                
-                                spawn(async move {
-                                    match load_from_github(user, token).await {
-                                        Ok(downloaded_collection) => {
-                                            collection.set(downloaded_collection);
-                                            sync_status.set("✅ Collection loaded!".to_string());
-                                        },
-                                        Err(e) => sync_status.set(format!("❌ {}", e)),
-                                    }
-                                });
-                            }
-                        },
-                        "Save Credentials & Load"
+                    if !sync_status.read().is_empty(){
+                        div { class: "text-center text-sm font-mono mt-2 p-2 rounded bg-gray-800/80 text-orange-400 border border-gray-700",
+                            "{sync_status}"
+                        }
+                    }
+
+                    div { class: "flex gap-2 mt-4",
+                        // SIGN IN BUTTON
+                        button {
+                            class: "bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg flex-1 transition-transform active:scale-95",
+                            onclick: move |_| {
+                                let email = user_email.read().clone();
+                                let pass = user_password.read().clone();
+
+                                if !email.is_empty() && !pass.is_empty() {
+                                    sync_status.set("🔄 Authenticating...".to_string());
+                                    
+                                    spawn(async move {
+                                        // false = standard login
+                                        match supabase_auth(&email, &pass, false).await {
+                                            Ok(token) => {
+                                                // Save to vault
+                                                let _ = LocalStorage::set("user_email", &email);
+                                                let _ = LocalStorage::set("supabase_token", &token);
+                                                auth_token.set(token.clone());
+                                                show_login_modal.set(false);
+                                                
+                                                // Immediately load their collection
+                                                sync_status.set("🔄 Downloading Binder...".to_string());
+                                                if let Ok(data) = load_from_supabase(&token).await {
+                                                    collection.set(data);
+                                                    sync_status.set("✅ Loaded!".to_string());
+                                                }
+                                            },
+                                            Err(e) => sync_status.set(format!("❌ {}", e)),
+                                        }
+                                    });
+                                }
+                            },
+                            "Sign In"
+                        }
+                        
+                        // CREATE ACCOUNT BUTTON
+                        button {
+                            class: "bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg flex-1 transition-transform active:scale-95",
+                            onclick: move |_| {
+                                let email = user_email.read().clone();
+                                let pass = user_password.read().clone();
+
+                                if !email.is_empty() && !pass.is_empty() {
+                                    sync_status.set("🔄 Creating Account...".to_string());
+                                    spawn(async move {
+                                        // true = sign up
+                                        match supabase_auth(&email, &pass, true).await {
+                                            Ok(token) => {
+                                                let _ = LocalStorage::set("user_email", &email);
+                                                let _ = LocalStorage::set("supabase_token", &token);
+                                                auth_token.set(token);
+                                                show_login_modal.set(false);
+                                                sync_status.set("✅ Account Created!".to_string());
+                                            },
+                                            Err(e) => sync_status.set(format!("❌ {}", e)),
+                                        }
+                                    });
+                                }
+                            },
+                            "Sign Up"
+                        }
                     }
                 }
             }
-        }
+        }    
     }
 }
 
 // =========================================================================
-// 5. GITHUB SYNC LOGIC
+// 5. SUPABASE SYNC LOGIC
 // =========================================================================
 
-async fn save_to_github(collection: CardCollection, username: String, token: String) -> Result<(), String> {
+// Safe to hardcode for a frontend web app: Anonymous Keys only have permissions that RLS allows!
+const SUPABASE_URL: &str = "https://zlqxrapobcheqfapchao.supabase.co"; // <-- Paste yours here
+const SUPABASE_ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpscXhyYXBvYmNoZXFmYXBjaGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDIwNjgsImV4cCI6MjA5NjUxODA2OH0.P9NRbm1-7orI1dP0TIcRzOkDjSJa1IGYtOdhQBXNmXU";     // <-- Paste yours here
 
-    if username.is_empty() || token.is_empty() {
-        return Err("Both GitHub Username and Token are required.".to_string());
-    }
-
-    let repo = "pocket-binder";
-    if token.is_empty() {
-        return Err("No GitHub Token provided.".to_string());
-    }
-    let url = format!("https://api.github.com/repos/{}/{}/contents/collection.json", username, repo);
-    let client = reqwest::Client::new();
-
-    // 1. GET the current file to grab its SHA hash
-    let mut sha = None;
-    let get_res = client.get(&url)
-        .header("Authorization", format!("Bearer {}", token))
-        .header("User-Agent", "Pocket-Binder-App")
-        .header("Accept", "application/vnd.github.v3+json")
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if get_res.status().is_success() {
-        let json: serde_json::Value = get_res.json().await.map_err(|e| e.to_string())?;
-        if let Some(s) = json["sha"].as_str() {
-            sha = Some(s.to_string());
-        }
-    }
-
-    // 2. Convert our Rust Struct back into a formatted JSON string
-    let new_json_string = serde_json::to_string_pretty(&collection).map_err(|e| e.to_string())?;
+// 1. Authenticate (Login or Sign Up)
+async fn supabase_auth(email: &str, password: &str, is_signup: bool) -> Result<String, String> {
+    let endpoint = if is_signup { "signup" } else { "token?grant_type=password" };
+    let url = format!("{}/auth/v1/{}", SUPABASE_URL, endpoint);
     
-    // 3. Base64 Encode the JSON string
-    let encoded_content = base64::engine::general_purpose::STANDARD.encode(new_json_string);
-
-    // 4. Prepare the Commit Payload
-    let mut payload = serde_json::json!({
-        "message": "Updated binder from Web App 🚀",
-        "content": encoded_content,
-    });
-
-    if let Some(s) = sha {
-        payload["sha"] = serde_json::json!(s);
-    }
-
-    // 5. PUT the new file back to GitHub
-    let put_res = client.put(&url)
-        .header("Authorization", format!("Bearer {}", token))
-        .header("User-Agent", "Pocket-Binder-App")
-        .header("Accept", "application/vnd.github.v3+json")
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if put_res.status().is_success() {
-        Ok(())
-    } else {
-        Err(format!("GitHub API Error: {}", put_res.status()))
-    }
-}
-
-async fn load_from_github(username: String, token: String) -> Result<CardCollection, String> {
-    let repo = "pocket-binder";
-    let url = format!("https://api.github.com/repos/{}/{}/contents/collection.json", username, repo);
     let client = reqwest::Client::new();
-
-    // 1. GET the file from GitHub
-    let get_res = client.get(&url)
-        .header("Authorization", format!("Bearer {}", token))
-        .header("User-Agent", "Pocket-Binder-App")
-        .header("Accept", "application/vnd.github.v3+json")
+    let res = client.post(&url)
+        .header("apikey", SUPABASE_ANON_KEY)
+        .header("Content-Type", "application/json")
+        .json(&serde_json::json!({
+            "email": email,
+            "password": password
+        }))
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
-    // 2. Save the status code immediately (StatusCode implements Copy, so this is safe)
-    let status = get_res.status();
+    let status = res.status();
+    let json: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
 
     if status.is_success() {
-        // get_res is consumed here, which is perfectly fine now!
-        let json: serde_json::Value = get_res.json().await.map_err(|e| e.to_string())?;
-        
-        // 3. Extract the base64 content
-        if let Some(content_base64) = json["content"].as_str() {
-            // GitHub adds newlines to their base64 string, we must remove them!
-            let clean_base64 = content_base64.replace("\n", "");
-            
-            // 4. Decode Base64 back to raw bytes
-            let decoded_bytes = base64::engine::general_purpose::STANDARD
-                .decode(clean_base64)
-                .map_err(|e| e.to_string())?;
-                
-            // 5. Parse the bytes back into our Rust struct
-            let collection: CardCollection = serde_json::from_slice(&decoded_bytes)
-                .map_err(|e| format!("Failed to parse JSON: {}", e))?;
-                
-            return Ok(collection);
+        if let Some(token) = json["access_token"].as_str() {
+            return Ok(token.to_string());
         }
     }
     
-    // 6. Use our saved 'status' variable instead of asking 'get_res'
-    Err(format!("Could not load collection. GitHub API Error: {}", status))
+    // Fallback error message if auth fails
+    Err(json["error_description"].as_str().or(json["msg"].as_str()).unwrap_or("Auth failed").to_string())
+}
+
+// 2. Load the User's Binder
+async fn load_from_supabase(token: &str) -> Result<CardCollection, String> {
+    let url = format!("{}/rest/v1/binders?select=collection_data", SUPABASE_URL);
+    let client = reqwest::Client::new();
+    
+    let res = client.get(&url)
+        .header("apikey", SUPABASE_ANON_KEY)
+        .header("Authorization", format!("Bearer {}", token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let status = res.status();
+    if status.is_success() {
+        let json: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+        
+        // Supabase returns an array of matching rows.
+        if let Some(rows) = json.as_array() {
+            if !rows.is_empty() {
+                let collection: CardCollection = serde_json::from_value(rows[0]["collection_data"].clone())
+                    .map_err(|e| format!("JSON Parse Error: {}", e))?;
+                return Ok(collection);
+            }
+        }
+        // If they have no rows, they are a new user! Return an empty binder.
+        return Ok(CardCollection { accounts: Vec::new(), inventory: Vec::new() });
+    }
+    
+    Err(format!("Load failed with status: {}", status))
+}
+
+// 3. Save the Binder (Upsert)
+async fn save_to_supabase(collection: CardCollection, token: String) -> Result<(), String> {
+    // "on_conflict=user_id" tells PostgreSQL to update the row if it exists, or insert if it doesn't.
+    let url = format!("{}/rest/v1/binders?on_conflict=user_id", SUPABASE_URL);
+    let client = reqwest::Client::new();
+    
+    let res = client.post(&url)
+        .header("apikey", SUPABASE_ANON_KEY)
+        .header("Authorization", format!("Bearer {}", token))
+        .header("Prefer", "resolution=merge-duplicates")
+        .header("Content-Type", "application/json")
+        .json(&serde_json::json!({
+            "collection_data": collection
+        }))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let status = res.status();
+    if status.is_success() || status == reqwest::StatusCode::CREATED {
+        Ok(())
+    } else {
+        Err(format!("Save failed with status: {}", status))
+    }
 }

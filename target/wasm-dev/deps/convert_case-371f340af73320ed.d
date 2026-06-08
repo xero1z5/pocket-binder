@@ -1,0 +1,11 @@
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/wasm-dev/deps/convert_case-371f340af73320ed.d: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/boundary.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/case.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/converter.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/pattern.rs
+
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/wasm-dev/deps/libconvert_case-371f340af73320ed.rlib: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/boundary.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/case.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/converter.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/pattern.rs
+
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/wasm-dev/deps/libconvert_case-371f340af73320ed.rmeta: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/boundary.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/case.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/converter.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/pattern.rs
+
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/lib.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/boundary.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/case.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/converter.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/convert_case-0.8.0/src/pattern.rs:

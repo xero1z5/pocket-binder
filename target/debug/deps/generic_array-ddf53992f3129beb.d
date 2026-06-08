@@ -1,0 +1,11 @@
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/generic_array-ddf53992f3129beb.d: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/hex.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/impls.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/arr.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/functional.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/iter.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/sequence.rs
+
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/libgeneric_array-ddf53992f3129beb.rmeta: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/hex.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/impls.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/arr.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/functional.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/iter.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/sequence.rs
+
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/lib.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/hex.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/impls.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/arr.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/functional.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/iter.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generic-array-0.14.7/src/sequence.rs:

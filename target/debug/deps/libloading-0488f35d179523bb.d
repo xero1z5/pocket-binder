@@ -1,0 +1,12 @@
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/libloading-0488f35d179523bb.d: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/changelog.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/error.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/mod.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/unix/mod.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/unix/consts.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/safe.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/util.rs
+
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/liblibloading-0488f35d179523bb.rmeta: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/changelog.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/error.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/mod.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/unix/mod.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/unix/consts.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/safe.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/util.rs
+
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/lib.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/changelog.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/error.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/mod.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/unix/mod.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/os/unix/consts.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/safe.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libloading-0.8.9/src/util.rs:

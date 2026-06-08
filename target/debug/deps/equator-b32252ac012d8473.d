@@ -1,0 +1,12 @@
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/equator-b32252ac012d8473.d: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/decompose.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/by_val.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/debug.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/sized.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/structures.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/traits.rs
+
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/libequator-b32252ac012d8473.rmeta: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/decompose.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/by_val.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/debug.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/sized.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/structures.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/traits.rs
+
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/lib.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/decompose.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/by_val.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/debug.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/spec/sized.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/structures.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/equator-0.4.2/src/traits.rs:

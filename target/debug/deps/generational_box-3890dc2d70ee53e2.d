@@ -1,0 +1,11 @@
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/generational_box-3890dc2d70ee53e2.d: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/entry.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/error.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/references.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/sync.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/unsync.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/../README.md
+
+/home/xero/code/projects/pocket-binder/pocket_binder_ui/target/debug/deps/libgenerational_box-3890dc2d70ee53e2.rmeta: /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/lib.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/entry.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/error.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/references.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/sync.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/unsync.rs /home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/../README.md
+
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/lib.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/entry.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/error.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/references.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/sync.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/unsync.rs:
+/home/xero/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/generational-box-0.7.9/src/../README.md:

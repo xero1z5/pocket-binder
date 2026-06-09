@@ -1,0 +1,43 @@
+name: Deploy to GitHub Pages
+
+# This tells GitHub to run this script every time you push to the 'main' branch
+on:
+  push:
+    branches:
+      - main 
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Grab your code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Install Rust
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      # 3. Cache dependencies to make future builds super fast
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      # 4. Install the Dioxus CLI
+      - name: Install Dioxus
+        run: cargo install dioxus-cli
+
+      # 5. Build the WebAssembly Release!
+      - name: Build App
+        run: dx build --release
+
+      # 6. Push the 'dist' folder to a new branch called 'gh-pages'
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages

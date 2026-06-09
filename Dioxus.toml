@@ -1,9 +1,8 @@
 [application]
 
 [web.app]
-
-# HTML title tag content
-title = "pocket_binder_ui"
+title = "Pocket Binder"
+base_path = "/pocket-binder/"
 
 # include `assets` in web platform
 [web.resource]

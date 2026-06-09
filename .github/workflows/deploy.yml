@@ -24,14 +24,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
 
       - name: Install Dioxus CLI
-        run: |
-          curl -fsSL https://dioxuslabs.com/install.sh | bash
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        run: cargo install dioxus-cli --version "0.7.1"
 
       - name: Build
-        run: |
-          source $HOME/.cargo/env
-          dx build --release --platform web
+        run: dx build --release --platform web
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

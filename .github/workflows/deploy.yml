@@ -22,14 +22,17 @@ jobs:
 
       - name: Install Dioxus CLI
         run: |
-          curl -fsSL https://dioxuslabs.com/install.sh | bash
+          curl -fsSL https://dioxuslabs.com/install.sh | sh -s dx-v0.7.1
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Build
         run: dx build --release --platform web
 
+      - name: List build output
+        run: find target/dx -type f | head -30
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist
+          folder: target/dx/pocket_binder_ui/release/web/public
           branch: gh-pages

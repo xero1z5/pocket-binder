@@ -8,22 +8,29 @@ pub struct CardGridProps {
     pub search_query: Signal<String>,
     pub selected_account_filter: Signal<String>,
     pub image_db: Resource<Option<HashMap<String, OfficialCard>>>,
-    pub toast_message: Signal<Option<String>>, 
+    pub selected_card_id: Signal<Option<String>>, 
 }
 
 #[component]
 pub fn CardGrid(mut props: CardGridProps) -> Element {
+    
+    let visible_entries: Vec<Inventory> = props.collection.read().inventory.iter().filter(|e| {
+        let matches_search = props.search_query.read().is_empty() || 
+                             e.card.name.to_lowercase().contains(&props.search_query.read().to_lowercase());
+        let matches_account = &*props.selected_account_filter.read() == "All" || 
+                              e.owners.contains_key(&*props.selected_account_filter.read());
+        matches_search && matches_account
+    }).cloned().collect();
+
     rsx! {
-        // Reduced gap on mobile (gap-3), standard gap on desktop (md:gap-4)
         div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 pb-24",
-            for entry in props.collection.read().inventory.iter().filter(|e| {
-                let matches_search = props.search_query.read().is_empty() || 
-                                     e.card.name.to_lowercase().contains(&props.search_query.read().to_lowercase());
-                let matches_account = &*props.selected_account_filter.read() == "All" || 
-                                      e.owners.contains_key(&*props.selected_account_filter.read());
-                matches_search && matches_account
-            }) {
-                div { class: "bg-gray-800 border border-gray-700 rounded-xl p-2 md:p-3 flex flex-col items-center shadow-lg transition-transform hover:scale-105",
+            for entry in visible_entries {
+                div { 
+                    class: "bg-gray-800 border border-gray-700 rounded-xl p-2 md:p-3 flex flex-col items-center shadow-lg transition-transform hover:scale-105 cursor-pointer active:scale-95 group",
+                    
+                    // The safe onclick handler using the cloned ID
+                    onclick: move |_| props.selected_card_id.set(Some(entry.card.id.clone())),
+                    
                     {
                         let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
                             api_map.get(&entry.card.id).map(|c| c.image.clone())
@@ -35,11 +42,11 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                             let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", url.replace("https://", ""));
                             rsx! { 
                                 img { 
-                                    src: "{url}", 
+                                    src: "{optimized_url}", 
                                     alt: "{entry.card.name}", 
                                     loading: "lazy",
                                     decoding: "async",
-                                    class: "w-full rounded-lg mb-2 md:mb-3 shadow-md border border-gray-600 aspect-[63/88] object-cover bg-gray-900 content-[auto]"
+                                    class: "w-full rounded-lg mb-2 md:mb-3 shadow-md border border-gray-600 aspect-[63/88] object-cover bg-gray-900 content-[auto] group-hover:border-gray-400 transition-colors"
                                 } 
                             }
                         } else {
@@ -47,58 +54,8 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                         }
                     }
                     
-                    h2 { class: "font-bold text-xs md:text-sm text-center truncate w-full", "{entry.card.name}" }
-                    p { class: "text-[10px] md:text-xs text-orange-400 mb-2 uppercase tracking-wide", "{entry.card.rarity}" }
-                    
-                    // --- DYNAMIC OWNER BADGES ---
-                    div { class: "w-full flex flex-wrap gap-1 justify-center mt-auto",
-                        for (owner_name, count) in entry.owners.iter() {
-                            if *count > 0 {
-                                {
-                                    let target_card = entry.card.clone();
-                                    let target_owner = owner_name.clone();
-                                    let card_name = entry.card.name.clone();
-                                    
-                                    // Check if this account is a Main (Green) or Temp (Blue) account
-                                    let is_main = props.collection.read().accounts.iter()
-                                        .find(|a| a.name == *owner_name)
-                                        .map(|a| a.main)
-                                        .unwrap_or(false);
-
-                                    let badge_bg = if is_main { 
-                                        "bg-green-900/50 text-green-200 border-green-700/50 hover:bg-green-800" 
-                                    } else { 
-                                        "bg-blue-900/50 text-blue-200 border-blue-700/50 hover:bg-blue-800" 
-                                    };
-                                    
-                                    rsx! {
-                                        div { class: "group relative flex items-center gap-1 border pl-2 pr-1 py-0.5 rounded-full font-mono text-[9px] md:text-[10px] transition-all {badge_bg}",
-                                            span { "{owner_name}: {count}" }
-                                            
-                                            // Hidden 'X' button
-                                            button {
-                                                class: "opacity-0 group-hover:opacity-100 text-red-400 hover:text-white hover:bg-red-500 rounded-full w-3.5 h-3.5 flex items-center justify-center transition-all cursor-pointer font-bold",
-                                                title: "Remove 1",
-                                                onclick: move |_| {
-                                                    let result = props.collection.write().remove_card(&target_card, &target_owner, 1);
-                                                    match result {
-                                                        Ok(_) => props.toast_message.set(Some(format!("🗑️ Removed {} from {}", card_name, target_owner))),
-                                                        Err(e) => props.toast_message.set(Some(format!("❌ {}", e))),
-                                                    }
-                                                    let mut toast = props.toast_message.clone();
-                                                    spawn(async move {
-                                                        gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await;
-                                                        toast.set(None);
-                                                    });
-                                                },
-                                                "✕"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    h2 { class: "font-bold text-xs md:text-sm text-center truncate w-full group-hover:text-orange-400 transition-colors", "{entry.card.name}" }
+                    p { class: "text-[10px] md:text-xs text-orange-400 mb-1 uppercase tracking-wide", "{entry.card.rarity}" }
                 }
             }
         }

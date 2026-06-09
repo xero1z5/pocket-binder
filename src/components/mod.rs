@@ -5,3 +5,4 @@ pub mod toast;
 pub mod add_card;
 pub mod account;
 pub mod login;
+pub mod card_detail;

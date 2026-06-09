@@ -98,30 +98,107 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
         if *props.show_account_modal.read() {
             div { class: "fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
                 div { class: "bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-4",
-                    div { class: "flex justify-between items-center",
-                        h2 { class: "text-2xl font-black text-white", "Add Account" }
-                        button { class: "text-gray-500 hover:text-white", onclick: move |_| props.show_account_modal.set(false), "✕" }
+                    
+                    // Header
+                    div { class: "flex justify-between items-center mb-2",
+                        h2 { class: "text-2xl font-black text-white", "Manage Accounts" }
+                        button { class: "text-gray-500 hover:text-white transition-colors", onclick: move |_| props.show_account_modal.set(false), "✕" }
                     }
-                    div { class: "flex flex-col gap-1.5",
-                        label { class: "text-xs text-gray-400 font-bold uppercase", "Account Name" }
-                        input { class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-blue-500", placeholder: "e.g., Ash Ketchum", value: "{props.new_acc_name}", oninput: move |evt| props.new_acc_name.set(evt.value()) }
-                    }
-                    div { class: "flex flex-col gap-1.5",
-                        label { class: "text-xs text-gray-400 font-bold uppercase", "Friend ID" }
-                        input { class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-blue-500", placeholder: "e.g., 1234-5678-9012", value: "{props.new_acc_id}", oninput: move |evt| props.new_acc_id.set(evt.value()) }
-                    }
-                    div { class: "flex items-center gap-3 mt-2",
-                        input { r#type: "checkbox", class: "w-5 h-5 accent-orange-500 cursor-pointer", checked: *props.new_acc_is_main.read(), onchange: move |evt| props.new_acc_is_main.set(evt.value().parse().unwrap_or(false)) }
-                        label { class: "text-sm text-gray-300 font-bold flex items-center gap-2", "Set as Main Account",
-                            if *props.new_acc_is_main.read() {
-                                span { class: "bg-green-900 text-green-300 text-[10px] px-2 py-0.5 rounded-full border border-green-700", "MAIN" }
-                            } else {
-                                span { class: "bg-blue-900 text-blue-300 text-[10px] px-2 py-0.5 rounded-full border border-blue-700", "TEMP" }
+
+                    // --- CURRENT ACCOUNTS LIST ---
+                    div { class: "flex flex-col gap-2 max-h-48 overflow-y-auto pr-2",
+                        if props.collection.read().accounts.is_empty() {
+                            div { class: "text-center text-sm text-gray-500 italic py-4", "No accounts added yet." }
+                        } else {
+                            for acc in props.collection.read().accounts.iter() {
+                                {
+                                    // Extract & clone variables for our event handlers
+                                    let acc_name = acc.name.clone();
+                                    let acc_id = acc.id.clone();
+                                    let is_main = acc.main;
+                                    
+                                    // Clone specifically for the closures
+                                    let name_for_toggle = acc_name.clone();
+                                    let name_for_delete = acc_name.clone();
+                                    
+                                    // FIX: Calculate colors outside of the RSX macro!
+                                    let temp_color = if is_main { "text-gray-600" } else { "text-blue-400" };
+                                    let main_color = if is_main { "text-green-400" } else { "text-gray-600" };
+                                    
+                                    rsx! {
+                                        div { class: "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg border border-gray-700",
+                                            div { class: "flex flex-col gap-1",
+                                                span { class: "text-sm font-bold text-white leading-none", "{acc_name}" }
+                                                span { class: "text-[10px] text-gray-400 font-mono leading-none", "ID: {acc_id}" }
+                                            }
+                                            
+                                            div { class: "flex items-center gap-3",
+                                                
+                                                // --- THE INTERACTIVE TOGGLE ---
+                                                div { class: "flex items-center gap-1.5 bg-gray-900/50 px-2 py-1 rounded-md border border-gray-700",
+                                                    // Use the calculated variable here cleanly
+                                                    span { class: "text-[9px] font-black tracking-wide {temp_color}", "TEMP" }
+                                                    
+                                                    // Tailwind CSS Toggle Switch
+                                                    label { class: "relative inline-flex items-center cursor-pointer",
+                                                        input { 
+                                                            r#type: "checkbox", 
+                                                            class: "sr-only peer",
+                                                            checked: is_main,
+                                                            onchange: move |evt| {
+                                                                let new_status = evt.value().parse().unwrap_or(false);
+                                                                props.collection.write().set_account_main_status(&name_for_toggle, new_status);
+                                                            }
+                                                        }
+                                                        div { class: "w-7 h-4 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500" }
+                                                    }
+                                                    
+                                                    // And use the calculated variable here cleanly
+                                                    span { class: "text-[9px] font-black tracking-wide {main_color}", "MAIN" }
+                                                }
+
+                                                // Delete Account Button
+                                                button {
+                                                    class: "text-red-400 hover:text-white hover:bg-red-500 rounded p-1 transition-colors flex items-center justify-center w-6 h-6",
+                                                    title: "Delete Account",
+                                                    onclick: move |_| {
+                                                        props.collection.write().remove_account(&name_for_delete);
+                                                        
+                                                        props.toast_message.set(Some(format!("🗑️ Account '{}' deleted!", name_for_delete)));
+                                                        let mut toast = props.toast_message.clone();
+                                                        spawn(async move {
+                                                            gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await;
+                                                            toast.set(None);
+                                                        });
+                                                    },
+                                                    "✕"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
+
+                    // Divider
+                    hr { class: "border-gray-800 my-2" }
+
+                    // --- ADD NEW ACCOUNT FORM ---
+                    h3 { class: "text-sm font-bold text-orange-400 uppercase tracking-wide", "Create New" }
+                    
+                    div { class: "flex flex-col gap-1.5",
+                        input { class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:border-blue-500", placeholder: "Name (e.g., Ash)", value: "{props.new_acc_name}", oninput: move |evt| props.new_acc_name.set(evt.value()) }
+                    }
+                    div { class: "flex flex-col gap-1.5",
+                        input { class: "bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:border-blue-500", placeholder: "Friend ID", value: "{props.new_acc_id}", oninput: move |evt| props.new_acc_id.set(evt.value()) }
+                    }
+                    div { class: "flex items-center gap-3 mt-1",
+                        input { r#type: "checkbox", class: "w-4 h-4 accent-orange-500 cursor-pointer", checked: *props.new_acc_is_main.read(), onchange: move |evt| props.new_acc_is_main.set(evt.value().parse().unwrap_or(false)) }
+                        label { class: "text-xs text-gray-300 font-bold", "Set as Main Account" }
+                    }
                     button {
-                        class: "mt-4 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-lg transition-transform active:scale-95",
+                        class: "mt-2 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2.5 px-4 rounded-lg transition-transform active:scale-95 text-sm",
                         onclick: move |_| {
                             let name = props.new_acc_name.read().clone();
                             let id = props.new_acc_id.read().clone();
@@ -132,9 +209,8 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                 props.new_acc_name.set(String::new());
                                 props.new_acc_id.set(String::new());
                                 props.new_acc_is_main.set(true);
-                                props.show_account_modal.set(false);
                                 
-                                props.toast_message.set(Some(format!("Account '{}' created!", name)));
+                                props.toast_message.set(Some(format!("✅ Account '{}' created!", name)));
                                 let mut toast = props.toast_message.clone();
                                 spawn(async move {
                                     gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await;
@@ -142,7 +218,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                 });
                             }
                         },
-                        "Create Account"
+                        "Add Account"
                     }
                 }
             }

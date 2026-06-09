@@ -30,7 +30,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     // =========================================================================
-    // 1. STATE SIGNALS
+    // STATE SIGNALS
     // =========================================================================
     
     // Core Data
@@ -41,6 +41,7 @@ fn App() -> Element {
     let mut search_query = use_signal(|| String::new());
     let mut selected_account_filter = use_signal(|| String::from("All"));
     let mut show_add_modal = use_signal(|| false);
+    let mut show_filter_menu = use_signal(|| false);
     let mut add_search_query = use_signal(|| String::new());
     let mut add_target_account = use_signal(|| String::new());
 
@@ -110,7 +111,8 @@ fn App() -> Element {
             
             FilterBar {
                 search_query, selected_account_filter, collection,
-                show_add_modal, show_account_modal, sync_status, auth_token
+                show_add_modal, show_account_modal, sync_status, auth_token,
+                show_filter_menu
             }
 
             // --- THE VISUAL GRID ---

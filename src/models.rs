@@ -102,5 +102,21 @@ impl CardCollection {
 
         Ok(())
     }
+
+    pub fn remove_account(&mut self, account_name: &str){
+        self.accounts.retain(|a| a.name!=account_name);
+
+        for entry in &mut self.inventory {
+            entry.owners.remove(account_name);
+        }
+
+        self.inventory.retain(|entry| !entry.owners.is_empty());
+    }
+
+    pub fn set_account_main_status(&mut self, account_name: &str, is_main: bool){
+        if let Some(acc) = self.accounts.iter_mut().find(|a| a.name==account_name){
+            acc.main=is_main;
+        }
+    }
 }
 

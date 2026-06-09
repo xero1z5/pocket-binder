@@ -23,26 +23,24 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install Linux Dependencies
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
-
-      - name: Install Dioxus CLI
+      - name: Install Dioxus CLI (Direct Binary)
         run: |
-          curl -fsSL https://dioxuslabs.com/install.sh | sh -s dx-v0.7.1
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          # 1. Download the exact v0.7.1 binary archive directly
+          wget https://github.com/DioxusLabs/dioxus/releases/download/v0.7.1/dx-x86_64-unknown-linux-gnu.tar.gz
+          # 2. Extract it
+          tar -xzf dx-x86_64-unknown-linux-gnu.tar.gz
+          # 3. Move it to the system binaries folder
+          sudo mv dx /usr/local/bin/dx
+          # 4. Verify it works
+          dx --version
 
       - name: Build App
         run: |
-          # 1. Force update dependencies to ensure resolution matches the lock file
-          cargo update
-          # 2. Clean to remove any conflicting cached artifacts
           cargo clean
-          # 3. Build
           dx build --release --platform web
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          # Double check this path against your last successful 'Find' log
           folder: target/dx/pocket_binder_ui/release/web/public 
           branch: gh-pages

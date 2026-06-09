@@ -2,7 +2,7 @@
 
 [web.app]
 title = "Pocket Binder"
-base_path = "pocket-binder"
+base_path = "/pocket-binder/"
 
 # include `assets` in web platform
 [web.resource]

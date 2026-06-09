@@ -9,11 +9,14 @@ use gloo_storage::{LocalStorage, Storage};
 use models::*;
 use supabase::*;
 
-// ---> THIS IS THE MISSING MAGIC! <---
 use components::{
-    layout::{Header, FilterBar, Toast},
+    header::Header,
+    filter::FilterBar,
     grid::CardGrid,
-    modals::{LoginModal, AddCardModal, AccountModal},
+    toast::Toast,
+    add_card::AddCardModal,
+    account::AccountModal,
+    login::LoginModal,
 };
 
 //======================= DX ===================

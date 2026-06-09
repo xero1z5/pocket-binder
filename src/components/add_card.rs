@@ -52,39 +52,59 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                     div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3",
                         {
                             let mut display_cards = Vec::new();
-                            if let Some(Some(db)) = &*props.image_db.read() {
-                                let search_term = props.add_search_query.read().to_lowercase();
-                                let mut count = 0;
-                                for card in db.values() {
-                                    if search_term.is_empty() || card.name.to_lowercase().contains(&search_term) {
-                                        display_cards.push(card.clone());
-                                        count += 1;
-                                        if count >= 32 { break; }
+                            let search_term = props.add_search_query.read().to_lowercase();
+
+                            // dont load until asked
+                            if !search_term.is_empty() {
+                                if let Some(Some(db)) = &*props.image_db.read() {
+                                    let mut count = 0;
+                                    for card in db.values() {
+                                        if card.name.to_lowercase().contains(&search_term){
+                                            display_cards.push(card.clone());
+                                            count+=1;
+                                            if count>=18 { break; }
+                                        }
                                     }
                                 }
                             }
 
-                            if display_cards.is_empty() {
+                            if search_term.is_empty() {
+                                rsx! { p { class: "col-span-full text-center text-gray-500 mt-10", "🔍 Type a card name to search..." } }
+                            }
+                            else if display_cards.is_empty() {
                                 rsx! { p { class: "col-span-full text-center text-gray-500 mt-10 animate-pulse", "Loading API Database or No Results Found..." } }
                             } else {
                                 rsx! {
                                     for official_card in display_cards {
-                                        div { class: "relative group cursor-pointer transition-transform hover:scale-105 hover:z-10",
-                                            onclick: move |_| {
-                                                let card_name = official_card.name.clone();
-                                                let new_card = Card { id: official_card.id.clone(), name: official_card.name.clone(), rarity: official_card.rarity.clone(), card_type: official_card.card_type.clone(), pack: official_card.pack.clone() };
-                                                props.collection.write().add_card(new_card, &*props.add_target_account.read(), 1);
-                                                
-                                                props.toast_message.set(Some(format!("✅ Added {}!", card_name)));
-                                                let mut toast = props.toast_message.clone();
-                                                spawn(async move {
-                                                    gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await;
-                                                    toast.set(None);
-                                                });
-                                            },
-                                            img { src: "{official_card.image}", loading: "lazy", decoding: "async", class: "w-full rounded border border-gray-600 shadow-md aspect-[63/88] object-cover" }
-                                            div { class: "absolute inset-0 bg-blue-500/50 opacity-0 group-hover:opacity-100 rounded flex items-center justify-center backdrop-blur-sm transition-opacity",
-                                                span { class: "bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-full", "+ Add" }
+                                        // --- NEW: Wrap the inside of the loop in a Rust block ---
+                                        {
+                                            // compressed image url
+                                            let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", official_card.image.replace("https://", ""));
+
+                                            rsx! {
+                                                div { class: "relative group cursor-pointer transition-transform hover:scale-105 hover:z-10",
+                                                    onclick: move |_| {
+                                                        let card_name = official_card.name.clone();
+                                                        let new_card = Card { id: official_card.id.clone(), name: official_card.name.clone(), rarity: official_card.rarity.clone(), card_type: official_card.card_type.clone(), pack: official_card.pack.clone() };
+                                                        props.collection.write().add_card(new_card, &*props.add_target_account.read(), 1);
+                                                        
+                                                        props.toast_message.set(Some(format!("✅ Added {}!", card_name)));
+                                                        let mut toast = props.toast_message.clone();
+                                                        spawn(async move {
+                                                            gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await;
+                                                            toast.set(None);
+                                                        });
+                                                    },
+                                                    img {
+                                                        src: "{optimized_url}",
+                                                        loading: "lazy",
+                                                        decoding: "async",
+                                                        class: "w-full rounded border border-gray-600 shadow-md aspect-[63/88] object-cover content-[auto] bg-gray-900"
+                                                    }
+                                                    div { class: "absolute inset-0 bg-blue-500/50 opacity-0 group-hover:opacity-100 rounded flex items-center justify-center backdrop-blur-sm transition-opacity",
+                                                        span { class: "bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-full", "+ Add" }
+                                                    }
+                                                }
                                             }
                                         }
                                     }

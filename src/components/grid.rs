@@ -32,14 +32,14 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                         };
 
                         if let Some(url) = image_url {
+                            let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", url.replace("https://", ""));
                             rsx! { 
                                 img { 
                                     src: "{url}", 
                                     alt: "{entry.card.name}", 
-                                    // CRITICAL FOR PERFORMANCE: loading lazy, decoding async, and fixed aspect ratio
                                     loading: "lazy",
                                     decoding: "async",
-                                    class: "w-full rounded-lg mb-2 md:mb-3 shadow-md border border-gray-600 aspect-[63/88] object-cover bg-gray-900"
+                                    class: "w-full rounded-lg mb-2 md:mb-3 shadow-md border border-gray-600 aspect-[63/88] object-cover bg-gray-900 content-[auto]"
                                 } 
                             }
                         } else {

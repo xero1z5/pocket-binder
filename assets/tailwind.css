@@ -325,6 +325,9 @@
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
   }
+  .block {
+    display: block;
+  }
   .flex {
     display: flex;
   }
@@ -551,6 +554,9 @@
   .border-gray-800 {
     border-color: var(--color-gray-800);
   }
+  .border-green-700 {
+    border-color: var(--color-green-700);
+  }
   .border-green-700\/50 {
     border-color: color-mix(in srgb, oklch(52.7% 0.154 150.069) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -649,6 +655,9 @@
   }
   .bg-green-500 {
     background-color: var(--color-green-500);
+  }
+  .bg-green-900 {
+    background-color: var(--color-green-900);
   }
   .bg-green-900\/50 {
     background-color: color-mix(in srgb, oklch(39.3% 0.095 152.535) 50%, transparent);
@@ -983,6 +992,10 @@
     transition-property: transform, translate, scale, rotate;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
+  .content-\[auto\] {
+    --tw-content: auto;
+    content: var(--tw-content);
   }
   .group-focus-within\:text-orange-400 {
     &:is(:where(.group):focus-within *) {
@@ -1567,8 +1580,8 @@
 }
 @property --tw-content {
   syntax: "*";
-  initial-value: "";
   inherits: false;
+  initial-value: "";
 }
 @property --tw-translate-x {
   syntax: "*";

@@ -1,13 +1,10 @@
 name: Deploy to GitHub Pages
-
 on:
   push:
     branches:
-      - main 
-
+      - main
 permissions:
   contents: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -31,21 +28,13 @@ jobs:
           curl -fsSL https://dioxuslabs.com/install.sh | bash
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Clean and Build
+      - name: Build
         run: |
-          cargo clean
           source $HOME/.cargo/env
-          dx build --release
-          
-      # --- THIS IS THE DETECTIVE STEP ---
-      - name: Find where 'dist' is hiding
-        run: |
-          echo "Listing all directories to find where build output went:"
-          find . -maxdepth 3 -type d
+          dx build --release --platform web
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          # If we find it elsewhere, we will update this path in the next step
           folder: dist
           branch: gh-pages

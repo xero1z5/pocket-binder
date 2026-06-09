@@ -20,11 +20,10 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install Linux Dependencies
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
-
       - name: Install Dioxus CLI
-        run: cargo install dioxus-cli --version "0.7.1"
+        run: |
+          curl -fsSL https://dioxuslabs.com/install.sh | bash
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Build
         run: dx build --release --platform web

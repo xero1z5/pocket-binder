@@ -23,15 +23,18 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
-      # NEW: Install required Linux C-libraries just in case
       - name: Install Linux Dependencies
         run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
 
-      # NEW: Download the pre-compiled Dioxus CLI instantly!
       - name: Install Dioxus CLI
         run: |
-          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-          cargo binstall dioxus-cli -y
+          # Download the pre-compiled Dioxus CLI binary directly
+          curl -L --proto '=https' --tlsv1.2 -sSf https://github.com/dioxuslabs/dioxus/releases/latest/download/dx-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          sudo mv dx /usr/local/bin/dx
+          dx --version
+
+      - name: Clean Build Cache
+        run: cargo clean
 
       - name: Build App
         run: dx build --release

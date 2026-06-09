@@ -1,8 +1,24 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
-use gloo_storage::{LocalStorage, Storage};
 use crate::models::*;
-use crate::supabase::*;
+
+#[derive(PartialEq, Clone, Props)]
+pub struct AddCardButtonProps {
+    pub show_add_modal: Signal<bool>,
+}
+
+#[component]
+pub fn AddCardButton(mut props: AddCardButtonProps) -> Element {
+    rsx! {
+        button {
+            class: "group w-11 h-11 md:w-14 md:h-14 flex flex-col items-center justify-center bg-orange-600/20 border border-orange-500/50 rounded-xl md:rounded-2xl hover:bg-orange-500 hover:border-orange-400 transition-all shadow-lg shadow-orange-900/20",
+            onclick: move |_| props.show_add_modal.set(true),
+            svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-6 h-6 md:w-7 md:h-7 text-orange-400 group-hover:text-white transition-colors",
+                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
+            }
+        }
+    }
+}
 
 #[derive(PartialEq, Clone, Props)]
 pub struct AddCardModalProps {
@@ -66,7 +82,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                     toast.set(None);
                                                 });
                                             },
-                                            img { src: "{official_card.image}", loading: "lazy", class: "w-full rounded border border-gray-600 shadow-md" }
+                                            img { src: "{official_card.image}", loading: "lazy", decoding: "async", class: "w-full rounded border border-gray-600 shadow-md aspect-[63/88] object-cover" }
                                             div { class: "absolute inset-0 bg-blue-500/50 opacity-0 group-hover:opacity-100 rounded flex items-center justify-center backdrop-blur-sm transition-opacity",
                                                 span { class: "bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-full", "+ Add" }
                                             }

@@ -1,6 +1,5 @@
 name: Deploy to GitHub Pages
 
-# This tells GitHub to run this script every time you push to the 'main' branch
 on:
   push:
     branches:
@@ -13,29 +12,30 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Grab your code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Install Rust
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
 
-      # 3. Cache dependencies to make future builds super fast
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
-      # 4. Install the Dioxus CLI
-      - name: Install Dioxus
-        run: cargo install dioxus-cli
+      # NEW: Install required Linux C-libraries just in case
+      - name: Install Linux Dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
 
-      # 5. Build the WebAssembly Release!
+      # NEW: Download the pre-compiled Dioxus CLI instantly!
+      - name: Install Dioxus CLI
+        run: |
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall dioxus-cli -y
+
       - name: Build App
         run: dx build --release
 
-      # 6. Push the 'dist' folder to a new branch called 'gh-pages'
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:

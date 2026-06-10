@@ -13,7 +13,6 @@ pub struct CardGridProps {
 
 #[component]
 pub fn CardGrid(mut props: CardGridProps) -> Element {
-    
     let visible_entries: Vec<Inventory> = props.collection.read().inventory.iter().filter(|e| {
         let matches_search = props.search_query.read().is_empty() || 
                              e.card.name.to_lowercase().contains(&props.search_query.read().to_lowercase());
@@ -23,20 +22,16 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
     }).cloned().collect();
 
     rsx! {
-        div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 pb-24",
+        // CHANGED: grid-cols-3 for mobile, smaller gap
+        div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-4 pb-24",
             for entry in visible_entries {
                 div { 
-                    class: "bg-gray-800 border border-gray-700 rounded-xl p-2 md:p-3 flex flex-col items-center shadow-lg transition-transform hover:scale-105 cursor-pointer active:scale-95 group",
-                    
-                    // The safe onclick handler using the cloned ID
+                    class: "bg-slate-800/80 border border-slate-700/50 rounded-xl p-2 flex flex-col items-center shadow-lg transition-transform hover:scale-105 cursor-pointer active:scale-95 group",
                     onclick: move |_| props.selected_card_id.set(Some(entry.card.id.clone())),
-                    
                     {
                         let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
                             api_map.get(&entry.card.id).map(|c| c.image.clone())
-                        } else {
-                            None
-                        };
+                        } else { None };
 
                         if let Some(url) = image_url {
                             let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", url.replace("https://", ""));
@@ -44,24 +39,28 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                 img { 
                                     src: "{optimized_url}", 
                                     alt: "{entry.card.name}", 
-                                    loading: "lazy",
-                                    decoding: "async",
-                                    class: "w-full rounded-lg mb-2 md:mb-3 shadow-md border border-gray-600 aspect-[63/88] object-cover bg-gray-900 content-[auto] group-hover:border-gray-400 transition-colors"
+                                    loading: "lazy", decoding: "async",
+                                    class: "w-full rounded-lg mb-2 shadow-md border border-slate-600/50 aspect-[63/88] object-cover group-hover:border-teal-400/50 transition-colors"
                                 } 
                             }
                         } else {
-                            rsx! { div { class: "w-full aspect-[63/88] bg-gray-700 rounded-lg mb-2 md:mb-3 flex items-center justify-center border border-gray-600 animate-pulse", span { class: "text-2xl md:text-4xl opacity-50", "🃏" } } }
+                            rsx! { div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-slate-600 animate-pulse" } }
                         }
                     }
                     
-                    h2 { class: "font-bold text-xs md:text-sm text-center truncate w-full group-hover:text-orange-400 transition-colors", "{entry.card.name}" }
-                    p { class: "text-[10px] md:text-xs text-orange-400 mb-1 uppercase tracking-wide", "{entry.card.rarity}" }
+                    h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-teal-400 transition-colors tracking-tight", "{entry.card.name}" }
+                    p { class: "text-[9px] md:text-[10px] text-teal-500/80 uppercase font-bold tracking-wider", "{entry.card.rarity}" }
                 }
             }
         }
         
         if props.collection.read().inventory.is_empty() {
-            div { class: "text-center text-gray-500 mt-12", "No cards found matching your criteria." }
+            div { class: "flex flex-col items-center justify-center mt-20 text-slate-500",
+                svg { class: "w-12 h-12 mb-3 opacity-50", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" }
+                }
+                span { class: "text-sm font-medium", "No cards found." }
+            }
         }
     }
 }

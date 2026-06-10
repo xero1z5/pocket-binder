@@ -48,7 +48,6 @@ fn App() -> Element {
     let mut show_filter_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
     let mut add_search_query = use_signal(|| String::new());
-    let mut add_target_account = use_signal(|| String::new());
 
     // Supabase Auth Signals
     let mut show_login_modal = use_signal(|| true);
@@ -175,7 +174,7 @@ fn App() -> Element {
         }
 
         // --- OVERLAYS & MODALS ---
-        AddCardModal { show_add_modal, add_search_query, add_target_account, collection, image_db, toast_message }
+        AddCardModal { show_add_modal, add_search_query, collection, image_db, toast_message }
         AccountModal { show_account_modal, new_acc_name, new_acc_id, new_acc_is_main, collection, toast_message }
         LoginModal { show_login_modal, user_email, user_password, auth_token, sync_status, collection }
 

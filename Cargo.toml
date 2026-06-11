@@ -19,3 +19,15 @@ default = ["web"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]
+
+# =======================================================
+# OPTIMIZATION PROFILES
+# =======================================================
+
+# This profile is used when you run `dx build --release`
+[profile.release]
+opt-level = 'z'     # Optimize for size ('z' or 's') rather than execution speed ('3')
+lto = true          # Link Time Optimization: Aggressively removes unused code across dependencies
+codegen-units = 1   # Compiles using a single thread to maximize optimization (slower build, faster app)
+panic = 'abort'     # Removes panic unwinding infrastructure, saving binary size
+strip = true        # Strips debug symbols from the final binary

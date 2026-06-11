@@ -19,9 +19,9 @@ pub struct Account {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Card {
     pub id: String,
-    pub name: String, // card name
-    pub rarity: String, // ? enum -> shiny fa, immersive, 2* (RR, FA, Trainers)
-    pub card_type: String, // pokemon, trainer
+    pub name: String,
+    pub rarity: String, 
+    pub card_type: String,
     pub pack: String,
 }
 
@@ -33,14 +33,22 @@ pub struct Inventory {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OfficialCard {
-    pub id: String,
+    pub set: String,
+    pub number: u32,
     pub name: String,
-    pub image: String,
-    pub pack: String,
     pub rarity: String,
+
+    #[serde(default)]
+    pub packs: Vec<String>,
 
     #[serde(rename="type", default)]
     pub card_type: String,
+
+    // Generated dynamically in main.rs
+    #[serde(default)]
+    pub full_image_url: String,
+    #[serde(default)]
+    pub generated_id: String,
 }
 
 //=================== LOGIC =======================
@@ -119,4 +127,3 @@ impl CardCollection {
         }
     }
 }
-

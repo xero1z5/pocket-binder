@@ -40,6 +40,11 @@ fn App() -> Element {
     // Core Data
     let mut collection = use_signal(|| CardCollection { accounts: Vec::new(), inventory: Vec::new() });
     let mut sync_status = use_signal(|| String::new());
+
+    // sync engine flags
+    let mut data_loaded = use_signal(|| false);
+    let mut is_saving = use_signal(|| false);
+    let mut pending_save = use_signal(|| false);
     
     // UI Toggles & Search
     let mut search_query = use_signal(|| String::new());
@@ -65,15 +70,14 @@ fn App() -> Element {
     let mut new_acc_is_main = use_signal(|| true);
 
     // =========================================================================
-    // 2. EFFECTS & DATA FETCHING
+    // EFFECTS & DATA FETCHING
     // =========================================================================
 
-    // Automatically bypass modal if token exists on startup
+    // Initial Database Load
     use_effect(move || {
-        if !auth_token.read().is_empty() {
+        let token = auth_token.read().clone();
+        if !token.is_empty() {
             show_login_modal.set(false);
-            
-            let token = auth_token.read().clone();
             spawn(async move {
                 sync_status.set("🔄 Syncing collection...".to_string());
                 if let Ok(data) = load_from_supabase(&token).await {
@@ -83,19 +87,82 @@ fn App() -> Element {
                     sync_status.set("❌ Session expired. Please log in again.".to_string());
                     show_login_modal.set(true);
                 }
+                // Wait 100ms before unlocking so the initial load doesn't trigger a re-save
+                gloo_timers::future::sleep(std::time::Duration::from_millis(100)).await;
+                data_loaded.set(true); 
             });
         }
     });
 
-    // Fetch Official API Database
+    // Change Tracker
+    use_effect(move || {
+        // By calling .read(), Dioxus will run this block EVERY time you add/remove a card
+        let _ = collection.read(); 
+        
+        // If the initial load is finished, flag that we have unsaved UI changes
+        if *data_loaded.peek() {
+            pending_save.set(true); 
+        }
+    });
+
+    // Sync Engine Queue
+    use_effect(move || {
+        // We read these flags to wake up the engine whenever they change
+        let has_pending = *pending_save.read();
+        let currently_saving = *is_saving.read();
+
+        // If we have changes AND the network is free, start saving!
+        if has_pending && !currently_saving {
+            
+            // Lock the network so we don't accidentally run two overlapping saves
+            pending_save.set(false);
+            is_saving.set(true);
+
+            spawn(async move {
+                // Wait a tiny 600ms to batch rapid-fire clicks into a single save
+                // time to batch rapid-fire clicks to a single save
+                gloo_timers::future::sleep(std::time::Duration::from_millis(250)).await;
+                
+                sync_status.set("⏳ Syncing...".to_string());
+                
+                // Grab a snapshot of exactly how the data looks RIGHT NOW
+                let current_data = collection.peek().clone();
+                let token = auth_token.peek().clone();
+
+                // Send it to Supabase
+                if save_to_supabase(current_data, token).await.is_ok() {
+                    sync_status.set("✅ Cloud Synced!".to_string());
+                } else {
+                    sync_status.set("❌ Sync Failed! Retrying...".to_string());
+                    pending_save.set(true); // If it fails, put it back in the queue
+                }
+                
+                // Unlock the network so the next batch of changes can save
+                is_saving.set(false);
+            });
+        }
+    });
+
+    // Fetch Official API Database (Updated to Flibustier via jsDelivr)
     let image_db = use_resource(move || async move {
-        let url = "https://raw.githubusercontent.com/chase-manning/pokemon-tcg-pocket-cards/refs/heads/main/v4.json";
+        // 1. Fetch the JSON from the NPM package CDN
+        let url = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/cards.json";
         let response = reqwest::get(url).await.ok()?;
         let official_cards = response.json::<Vec<OfficialCard>>().await.ok()?;
         
         let mut api_db: HashMap<String, OfficialCard> = HashMap::new();
-        for card in official_cards {
-            api_db.insert(card.id.clone(), card);
+        
+        // 2. Base URL for the actual WebP images hosted in the exchange repo
+        let base_image_url = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-exchange/main/public/images/cards-by-set";
+
+        for mut card in official_cards {
+            // Build the perfect image URL: .../cards-by-set/A1/1.webp
+            card.full_image_url = format!("{}/{}/{}.webp", base_image_url, card.set, card.number);
+            
+            // Create a universal ID (e.g., "A1-1")
+            card.generated_id = format!("{}-{}", card.set, card.number);
+            
+            api_db.insert(card.generated_id.clone(), card);
         }
         Some(api_db)
     });
@@ -109,6 +176,7 @@ fn App() -> Element {
         // pre warm the network connections
         document::Link { rel: "preconnect", href: "https://wsrv.nl" }
         document::Link { rel: "preconnect", href: "https://raw.githubusercontent.com" }
+        document::Link { rel: "preconnect", href: "https://cdn.jsdelivr.net" }
 
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
@@ -136,31 +204,61 @@ fn App() -> Element {
                             }
                         }
 
-                        // The 4 Square Action Buttons
+                        // The Square Action Buttons
                         div { class: "flex items-center gap-2 md:gap-3",
+        
+                            // THE NEW "HEAL DATABASE" BUTTON
+                            button {
+                                class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-purple-600/20 border border-purple-500/50 rounded-xl md:rounded-2xl hover:bg-purple-500 hover:border-purple-400 transition-all shadow-lg",
+                                title: "Fix Broken Legacy Cards",
+                                onclick: move |_| {
+                                    if let Some(Some(api_map)) = &*image_db.read() {
+                                        sync_status.set("🛠️ Fixing Cards...".to_string());
+                                        let mut col = collection.write();
+                                        let mut needs_save = false;
+
+                                        for entry in col.inventory.iter_mut() {
+                                            let mut found_api_card = api_map.get(&entry.card.id);
+                                            
+                                            // 1. If ID is broken, find the card by its exact name
+                                            if found_api_card.is_none() {
+                                                if let Some((_, matching_card)) = api_map.iter().find(|(_, c)| c.name.to_lowercase() == entry.card.name.to_lowercase()) {
+                                                    entry.card.id = matching_card.generated_id.clone();
+                                                    found_api_card = Some(matching_card);
+                                                    needs_save = true;
+                                                }
+                                            }
+                                            
+                                            // 2. Update the old "☆☆" text to the new "SAR" code
+                                            if let Some(api_card) = found_api_card {
+                                                let new_pack = if api_card.packs.is_empty() { "Promo".to_string() } else { api_card.packs.join(", ") };
+                                                if entry.card.rarity != api_card.rarity || entry.card.pack != new_pack {
+                                                    entry.card.rarity = api_card.rarity.clone();
+                                                    entry.card.pack = new_pack;
+                                                    needs_save = true;
+                                                }
+                                            }
+                                        }
+
+                                        // 3. Upload the fixed database to Supabase
+                                        if needs_save {
+                                            let current_collection = col.clone();
+                                            let token = auth_token.read().clone();
+                                            spawn(async move {
+                                                if save_to_supabase(current_collection, token).await.is_ok() {
+                                                    sync_status.set("✅ Cards Fixed & Synced!".to_string());
+                                                }
+                                            });
+                                        } else {
+                                            sync_status.set("✅ Cards already up to date.".to_string());
+                                        }
+                                    }
+                                },
+                                span { class: "text-xl group-hover:scale-110 transition-transform", "✨" }
+                            }
                             FilterButton { show_filter_menu }
                             AccountButton { show_account_modal }
                             AddCardButton { show_add_modal }
-                            
-                            // Inline Cloud Sync Button
-                            button {
-                                class: "group w-11 h-11 md:w-14 md:h-14 flex flex-col items-center justify-center bg-blue-600/20 border border-blue-500/50 rounded-xl md:rounded-2xl hover:bg-blue-500 hover:border-blue-400 transition-all shadow-lg shadow-blue-900/20",
-                                onclick: move |_| {
-                                    sync_status.set("Syncing...".to_string());
-                                    let current_collection = collection.read().clone();
-                                    let token_to_use = auth_token.read().clone();
-                                    
-                                    spawn(async move {
-                                        match save_to_supabase(current_collection, token_to_use).await {
-                                            Ok(_) => sync_status.set("Last sync: Just now".to_string()),
-                                            Err(_) => sync_status.set("Sync Failed!".to_string()),
-                                        }
-                                    });
-                                },
-                                svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-5 h-5 md:w-6 md:h-6 text-blue-400 group-hover:text-white transition-colors",
-                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" }
-                                }
-                            }
                         }
                     }
                 }
@@ -182,4 +280,6 @@ fn App() -> Element {
 
         Toast { toast_message }
     }
+
+        
 }

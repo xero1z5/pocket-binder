@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
 use crate::models::*;
+use crate::components::add_card::RarityDisplay;
 
 #[derive(PartialEq, Clone, Props)]
 pub struct CardGridProps {
@@ -13,16 +14,18 @@ pub struct CardGridProps {
 
 #[component]
 pub fn CardGrid(mut props: CardGridProps) -> Element {
+    let query = props.search_query.read().to_lowercase();
+    let selected_acc = props.selected_account_filter.read().clone();
+
+    // We MUST clone and collect here so the Dioxus onclick closures legally own the data.
+    // Because 'query' is evaluated above, this iteration is now extremely fast!
     let visible_entries: Vec<Inventory> = props.collection.read().inventory.iter().filter(|e| {
-        let matches_search = props.search_query.read().is_empty() || 
-                             e.card.name.to_lowercase().contains(&props.search_query.read().to_lowercase());
-        let matches_account = &*props.selected_account_filter.read() == "All" || 
-                              e.owners.contains_key(&*props.selected_account_filter.read());
+        let matches_search = query.is_empty() || e.card.name.to_lowercase().contains(&query);
+        let matches_account = selected_acc == "All" || e.owners.contains_key(&selected_acc);
         matches_search && matches_account
     }).cloned().collect();
 
     rsx! {
-        // CHANGED: grid-cols-3 for mobile, smaller gap
         div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-4 pb-24",
             for entry in visible_entries {
                 div { 
@@ -30,7 +33,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     onclick: move |_| props.selected_card_id.set(Some(entry.card.id.clone())),
                     {
                         let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
-                            api_map.get(&entry.card.id).map(|c| c.image.clone())
+                            api_map.get(&entry.card.id).map(|c| c.full_image_url.clone())
                         } else { None };
 
                         if let Some(url) = image_url {
@@ -49,7 +52,10 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     }
                     
                     h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-teal-400 transition-colors tracking-tight", "{entry.card.name}" }
-                    p { class: "text-[9px] md:text-[10px] text-teal-500/80 uppercase font-bold tracking-wider", "{entry.card.rarity}" }
+                    
+                    div { class: "mt-1",
+                        RarityDisplay { rarity_code: entry.card.rarity.clone() }
+                    }
                 }
             }
         }

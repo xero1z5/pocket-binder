@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
 use crate::models::*;
+use crate::components::add_card::RarityDisplay;
 
 #[derive(PartialEq, Clone, Props)]
 pub struct CardDetailModalProps {
@@ -22,7 +23,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                 if let Some(entry) = entry_opt {
                     // Fetch the optimized image
                     let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
-                        api_map.get(&entry.card.id).map(|c| c.image.clone())
+                        api_map.get(&entry.card.id).map(|c| c.full_image_url.clone()) // FIXED HERE
                     } else { None };
                     
                     let optimized_url = image_url.map(|url| format!("https://wsrv.nl/?url={}&w=400&output=webp", url.replace("https://", "")));
@@ -60,7 +61,9 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                         div { class: "grid grid-cols-2 gap-4",
                                             div { class: "flex flex-col gap-1",
                                                 span { class: "text-[10px] text-gray-500 uppercase font-black tracking-widest", "Rarity" }
-                                                span { class: "text-sm text-orange-400 font-bold", "{entry.card.rarity}" }
+                                                div { class: "mt-1 flex justify-start",
+                                                    RarityDisplay { rarity_code: entry.card.rarity.clone() }
+                                                }
                                             }
                                             div { class: "flex flex-col gap-1",
                                                 span { class: "text-[10px] text-gray-500 uppercase font-black tracking-widest", "Pack" }

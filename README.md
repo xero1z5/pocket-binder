@@ -14,14 +14,19 @@ HOW TO USE?
 - quick add
 - profile sync
 
+
 -- TODO
-- add trade option
-- auto save
-- make UI better
-- Add filters
-- make the theme better
-- make the account manager better
-- add rarity and pack pngs
+- [x] fix rarity assignment
+- [x] add auto database resync
+- [ ] auto save
+- [ ] add pack logos
+- [ ] make add card ui better
+- [ ] add trade option
+- [ ] make UI better
+- [ ] Add filters
+- [ ] make the theme better
+- [ ] make the account manager better
 
 good site to take inspo : https://ptcgp.raenonx.cc
+https://pocketcards.net/database
 

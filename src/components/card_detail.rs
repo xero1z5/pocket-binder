@@ -48,7 +48,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                     // Left: Image
                                     div { class: "w-full md:w-1/2 flex justify-center",
                                         if let Some(url) = optimized_url {
-                                            img { src: "{url}", class: "w-48 md:w-full rounded-xl shadow-lg border border-gray-700 aspect-[63/88] object-cover" }
+                                            img { src: "{url}", width: "400", height: "560", class: "w-48 md:w-full rounded-xl shadow-lg border border-gray-700 aspect-[63/88] object-cover" }
                                         } else {
                                             div { class: "w-48 aspect-[63/88] bg-gray-800 rounded-xl flex items-center justify-center", "🃏" }
                                         }

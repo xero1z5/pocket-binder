@@ -18,6 +18,7 @@ use components::{
     filter::{SearchInput, FilterButton, FilterTray},
     add_card::{AddCardButton, AddCardModal},
     account::{AccountButton, AccountModal},
+    trade::{TradeButton, TradeModal},
 };
 
 //======================= DX ===================
@@ -43,8 +44,8 @@ fn App() -> Element {
 
     // sync engine flags
     let mut data_loaded = use_signal(|| false);
-    let mut is_saving = use_signal(|| false);
-    let mut pending_save = use_signal(|| false);
+    let mut save_version = use_signal(|| 0u64);      // bumped on every collection change
+    let mut last_saved_version = use_signal(|| 0u64); // tracks what we last saved
     
     // UI Toggles & Search
     let mut search_query = use_signal(|| String::new());
@@ -53,6 +54,7 @@ fn App() -> Element {
     let mut show_filter_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
     let mut add_search_query = use_signal(|| String::new());
+    let mut show_trade_modal = use_signal(|| false);
 
     // Supabase Auth Signals
     let mut show_login_modal = use_signal(|| true);
@@ -94,77 +96,100 @@ fn App() -> Element {
         }
     });
 
-    // Change Tracker
+    // Change Tracker: bump save_version whenever the collection changes
     use_effect(move || {
         // By calling .read(), Dioxus will run this block EVERY time you add/remove a card
         let _ = collection.read(); 
         
         // If the initial load is finished, flag that we have unsaved UI changes
         if *data_loaded.peek() {
-            pending_save.set(true); 
+            *save_version.write() += 1;
         }
     });
 
-    // Sync Engine Queue
+    // Trailing-Edge Debounced Saver: waits 800ms of inactivity before saving
     use_effect(move || {
-        // We read these flags to wake up the engine whenever they change
-        let has_pending = *pending_save.read();
-        let currently_saving = *is_saving.read();
+        let version_at_trigger = *save_version.read();
 
-        // If we have changes AND the network is free, start saving!
-        if has_pending && !currently_saving {
-            
-            // Lock the network so we don't accidentally run two overlapping saves
-            pending_save.set(false);
-            is_saving.set(true);
-
-            spawn(async move {
-                // Wait a tiny 600ms to batch rapid-fire clicks into a single save
-                // time to batch rapid-fire clicks to a single save
-                gloo_timers::future::sleep(std::time::Duration::from_millis(250)).await;
-                
-                sync_status.set("⏳ Syncing...".to_string());
-                
-                // Grab a snapshot of exactly how the data looks RIGHT NOW
-                let current_data = collection.peek().clone();
-                let token = auth_token.peek().clone();
-
-                // Send it to Supabase
-                if save_to_supabase(current_data, token).await.is_ok() {
-                    sync_status.set("✅ Cloud Synced!".to_string());
-                } else {
-                    sync_status.set("❌ Sync Failed! Retrying...".to_string());
-                    pending_save.set(true); // If it fails, put it back in the queue
-                }
-                
-                // Unlock the network so the next batch of changes can save
-                is_saving.set(false);
-            });
+        // Don't save if nothing has changed since last save
+        if version_at_trigger == 0 || version_at_trigger == *last_saved_version.peek() {
+            return;
         }
+
+        spawn(async move {
+            // Wait 800ms to batch rapid-fire clicks into a single save
+            gloo_timers::future::sleep(std::time::Duration::from_millis(800)).await;
+
+            // Check if any NEW changes happened during the wait
+            let current_version = *save_version.peek();
+            if current_version != version_at_trigger {
+                // A newer change came in — that change's own effect will handle saving
+                return;
+            }
+
+            // No new changes during the wait — save now!
+            sync_status.set("⏳ Syncing...".to_string());
+            
+            let current_data = collection.peek().clone();
+            let token = auth_token.peek().clone();
+
+            if save_to_supabase(current_data, token).await.is_ok() {
+                sync_status.set("✅ Cloud Synced!".to_string());
+                last_saved_version.set(current_version);
+            } else {
+                sync_status.set("❌ Sync Failed! Retrying...".to_string());
+                // Bump version to retrigger the saver
+                *save_version.write() += 1;
+            }
+        });
     });
 
-    // Fetch Official API Database (Updated to Flibustier via jsDelivr)
+    // Fetch Official API Database with LocalStorage caching (stale-while-revalidate)
     let image_db = use_resource(move || async move {
-        // 1. Fetch the JSON from the NPM package CDN
-        let url = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/cards.json";
-        let response = reqwest::get(url).await.ok()?;
-        let official_cards = response.json::<Vec<OfficialCard>>().await.ok()?;
+        let cache_key = "cached_card_db";
         
-        let mut api_db: HashMap<String, OfficialCard> = HashMap::new();
+        // 1. Try to load from LocalStorage cache instantly
+        let cached: Option<Vec<OfficialCard>> = LocalStorage::get(cache_key).ok();
         
-        // 2. Base URL for the actual WebP images hosted in the exchange repo
+        // 2. Build the HashMap from cache if available
         let base_image_url = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-exchange/main/public/images/cards-by-set";
-
-        for mut card in official_cards {
-            // Build the perfect image URL: .../cards-by-set/A1/1.webp
-            card.full_image_url = format!("{}/{}/{}.webp", base_image_url, card.set, card.number);
+        
+        let build_db = |cards: Vec<OfficialCard>| -> HashMap<String, OfficialCard> {
+            let mut api_db: HashMap<String, OfficialCard> = HashMap::new();
+            for mut card in cards {
+                card.full_image_url = format!("{}/{}/{}.webp", base_image_url, card.set, card.number);
+                card.generated_id = format!("{}-{}", card.set, card.number);
+                api_db.insert(card.generated_id.clone(), card);
+            }
+            api_db
+        };
+        
+        if let Some(cards) = cached {
+            // Return cached data immediately, then refresh in background
+            let db = build_db(cards);
             
-            // Create a universal ID (e.g., "A1-1")
-            card.generated_id = format!("{}-{}", card.set, card.number);
+            // Background refresh: fetch latest and update cache silently
+            spawn(async move {
+                let url = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/cards.json";
+                if let Ok(response) = reqwest::get(url).await {
+                    if let Ok(fresh_cards) = response.json::<Vec<OfficialCard>>().await {
+                        let _ = LocalStorage::set(cache_key, &fresh_cards);
+                    }
+                }
+            });
             
-            api_db.insert(card.generated_id.clone(), card);
+            Some(db)
+        } else {
+            // First ever load: must fetch from network
+            let url = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/cards.json";
+            let response = reqwest::get(url).await.ok()?;
+            let official_cards = response.json::<Vec<OfficialCard>>().await.ok()?;
+            
+            // Cache for next time
+            let _ = LocalStorage::set(cache_key, &official_cards);
+            
+            Some(build_db(official_cards))
         }
-        Some(api_db)
     });
 
     // =========================================================================
@@ -259,6 +284,7 @@ fn App() -> Element {
                             FilterButton { show_filter_menu }
                             AccountButton { show_account_modal }
                             AddCardButton { show_add_modal }
+                            TradeButton { show_trade_modal }
                         }
                     }
                 }
@@ -277,7 +303,7 @@ fn App() -> Element {
         LoginModal { show_login_modal, user_email, user_password, auth_token, sync_status, collection }
 
         CardDetailModal { selected_card_id, collection, image_db, toast_message }
-
+        TradeModal { show_trade_modal, collection, image_db, toast_message }
         Toast { toast_message }
     }
 

@@ -18,14 +18,13 @@ HOW TO USE?
 -- TODO
 - [x] fix rarity assignment
 - [x] add auto database resync
-- [ ] auto save
-- [ ] add pack logos
+- [x] auto save
 - [ ] make add card ui better
 - [ ] add trade option
-- [ ] make UI better
 - [ ] Add filters
+- [ ] make UI better
+- [ ] add pack logos
 - [ ] make the theme better
-- [ ] make the account manager better
 
 good site to take inspo : https://ptcgp.raenonx.cc
 https://pocketcards.net/database

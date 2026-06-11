@@ -88,6 +88,61 @@ pub struct AddCardModalProps {
 pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
 
+    // Local raw input for instant typing feedback
+    let mut raw_add_input = use_signal(|| String::new());
+    let mut add_debounce_version = use_signal(|| 0u64);
+
+    // Progressive image URL — lives outside the conditional so hooks are called unconditionally
+    let mut display_url = use_signal(|| String::new());
+
+    // Debounce the add-card search input (150ms)
+    use_effect(move || {
+        let version = *add_debounce_version.read();
+        let value = raw_add_input.read().clone();
+
+        spawn(async move {
+            gloo_timers::future::sleep(std::time::Duration::from_millis(150)).await;
+            if *add_debounce_version.peek() == version {
+                props.add_search_query.set(value);
+            }
+        });
+    });
+
+    // Progressive image loader: reacts to card selection changes
+    use_effect(move || {
+        let card_opt = selected_card_to_add.read().clone();
+        if let Some(card) = card_opt {
+            // Instantly show the cached thumbnail
+            let thumb = format!("https://wsrv.nl/?url={}&w=200&output=webp", card.full_image_url.replace("https://", ""));
+            let hires = format!("https://wsrv.nl/?url={}&w=400&output=webp", card.full_image_url.replace("https://", ""));
+            display_url.set(thumb);
+
+            // Upgrade to hi-res in background
+            spawn(async move {
+                if reqwest::get(&hires).await.is_ok() {
+                    display_url.set(hires);
+                }
+            });
+        }
+    });
+
+    // Memoized filtered results from the API database
+    let filtered_api_cards = use_memo(move || {
+        let query = props.add_search_query.read().to_lowercase();
+        if query.is_empty() {
+            return Vec::new();
+        }
+        if let Some(Some(api_map)) = &*props.image_db.read() {
+            api_map.values()
+                .filter(|c| c.name.to_lowercase().contains(&query))
+                .take(30)
+                .cloned()
+                .collect::<Vec<OfficialCard>>()
+        } else {
+            Vec::new()
+        }
+    });
+
     rsx! {
         if *props.show_add_modal.read() {
             div { class: "fixed inset-0 bg-slate-950/90 flex flex-col z-50 animate-fade-in-down",
@@ -103,8 +158,12 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                     input { 
                         class: "bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-teal-500 outline-none w-full", 
                         placeholder: "Search card name...", 
-                        value: "{props.add_search_query}", 
-                        oninput: move |evt| { props.add_search_query.set(evt.value()); selected_card_to_add.set(None); } 
+                        value: "{raw_add_input}", 
+                        oninput: move |evt| {
+                            raw_add_input.set(evt.value());
+                            *add_debounce_version.write() += 1;
+                            selected_card_to_add.set(None);
+                        }
                     }
                 }
 
@@ -114,29 +173,41 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                             let packs_text = if card.packs.is_empty() { "Promo".to_string() } else { card.packs.join(", ") };
                             
                             rsx! {
-                                div { class: "flex flex-col items-center justify-center h-full max-w-sm mx-auto gap-6",
-                                    img { src: "{card.full_image_url}", class: "w-48 rounded-2xl border border-slate-700 shadow-2xl" }
+                                // Side-by-side layout: card on left, actions on right
+                                div { class: "flex flex-col md:flex-row items-center md:items-start justify-center gap-6 md:gap-10 h-full max-w-2xl mx-auto py-4",
                                     
-                                    div { class: "flex flex-col items-center gap-1 mt-2",
-                                        RarityDisplay { rarity_code: card.rarity.clone() }
-                                        span { class: "text-slate-400 text-sm font-medium", "{packs_text}" }
+                                    // LEFT: Card Image + Metadata
+                                    div { class: "flex flex-col items-center gap-3 flex-shrink-0",
+                                        img { 
+                                            src: "{display_url}", 
+                                            class: "w-44 md:w-56 rounded-2xl border border-slate-700 shadow-2xl transition-all" 
+                                        }
+                                        
+                                        // Card info below image
+                                        div { class: "flex flex-col items-center gap-1.5 mt-1",
+                                            h3 { class: "text-lg font-bold text-white text-center", "{card.name}" }
+                                            RarityDisplay { rarity_code: card.rarity.clone() }
+                                            span { class: "text-slate-500 text-xs font-medium tracking-wide", "{card.set} • {packs_text}" }
+                                        }
                                     }
 
-                                    h3 { class: "text-xl font-bold text-white", "Add {card.name}?" }
-                                    
-                                    div { class: "w-full flex flex-col gap-2",
+                                    // RIGHT: Account Selection
+                                    div { class: "flex flex-col gap-3 w-full md:w-64 md:pt-2",
+                                        span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1", "Add to Account" }
+                                        
                                         for acc in props.collection.read().accounts.iter() {
                                             {
                                                 let c = card.clone(); 
                                                 let target_acc = acc.name.clone();
+                                                let is_main = acc.main;
                                                 rsx! {
                                                     button {
-                                                        class: "w-full py-3.5 px-4 bg-slate-800 hover:bg-teal-900/30 border border-slate-700 rounded-xl text-white font-medium flex justify-between items-center transition-all",
+                                                        class: "w-full py-3.5 px-4 bg-slate-800/80 hover:bg-teal-500/15 border border-slate-700/60 hover:border-teal-500/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group",
                                                         onclick: move |_| {
                                                             let card_to_add = Card { 
                                                                 id: c.generated_id.clone(), 
                                                                 name: c.name.clone(), 
-                                                                rarity: c.rarity.clone(), // NOW SAVING THE RAW CODE
+                                                                rarity: c.rarity.clone(),
                                                                 card_type: c.card_type.clone(), 
                                                                 pack: if c.packs.is_empty() { "Promo".to_string() } else { c.packs.join(", ") }
                                                             };
@@ -150,46 +221,59 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                             });
                                                             selected_card_to_add.set(None);
                                                         },
-                                                        span { "Add to {acc.name}" }
+                                                        // Account icon
+                                                        div { class: "w-9 h-9 rounded-lg bg-slate-700/60 group-hover:bg-teal-500/20 flex items-center justify-center transition-colors flex-shrink-0",
+                                                            span { class: "text-sm", if is_main { "⭐" } else { "👤" } }
+                                                        }
+                                                        div { class: "flex flex-col items-start",
+                                                            span { class: "text-sm font-semibold group-hover:text-teal-400 transition-colors", "{acc.name}" }
+                                                            if is_main {
+                                                                span { class: "text-[10px] text-slate-500", "Main Account" }
+                                                            }
+                                                        }
+                                                        // Arrow icon on the right
+                                                        svg { class: "w-4 h-4 text-slate-600 group-hover:text-teal-400 ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
+                                        
+                                        button { 
+                                            class: "text-slate-500 hover:text-white text-sm mt-2 py-2 transition-colors", 
+                                            onclick: move |_| selected_card_to_add.set(None), 
+                                            "← Back to results" 
+                                        }
                                     }
-                                    button { class: "text-slate-500 hover:text-white mt-4", onclick: move |_| selected_card_to_add.set(None), "← Back" }
                                 }
                             }
                         }
                     } else {
                         div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3",
-                            if let Some(Some(api_map)) = &*props.image_db.read() {
+                            for api_card in filtered_api_cards() {
                                 {
-                                    let query = props.add_search_query.read().to_lowercase();
-                                    
-                                    rsx! {
-                                        for (_, api_card) in api_map.iter().filter(|(_, c)| {
-                                            !query.is_empty() && c.name.to_lowercase().contains(&query)
-                                        }).take(30) {
-                                            {
-                                                let c = api_card.clone();
-                                                let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", api_card.full_image_url.replace("https://", ""));
-                                                let packs_display = if api_card.packs.is_empty() { "Promo".to_string() } else { api_card.packs.join(", ") };
+                                    let c = api_card.clone();
+                                    let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", api_card.full_image_url.replace("https://", ""));
+                                    let packs_display = if api_card.packs.is_empty() { "Promo".to_string() } else { api_card.packs.join(", ") };
 
-                                                rsx! {
-                                                    div { 
-                                                        class: "bg-slate-800 border border-slate-700 rounded-xl p-2 cursor-pointer hover:border-teal-500 transition-all flex flex-col",
-                                                        onclick: move |_| selected_card_to_add.set(Some(c.clone())),
-                                                        img { src: "{optimized_url}", class: "w-full rounded-lg mb-2 shadow-sm border border-slate-700 aspect-[63/88] object-cover" }
-                                                        h2 { class: "text-[11px] font-bold text-center text-slate-200 truncate", "{api_card.name}" }
-                                                        
-                                                        div { class: "mt-1 mb-1",
-                                                            RarityDisplay { rarity_code: api_card.rarity.clone() }
-                                                        }
-                                                        
-                                                        span { class: "text-[9px] text-center text-slate-500", "{api_card.set} • {packs_display}" }
-                                                    }
-                                                }
+                                    rsx! {
+                                        div { 
+                                            class: "bg-slate-800 border border-slate-700 rounded-xl p-2 cursor-pointer hover:border-teal-500 transition-all flex flex-col",
+                                            onclick: move |_| selected_card_to_add.set(Some(c.clone())),
+                                            img { 
+                                                src: "{optimized_url}", 
+                                                loading: "lazy", decoding: "async",
+                                                width: "200", height: "280",
+                                                class: "w-full rounded-lg mb-2 shadow-sm border border-slate-700 aspect-[63/88] object-cover" 
                                             }
+                                            h2 { class: "text-[11px] font-bold text-center text-slate-200 truncate", "{api_card.name}" }
+                                            
+                                            div { class: "mt-1 mb-1",
+                                                RarityDisplay { rarity_code: api_card.rarity.clone() }
+                                            }
+                                            
+                                            span { class: "text-[9px] text-center text-slate-500", "{api_card.set} • {packs_display}" }
                                         }
                                     }
                                 }

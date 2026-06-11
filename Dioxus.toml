@@ -24,3 +24,7 @@ script = []
 # Javascript code file
 # serve: [dev-server] only
 script = []
+
+# Post-process the WASM binary for size optimization
+[web.wasm_opt]
+level = "z"

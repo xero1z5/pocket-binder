@@ -14,47 +14,73 @@ pub struct CardGridProps {
 
 #[component]
 pub fn CardGrid(mut props: CardGridProps) -> Element {
-    let query = props.search_query.read().to_lowercase();
-    let selected_acc = props.selected_account_filter.read().clone();
+    // Memoized filtering: only recalculates when collection, search_query, or account filter change
+    let visible_entries = use_memo(move || {
+        let query = props.search_query.read().to_lowercase();
+        let selected_acc = props.selected_account_filter.read().clone();
 
-    // We MUST clone and collect here so the Dioxus onclick closures legally own the data.
-    // Because 'query' is evaluated above, this iteration is now extremely fast!
-    let visible_entries: Vec<Inventory> = props.collection.read().inventory.iter().filter(|e| {
-        let matches_search = query.is_empty() || e.card.name.to_lowercase().contains(&query);
-        let matches_account = selected_acc == "All" || e.owners.contains_key(&selected_acc);
-        matches_search && matches_account
-    }).cloned().collect();
+        props.collection.read().inventory.iter().filter(|e| {
+            let matches_search = query.is_empty() || e.card.name.to_lowercase().contains(&query);
+            let matches_account = selected_acc == "All" || e.owners.contains_key(&selected_acc);
+            matches_search && matches_account
+        }).cloned().collect::<Vec<Inventory>>()
+    });
 
     rsx! {
         div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-4 pb-24",
-            for entry in visible_entries {
-                div { 
-                    class: "bg-slate-800/80 border border-slate-700/50 rounded-xl p-2 flex flex-col items-center shadow-lg transition-transform hover:scale-105 cursor-pointer active:scale-95 group",
-                    onclick: move |_| props.selected_card_id.set(Some(entry.card.id.clone())),
-                    {
-                        let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
-                            api_map.get(&entry.card.id).map(|c| c.full_image_url.clone())
-                        } else { None };
+            for entry in visible_entries() {
+                {
+                    // Clone the ID up front so both closures can own their own copy
+                    let card_id_for_click = entry.card.id.clone();
+                    let card_id_for_hover = entry.card.id.clone();
 
-                        if let Some(url) = image_url {
-                            let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", url.replace("https://", ""));
-                            rsx! { 
-                                img { 
-                                    src: "{optimized_url}", 
-                                    alt: "{entry.card.name}", 
-                                    loading: "lazy", decoding: "async",
-                                    class: "w-full rounded-lg mb-2 shadow-md border border-slate-600/50 aspect-[63/88] object-cover group-hover:border-teal-400/50 transition-colors"
-                                } 
+                    let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
+                        api_map.get(&entry.card.id).map(|c| c.full_image_url.clone())
+                    } else { None };
+
+                    let card_name = entry.card.name.clone();
+                    let rarity_code = entry.card.rarity.clone();
+
+                    rsx! {
+                        div { 
+                            class: "bg-slate-800/80 border border-slate-700/50 rounded-xl p-2 flex flex-col items-center shadow-lg transition-transform hover:scale-105 cursor-pointer active:scale-95 group",
+                            onclick: move |_| props.selected_card_id.set(Some(card_id_for_click.clone())),
+                            // Prefetch the larger detail image on hover so it's cached when clicked
+                            onmouseenter: move |_| {
+                                let cid = card_id_for_hover.clone();
+                                if let Some(Some(api_map)) = &*props.image_db.read() {
+                                    if let Some(api_card) = api_map.get(&cid) {
+                                        let detail_url = format!("https://wsrv.nl/?url={}&w=400&output=webp", api_card.full_image_url.replace("https://", ""));
+                                        spawn(async move {
+                                            let _ = reqwest::get(&detail_url).await;
+                                        });
+                                    }
+                                }
+                            },
+
+                            if let Some(url) = image_url {
+                                {
+                                    let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", url.replace("https://", ""));
+                                    rsx! {
+                                        img { 
+                                            src: "{optimized_url}", 
+                                            alt: "{card_name}", 
+                                            loading: "lazy", decoding: "async",
+                                            width: "200", height: "280",
+                                            class: "w-full rounded-lg mb-2 shadow-md border border-slate-600/50 aspect-[63/88] object-cover group-hover:border-teal-400/50 transition-colors"
+                                        } 
+                                    }
+                                }
+                            } else {
+                                div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-slate-600 animate-pulse" }
                             }
-                        } else {
-                            rsx! { div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-slate-600 animate-pulse" } }
+                            
+                            h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-teal-400 transition-colors tracking-tight", "{card_name}" }
+                            
+                            div { class: "mt-1",
+                                RarityDisplay { rarity_code }
+                            }
                         }
-                    }
-                    
-                    h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-teal-400 transition-colors tracking-tight", "{entry.card.name}" }
-                    
-                    div { class: "mt-1",
-                        RarityDisplay { rarity_code: entry.card.rarity.clone() }
                     }
                 }
             }

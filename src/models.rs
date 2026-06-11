@@ -104,9 +104,22 @@ impl CardCollection {
         }
     }
 
-    pub fn trade_card(&mut self, card: &Card, from_account: &str, to_account: &str, quantity: i32) -> Result<(), String> {
-        self.remove_card(card,from_account, quantity)?;
-        self.add_card(card.clone(), to_account, quantity);
+    pub fn trade_card(&mut self, card_giving: &Card, card_taking: &Card, my_acc: &str, partner_acc: &str) -> Result<(), String> {
+        if !self.inventory.iter().any(|e| &e.card == card_giving && e.owners.get(my_acc).copied().unwrap_or(0) > 0) {
+            return Err(format!("{} does not own {}!", my_acc, card_giving.name));
+        }
+
+        if partner_acc != "Other" {
+            if !self.inventory.iter().any(|e| &e.card == card_taking && e.owners.get(partner_acc).copied().unwrap_or(0) > 0) {
+                return Err(format!("{} does not own {}!", partner_acc, card_taking.name));
+            }
+            
+            self.remove_card(card_taking, partner_acc, 1)?;
+            self.add_card(card_giving.clone(), partner_acc, 1);
+        }
+
+        self.remove_card(card_giving, my_acc, 1)?;
+        self.add_card(card_taking.clone(), my_acc, 1);
 
         Ok(())
     }

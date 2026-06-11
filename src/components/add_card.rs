@@ -38,7 +38,7 @@ pub fn RarityDisplay(props: RarityDisplayProps) -> Element {
 
     if count == 0 || image_asset.is_none() {
         return rsx! {
-            span { class: "text-[10px] font-bold text-teal-400", "{label}" }
+            span { class: "text-[10px] font-bold text-indigo-400", "{label}" }
         };
     }
 
@@ -46,7 +46,7 @@ pub fn RarityDisplay(props: RarityDisplayProps) -> Element {
         div { class: "flex items-center justify-center gap-0.5", title: "{label}",
             for _ in 0..count {
                 img { 
-                    src: "{image_asset.clone().unwrap()}",
+                    src: image_asset.clone().unwrap(),
                     class: "h-3.5 w-auto object-contain drop-shadow-md",
                     alt: "{label}"
                 }
@@ -65,9 +65,9 @@ pub struct AddCardButtonProps {
 pub fn AddCardButton(mut props: AddCardButtonProps) -> Element {
     rsx! {
         button {
-            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/80 border border-slate-700/80 rounded-xl md:rounded-2xl hover:bg-slate-700 hover:border-teal-500/50 transition-all shadow-lg backdrop-blur-sm",
+            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-indigo-500/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-indigo-400/40 transition-all shadow-lg backdrop-blur-sm",
             onclick: move |_| props.show_add_modal.set(true),
-            svg { class: "w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-teal-400 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+            svg { class: "w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-indigo-400 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                 path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
             }
         }
@@ -145,10 +145,10 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
     rsx! {
         if *props.show_add_modal.read() {
-            div { class: "fixed inset-0 bg-slate-950/90 flex flex-col z-50 animate-fade-in-down",
-                div { class: "bg-slate-900 border-b border-slate-800 p-4 pt-6 flex flex-col gap-4 shadow-xl z-10",
+            div { class: "fixed inset-0 bg-slate-950/90 flex flex-col z-50 animate-fade-in-down backdrop-blur-sm",
+                div { class: "bg-slate-900/80 border-b border-indigo-500/20 p-4 pt-6 flex flex-col gap-4 shadow-xl z-10 backdrop-blur-xl",
                     div { class: "flex justify-between items-center",
-                        h2 { class: "text-xl font-bold text-white tracking-tight", "Add Cards" }
+                        h2 { class: "text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300", "Add Cards" }
                         button { 
                             class: "text-slate-500 hover:text-white p-2 transition-colors", 
                             onclick: move |_| { props.show_add_modal.set(false); selected_card_to_add.set(None); }, 
@@ -156,7 +156,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         }
                     }
                     input { 
-                        class: "bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-teal-500 outline-none w-full", 
+                        class: "bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none w-full transition-colors shadow-inner", 
                         placeholder: "Search card name...", 
                         value: "{raw_add_input}", 
                         oninput: move |evt| {
@@ -180,7 +180,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     div { class: "flex flex-col items-center gap-3 flex-shrink-0",
                                         img { 
                                             src: "{display_url}", 
-                                            class: "w-44 md:w-56 rounded-2xl border border-slate-700 shadow-2xl transition-all" 
+                                            class: "w-44 md:w-56 rounded-2xl border border-indigo-500/20 shadow-2xl transition-all" 
                                         }
                                         
                                         // Card info below image
@@ -202,7 +202,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                 let is_main = acc.main;
                                                 rsx! {
                                                     button {
-                                                        class: "w-full py-3.5 px-4 bg-slate-800/80 hover:bg-teal-500/15 border border-slate-700/60 hover:border-teal-500/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group",
+                                                        class: "w-full py-3.5 px-4 bg-slate-800/60 hover:bg-indigo-500/15 border border-indigo-500/15 hover:border-indigo-500/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group backdrop-blur-sm",
                                                         onclick: move |_| {
                                                             let card_to_add = Card { 
                                                                 id: c.generated_id.clone(), 
@@ -222,17 +222,17 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                             selected_card_to_add.set(None);
                                                         },
                                                         // Account icon
-                                                        div { class: "w-9 h-9 rounded-lg bg-slate-700/60 group-hover:bg-teal-500/20 flex items-center justify-center transition-colors flex-shrink-0",
+                                                        div { class: "w-9 h-9 rounded-lg bg-slate-700/60 group-hover:bg-indigo-500/20 flex items-center justify-center transition-colors flex-shrink-0",
                                                             span { class: "text-sm", if is_main { "⭐" } else { "👤" } }
                                                         }
                                                         div { class: "flex flex-col items-start",
-                                                            span { class: "text-sm font-semibold group-hover:text-teal-400 transition-colors", "{acc.name}" }
+                                                            span { class: "text-sm font-semibold group-hover:text-indigo-400 transition-colors", "{acc.name}" }
                                                             if is_main {
                                                                 span { class: "text-[10px] text-slate-500", "Main Account" }
                                                             }
                                                         }
                                                         // Arrow icon on the right
-                                                        svg { class: "w-4 h-4 text-slate-600 group-hover:text-teal-400 ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                                        svg { class: "w-4 h-4 text-slate-600 group-hover:text-indigo-400 ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                                             path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
                                                         }
                                                     }
@@ -259,13 +259,13 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
                                     rsx! {
                                         div { 
-                                            class: "bg-slate-800 border border-slate-700 rounded-xl p-2 cursor-pointer hover:border-teal-500 transition-all flex flex-col",
+                                            class: "bg-slate-800/60 border border-indigo-500/15 rounded-xl p-2 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all flex flex-col backdrop-blur-sm",
                                             onclick: move |_| selected_card_to_add.set(Some(c.clone())),
                                             img { 
                                                 src: "{optimized_url}", 
                                                 loading: "lazy", decoding: "async",
                                                 width: "200", height: "280",
-                                                class: "w-full rounded-lg mb-2 shadow-sm border border-slate-700 aspect-[63/88] object-cover" 
+                                                class: "w-full rounded-lg mb-2 shadow-sm border border-indigo-500/10 aspect-[63/88] object-cover" 
                                             }
                                             h2 { class: "text-[11px] font-bold text-center text-slate-200 truncate", "{api_card.name}" }
                                             

@@ -1,8 +1,12 @@
+/* ========================================
+   POCKET BINDER — Futuristic Teal Theme
+   ======================================== */
+
 /* App-wide styling */
 body {
-    background-color: #0f1116;
+    background-color: #0a0f1a;
     color: #ffffff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 20px;
 }
 
@@ -42,5 +46,48 @@ body {
     max-width: 1200px;
 }
 
+/* ========================================
+   ANIMATIONS
+   ======================================== */
 
+/* Background grid pattern */
+.bg-cyber-grid {
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+    animation: pan-grid 20s linear infinite;
+}
 
+@keyframes pan-grid {
+    0% { background-position: 0 0; }
+    100% { background-position: 40px 40px; }
+}
+
+/* Gradient text animation */
+.animate-gradient-x {
+    background-size: 200% auto;
+    animation: gradient-x 4s linear infinite;
+}
+
+@keyframes gradient-x {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Modal fade-in class */
+.animate-fade-in-down {
+    animation: fade-in-down 0.25s ease-out;
+}
+
+/* Shimmer loading skeleton */
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(20, 184, 166, 0.03) 25%,
+        rgba(20, 184, 166, 0.08) 50%,
+        rgba(20, 184, 166, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+}

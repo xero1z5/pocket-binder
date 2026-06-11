@@ -207,7 +207,7 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
 
-        div { class: "bg-gray-900 text-white min-h-screen p-6 font-sans relative",
+        div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen p-6 font-sans relative",
             
             // --- TOP SECTIONS ---
             Header { auth_token, user_email, show_login_modal }
@@ -234,7 +234,7 @@ fn App() -> Element {
         
                             // THE NEW "HEAL DATABASE" BUTTON
                             button {
-                                class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-purple-600/20 border border-purple-500/50 rounded-xl md:rounded-2xl hover:bg-purple-500 hover:border-purple-400 transition-all shadow-lg",
+                                class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-indigo-600/15 border border-indigo-500/30 rounded-xl md:rounded-2xl hover:bg-indigo-500 hover:border-indigo-400 transition-all shadow-lg backdrop-blur-sm",
                                 title: "Fix Broken Legacy Cards",
                                 onclick: move |_| {
                                     if let Some(Some(api_map)) = &*image_db.read() {

@@ -12,10 +12,10 @@ pub struct TradeButtonProps {
 pub fn TradeButton(mut props: TradeButtonProps) -> Element {
     rsx! {
         button {
-            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-indigo-900/40 border border-indigo-700/50 rounded-xl md:rounded-2xl hover:bg-indigo-600 hover:border-indigo-400 transition-all shadow-lg backdrop-blur-sm",
+            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-indigo-500/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-indigo-400/40 transition-all shadow-lg backdrop-blur-sm",
             onclick: move |_| props.show_trade_modal.set(true),
             title: "Trade Cards",
-            svg { class: "w-5 h-5 md:w-6 md:h-6 text-indigo-400 group-hover:text-white transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+            svg { class: "w-5 h-5 md:w-6 md:h-6 text-indigo-400 group-hover:text-purple-300 group-hover:scale-110 transition-all duration-200", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                 path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
             }
         }
@@ -52,8 +52,8 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
         if *props.show_trade_modal.read() {
             div { class: "fixed inset-0 bg-slate-950/95 flex flex-col z-50 animate-fade-in-down",
                 
-                div { class: "bg-slate-900 border-b border-slate-800 p-4 pt-6 flex justify-between items-center shadow-xl z-10",
-                    h2 { class: "text-xl font-bold text-white tracking-tight flex items-center gap-2", 
+                div { class: "bg-slate-900/80 border-b border-indigo-500/20 p-4 pt-6 flex justify-between items-center shadow-xl z-10 backdrop-blur-xl",
+                    h2 { class: "text-xl font-bold tracking-tight flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300", 
                         "Trade Room" 
                     }
                     button { 
@@ -75,17 +75,17 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                             
                             div { class: "flex flex-col md:flex-row gap-6 md:gap-12 items-center w-full",
                                 
-                                div { class: "flex-1 flex flex-col bg-slate-800/50 p-4 md:p-6 rounded-2xl border border-slate-700 w-full",
-                                    h3 { class: "text-sm text-slate-400 font-bold uppercase tracking-widest mb-4", "Taking From" }
+                                div { class: "flex-1 flex flex-col bg-slate-800/40 p-4 md:p-6 rounded-2xl border border-indigo-500/15 backdrop-blur w-full",
+                                    h3 { class: "text-sm text-indigo-400 font-bold uppercase tracking-widest mb-4", "Taking From" }
                                     
                                     select {
-                                        class: "w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none mb-6 cursor-pointer",
+                                        class: "w-full bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-3 text-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none mb-6 cursor-pointer transition-colors",
                                         value: "{partner_acc}",
                                         onchange: move |evt| {
                                             partner_acc.set(evt.value());
                                             card_taking.set(None); 
                                         },
-                                        option { value: "Other", "Other (External Trade)" }
+                                        option { value: "Other", "Other" }
                                         for acc in props.collection.read().accounts.iter() {
                                             option { value: "{acc.name}", "Internal: {acc.name}" }
                                         }
@@ -103,17 +103,17 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                     }
                                 }
 
-                                div { class: "flex-shrink-0 bg-slate-800 border border-slate-700 p-4 rounded-full shadow-lg z-10 -my-4 md:my-0 md:-mx-8",
+                                div { class: "flex-shrink-0 bg-slate-800/80 border border-indigo-500/30 p-4 rounded-full shadow-lg z-10 -my-4 md:my-0 md:-mx-8",
                                     svg { class: "w-8 h-8 text-indigo-400", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
                                     }
                                 }
 
-                                div { class: "flex-1 flex flex-col bg-slate-800/50 p-4 md:p-6 rounded-2xl border border-slate-700 w-full",
-                                    h3 { class: "text-sm text-slate-400 font-bold uppercase tracking-widest mb-4", "Giving From" }
+                                div { class: "flex-1 flex flex-col bg-slate-800/40 p-4 md:p-6 rounded-2xl border border-indigo-500/15 backdrop-blur w-full",
+                                    h3 { class: "text-sm text-indigo-400 font-bold uppercase tracking-widest mb-4", "Giving From" }
                                     
                                     select {
-                                        class: "w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none mb-6 cursor-pointer",
+                                        class: "w-full bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-3 text-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none mb-6 cursor-pointer transition-colors",
                                         value: "{my_acc}",
                                         onchange: move |evt| {
                                             my_acc.set(evt.value());
@@ -151,14 +151,14 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
 
                                     rsx! {
                                         if is_same_acc {
-                                            div { class: "text-red-400 text-sm font-medium bg-red-900/20 px-4 py-2 rounded-lg", "⚠️ Accounts must be different." }
+                                            div { class: "text-rose-400 text-sm font-medium bg-rose-900/20 px-4 py-2 rounded-lg border border-rose-500/20", "⚠️ Accounts must be different." }
                                         } else if rarity_mismatch {
-                                            div { class: "text-orange-400 text-sm font-medium bg-orange-900/20 px-4 py-2 rounded-lg", "⚠️ Rarities must match exactly." }
+                                            div { class: "text-amber-400 text-sm font-medium bg-amber-900/20 px-4 py-2 rounded-lg border border-amber-500/20", "⚠️ Rarities must match exactly." }
                                         }
 
                                         button {
-                                            class: "w-full md:w-auto px-12 py-4 rounded-xl font-bold text-lg transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed",
-                                            class: if !has_both || is_same_acc || rarity_mismatch { "bg-slate-700 text-slate-400" } else { "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/20" },
+                                            class: "w-full md:w-auto px-12 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                                            class: if !has_both || is_same_acc || rarity_mismatch { "bg-slate-700 text-slate-400 shadow-lg" } else { "bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white shadow-[0_0_25px_rgba(99,102,241,0.3)] hover:shadow-[0_0_35px_rgba(99,102,241,0.5)]" },
                                             disabled: !has_both || is_same_acc || rarity_mismatch,
                                             onclick: move |_| {
                                                 let g_opt = card_giving.read().clone();
@@ -195,9 +195,9 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                     } else {
                         div { class: "w-full max-w-5xl flex flex-col gap-4",
                             div { class: "flex items-center gap-4 mb-4",
-                                button { class: "bg-slate-800 p-2 rounded-lg text-slate-400 hover:text-white", onclick: move |_| view_state.set("main".to_string()), "← Back" }
+                                button { class: "bg-slate-800/80 border border-indigo-500/20 p-2 rounded-lg text-slate-400 hover:text-white hover:border-indigo-400/40 transition-colors", onclick: move |_| view_state.set("main".to_string()), "← Back" }
                                 input {
-                                    class: "flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none",
+                                    class: "flex-1 bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-3 text-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors",
                                     placeholder: "Search to pick card...",
                                     value: "{search_query}",
                                     oninput: move |evt| search_query.set(evt.value())
@@ -276,9 +276,9 @@ fn TradeCardSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialC
             class: "w-full max-w-[200px] mx-auto flex flex-col items-center cursor-pointer group",
             onclick: move |e| on_click.call(e),
             if let Some(url) = optimized_url {
-                img { src: "{url}", class: "w-full rounded-xl shadow-xl border-2 border-indigo-500/50 group-hover:border-indigo-400 transition-colors aspect-[63/88] object-cover mb-3" }
+                img { src: "{url}", class: "w-full rounded-xl shadow-xl border-2 border-indigo-500/40 group-hover:border-purple-400 transition-colors aspect-[63/88] object-cover mb-3" }
             } else {
-                div { class: "w-full aspect-[63/88] bg-slate-800 rounded-xl mb-3 flex items-center justify-center border border-slate-700", "🃏" }
+                div { class: "w-full aspect-[63/88] bg-slate-800 rounded-xl mb-3 flex items-center justify-center border border-indigo-500/20", "🃏" }
             }
             h4 { class: "text-white font-bold text-center truncate w-full px-2", "{card.name}" }
             div { class: "mt-1", RarityDisplay { rarity_code: card.rarity } }
@@ -294,12 +294,12 @@ fn PickerSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard
 
     rsx! {
         div { 
-            class: "bg-slate-800 border border-slate-700 rounded-xl p-2 cursor-pointer hover:border-indigo-500 transition-all flex flex-col items-center",
+            class: "bg-slate-800/60 border border-indigo-500/15 rounded-xl p-2 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all flex flex-col items-center backdrop-blur-sm",
             onclick: move |e| onclick.call(e),
             if let Some(url) = optimized_url {
                 img { src: "{url}", class: "w-full rounded-lg mb-2 shadow-md aspect-[63/88] object-cover" }
             } else {
-                div { class: "w-full aspect-[63/88] bg-slate-700 rounded-lg mb-2 border border-slate-600 animate-pulse" }
+                div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-indigo-500/10 animate-pulse" }
             }
             h2 { class: "text-[11px] font-bold text-center text-slate-200 truncate w-full px-1", "{card.name}" }
             div { class: "mt-1 mb-1", RarityDisplay { rarity_code: card.rarity } }

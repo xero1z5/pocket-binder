@@ -43,7 +43,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
 
                     rsx! {
                         div { 
-                            class: "bg-slate-800/80 border border-slate-700/50 rounded-xl p-2 flex flex-col items-center shadow-lg transition-transform hover:scale-105 cursor-pointer active:scale-95 group",
+                            class: "bg-slate-800/40 border border-indigo-500/10 rounded-xl p-2 flex flex-col items-center shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_10px_20px_rgba(99,102,241,0.15)] cursor-pointer active:scale-95 group backdrop-blur-sm",
                             onclick: move |_| props.selected_card_id.set(Some(card_id_for_click.clone())),
                             // Prefetch the larger detail image on hover so it's cached when clicked
                             onmouseenter: move |_| {
@@ -67,15 +67,15 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                             alt: "{card_name}", 
                                             loading: "lazy", decoding: "async",
                                             width: "200", height: "280",
-                                            class: "w-full rounded-lg mb-2 shadow-md border border-slate-600/50 aspect-[63/88] object-cover group-hover:border-teal-400/50 transition-colors"
+                                            class: "w-full rounded-lg mb-2 shadow-md border border-indigo-500/10 aspect-[63/88] object-cover group-hover:border-indigo-400/50 transition-colors"
                                         } 
                                     }
                                 }
                             } else {
-                                div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-slate-600 animate-pulse" }
+                                div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-indigo-500/10 animate-pulse" }
                             }
                             
-                            h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-teal-400 transition-colors tracking-tight", "{card_name}" }
+                            h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-indigo-400 transition-colors tracking-tight", "{card_name}" }
                             
                             div { class: "mt-1",
                                 RarityDisplay { rarity_code }

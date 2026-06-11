@@ -23,20 +23,20 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                 if let Some(entry) = entry_opt {
                     // Fetch the optimized image
                     let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
-                        api_map.get(&entry.card.id).map(|c| c.full_image_url.clone()) // FIXED HERE
+                        api_map.get(&entry.card.id).map(|c| c.full_image_url.clone())
                     } else { None };
                     
                     let optimized_url = image_url.map(|url| format!("https://wsrv.nl/?url={}&w=400&output=webp", url.replace("https://", "")));
 
                     rsx! {
-                        div { class: "fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
-                            div { class: "bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-fade-in-down",
+                        div { class: "fixed inset-0 bg-slate-950/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
+                            div { class: "bg-slate-900 border border-indigo-500/20 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-fade-in-down",
                                 
                                 // --- HEADER ---
-                                div { class: "flex justify-between items-center p-4 border-b border-gray-800",
+                                div { class: "flex justify-between items-center p-4 border-b border-indigo-500/15",
                                     h2 { class: "text-xl font-bold text-white truncate pr-4", "{entry.card.name}" }
                                     button { 
-                                        class: "text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-full w-8 h-8 flex items-center justify-center transition-colors active:scale-95",
+                                        class: "text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center transition-colors active:scale-95",
                                         onclick: move |_| props.selected_card_id.set(None),
                                         "✕"
                                     }
@@ -48,9 +48,9 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                     // Left: Image
                                     div { class: "w-full md:w-1/2 flex justify-center",
                                         if let Some(url) = optimized_url {
-                                            img { src: "{url}", width: "400", height: "560", class: "w-48 md:w-full rounded-xl shadow-lg border border-gray-700 aspect-[63/88] object-cover" }
+                                            img { src: "{url}", width: "400", height: "560", class: "w-48 md:w-full rounded-xl shadow-lg border border-indigo-500/20 aspect-[63/88] object-cover" }
                                         } else {
-                                            div { class: "w-48 aspect-[63/88] bg-gray-800 rounded-xl flex items-center justify-center", "🃏" }
+                                            div { class: "w-48 aspect-[63/88] bg-slate-800 rounded-xl flex items-center justify-center border border-indigo-500/15", "🃏" }
                                         }
                                     }
 
@@ -60,22 +60,22 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                         // Metadata
                                         div { class: "grid grid-cols-2 gap-4",
                                             div { class: "flex flex-col gap-1",
-                                                span { class: "text-[10px] text-gray-500 uppercase font-black tracking-widest", "Rarity" }
+                                                span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest", "Rarity" }
                                                 div { class: "mt-1 flex justify-start",
                                                     RarityDisplay { rarity_code: entry.card.rarity.clone() }
                                                 }
                                             }
                                             div { class: "flex flex-col gap-1",
-                                                span { class: "text-[10px] text-gray-500 uppercase font-black tracking-widest", "Pack" }
-                                                span { class: "text-sm text-blue-400 font-bold truncate", "{entry.card.pack}" }
+                                                span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest", "Pack" }
+                                                span { class: "text-sm text-indigo-400 font-bold truncate", "{entry.card.pack}" }
                                             }
                                         }
 
-                                        hr { class: "border-gray-800" }
+                                        hr { class: "border-indigo-500/10" }
 
                                         // Touch-Friendly Owner List
                                         div { class: "flex flex-col gap-2",
-                                            span { class: "text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1", "Owned By" }
+                                            span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1", "Owned By" }
                                             
                                             for (owner, count) in entry.owners.iter() {
                                                 if *count > 0 {
@@ -85,15 +85,15 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                         let c_name = target_card.name.clone();
                                                         
                                                         rsx! {
-                                                            div { class: "flex justify-between items-center bg-gray-800/80 p-2.5 rounded-xl border border-gray-700",
+                                                            div { class: "flex justify-between items-center bg-slate-800/60 p-2.5 rounded-xl border border-indigo-500/15",
                                                                 div { class: "flex items-center gap-2",
                                                                     span { class: "text-sm font-bold text-white", "{owner}" }
-                                                                    span { class: "bg-gray-900 text-gray-300 text-xs px-2 py-0.5 rounded border border-gray-700 font-mono", "x{count}" }
+                                                                    span { class: "bg-slate-900 text-slate-300 text-xs px-2 py-0.5 rounded border border-indigo-500/15 font-mono", "x{count}" }
                                                                 }
                                                                 
                                                                 // Big Touch Target for Removal
                                                                 button {
-                                                                    class: "bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white px-4 py-1.5 rounded-lg text-sm font-bold transition-colors active:scale-95",
+                                                                    class: "bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-4 py-1.5 rounded-lg text-sm font-bold transition-colors active:scale-95",
                                                                     onclick: move |_| {
                                                                         let res = props.collection.write().remove_card(&target_card, &target_owner, 1);
                                                                         if res.is_ok() {

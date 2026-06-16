@@ -27,7 +27,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
     });
 
     rsx! {
-        div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-4 pb-24",
+        div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 sm:gap-2 md:gap-4 pb-24",
             for entry in visible_entries() {
                 {
                     // Clone the ID up front so both closures can own their own copy
@@ -60,13 +60,12 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
 
                             if let Some(url) = image_url {
                                 {
-                                    let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", url.replace("https://", ""));
                                     rsx! {
                                         img { 
-                                            src: "{optimized_url}", 
+                                            src: "{url}", 
                                             alt: "{card_name}", 
                                             loading: "lazy", decoding: "async",
-                                            width: "200", height: "280",
+                                            width: "400", height: "560",
                                             class: "w-full rounded-lg mb-2 shadow-md border border-indigo-500/10 aspect-[63/88] object-cover group-hover:border-indigo-400/50 transition-colors"
                                         } 
                                     }

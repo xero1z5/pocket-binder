@@ -14,7 +14,7 @@ pub struct HeaderProps {
 pub fn Header(mut props: HeaderProps) -> Element {
     rsx! {
         // Use flex-col on mobile, flex-row on desktop (md:)
-        header { class: "flex flex-col md:flex-row justify-between items-center gap-4 mb-6 pt-2 w-full",
+        header { class: "flex flex-col md:flex-row justify-between items-center gap-4 mb-6 pt-2 w-full px-2 md:px-0",
             div { class: "bg-slate-800/60 border border-indigo-500/20 px-6 py-2.5 rounded-2xl shadow-lg w-full md:w-auto text-center backdrop-blur-md relative overflow-hidden",
                 // Glass reflection effect
                 div { class: "absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-50 transform -skew-x-12 pointer-events-none" }

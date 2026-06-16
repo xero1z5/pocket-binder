@@ -92,9 +92,6 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut raw_add_input = use_signal(|| String::new());
     let mut add_debounce_version = use_signal(|| 0u64);
 
-    // Progressive image URL — lives outside the conditional so hooks are called unconditionally
-    let mut display_url = use_signal(|| String::new());
-
     // Debounce the add-card search input (150ms)
     use_effect(move || {
         let version = *add_debounce_version.read();
@@ -107,25 +104,6 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
             }
         });
     });
-
-    // Progressive image loader: reacts to card selection changes
-    use_effect(move || {
-        let card_opt = selected_card_to_add.read().clone();
-        if let Some(card) = card_opt {
-            // Instantly show the cached thumbnail
-            let thumb = format!("https://wsrv.nl/?url={}&w=200&output=webp", card.full_image_url.replace("https://", ""));
-            let hires = format!("https://wsrv.nl/?url={}&w=400&output=webp", card.full_image_url.replace("https://", ""));
-            display_url.set(thumb);
-
-            // Upgrade to hi-res in background
-            spawn(async move {
-                if reqwest::get(&hires).await.is_ok() {
-                    display_url.set(hires);
-                }
-            });
-        }
-    });
-
     // Memoized filtered results from the API database
     let filtered_api_cards = use_memo(move || {
         let query = props.add_search_query.read().to_lowercase();
@@ -178,9 +156,13 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     
                                     // LEFT: Card Image + Metadata
                                     div { class: "flex flex-col items-center gap-3 flex-shrink-0",
-                                        img { 
-                                            src: "{display_url}", 
-                                            class: "w-44 md:w-56 rounded-2xl border border-indigo-500/20 shadow-2xl transition-all" 
+                                        {
+                                            rsx! {
+                                                img { 
+                                                    src: "{card.full_image_url}", 
+                                                    class: "w-44 md:w-56 rounded-2xl border border-indigo-500/20 shadow-2xl transition-all" 
+                                                }
+                                            }
                                         }
                                         
                                         // Card info below image
@@ -250,11 +232,10 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                             }
                         }
                     } else {
-                        div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3",
+                        div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3",
                             for api_card in filtered_api_cards() {
                                 {
                                     let c = api_card.clone();
-                                    let optimized_url = format!("https://wsrv.nl/?url={}&w=200&output=webp", api_card.full_image_url.replace("https://", ""));
                                     let packs_display = if api_card.packs.is_empty() { "Promo".to_string() } else { api_card.packs.join(", ") };
 
                                     rsx! {
@@ -262,9 +243,9 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                             class: "bg-slate-800/60 border border-indigo-500/15 rounded-xl p-2 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all flex flex-col backdrop-blur-sm",
                                             onclick: move |_| selected_card_to_add.set(Some(c.clone())),
                                             img { 
-                                                src: "{optimized_url}", 
+                                                src: "{api_card.full_image_url}", 
                                                 loading: "lazy", decoding: "async",
-                                                width: "200", height: "280",
+                                                width: "400", height: "560",
                                                 class: "w-full rounded-lg mb-2 shadow-sm border border-indigo-500/10 aspect-[63/88] object-cover" 
                                             }
                                             h2 { class: "text-[11px] font-bold text-center text-slate-200 truncate", "{api_card.name}" }

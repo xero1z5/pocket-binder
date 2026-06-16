@@ -6,25 +6,21 @@ HOW TO USE?
 - Add cards for the particular account
 - Sync to cloud to save changes
 
--- FEATURES IN WORK
-
-- auto cloud sync
-- rarity and type filters
-- trades handler
-- quick add
-- profile sync
-
 
 -- TODO
-- [x] fix rarity assignment
-- [x] add auto database resync
-- [x] auto save
-- [ ] make add card ui better
-- [ ] add trade option
-- [ ] Add filters
-- [ ] make UI better
-- [ ] add pack logos
-- [ ] make the theme better
+- Add filters
+- add pack logos
+- Add what cards are missing in the pack
+- fix low res images
+- fix scale on mobile
+- better: old Cards dont go away immediately when something else is searched
+- make hamburger tray so that I can move options there
+    - accounts -> edit account option, copy id option
+    - aggregate based on rarity
+- add sorting behaviour based on rarity
+- STICKY tool bar : search and other options stays even when scrolling
+- ADD all accounts option in trade
+- Hot reload
 
 good site to take inspo : https://ptcgp.raenonx.cc
 https://pocketcards.net/database

@@ -204,7 +204,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                 }
                             }
 
-                            div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3",
+                            div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3",
                                 {
                                     let query = search_query.read().to_lowercase();
                                     let v_state = view_state.read().clone();
@@ -267,16 +267,19 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
 
 #[component]
 fn TradeCardSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard>>>, on_click: EventHandler<MouseEvent>) -> Element {
-    let optimized_url = if let Some(Some(api_map)) = &*image_db.read() {
-        api_map.get(&card.id).map(|c| format!("https://wsrv.nl/?url={}&w=300&output=webp", c.full_image_url.replace("https://", "")))
+    let url = if let Some(Some(api_map)) = &*image_db.read() {
+        api_map.get(&card.id).map(|c| c.full_image_url.clone())
     } else { None };
 
     rsx! {
         div { 
             class: "w-full max-w-[200px] mx-auto flex flex-col items-center cursor-pointer group",
             onclick: move |e| on_click.call(e),
-            if let Some(url) = optimized_url {
-                img { src: "{url}", class: "w-full rounded-xl shadow-xl border-2 border-indigo-500/40 group-hover:border-purple-400 transition-colors aspect-[63/88] object-cover mb-3" }
+            if let Some(img_url) = url {
+                img { 
+                    src: "{img_url}", 
+                    class: "w-full rounded-xl shadow-xl border-2 border-indigo-500/40 group-hover:border-purple-400 transition-colors aspect-[63/88] object-cover mb-3" 
+                }
             } else {
                 div { class: "w-full aspect-[63/88] bg-slate-800 rounded-xl mb-3 flex items-center justify-center border border-indigo-500/20", "🃏" }
             }
@@ -288,16 +291,19 @@ fn TradeCardSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialC
 
 #[component]
 fn PickerSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard>>>, onclick: EventHandler<MouseEvent>) -> Element {
-    let optimized_url = if let Some(Some(api_map)) = &*image_db.read() {
-        api_map.get(&card.id).map(|c| format!("https://wsrv.nl/?url={}&w=200&output=webp", c.full_image_url.replace("https://", "")))
+    let url = if let Some(Some(api_map)) = &*image_db.read() {
+        api_map.get(&card.id).map(|c| c.full_image_url.clone())
     } else { None };
 
     rsx! {
         div { 
             class: "bg-slate-800/60 border border-indigo-500/15 rounded-xl p-2 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all flex flex-col items-center backdrop-blur-sm",
             onclick: move |e| onclick.call(e),
-            if let Some(url) = optimized_url {
-                img { src: "{url}", class: "w-full rounded-lg mb-2 shadow-md aspect-[63/88] object-cover" }
+            if let Some(img_url) = url {
+                img { 
+                    src: "{img_url}", 
+                    class: "w-full rounded-lg mb-2 shadow-md aspect-[63/88] object-cover" 
+                }
             } else {
                 div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-indigo-500/10 animate-pulse" }
             }

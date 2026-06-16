@@ -26,7 +26,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                         api_map.get(&entry.card.id).map(|c| c.full_image_url.clone())
                     } else { None };
                     
-                    let optimized_url = image_url.map(|url| format!("https://wsrv.nl/?url={}&w=400&output=webp", url.replace("https://", "")));
+                    let url = image_url.clone();
 
                     rsx! {
                         div { class: "fixed inset-0 bg-slate-950/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
@@ -47,8 +47,13 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                     
                                     // Left: Image
                                     div { class: "w-full md:w-1/2 flex justify-center",
-                                        if let Some(url) = optimized_url {
-                                            img { src: "{url}", width: "400", height: "560", class: "w-48 md:w-full rounded-xl shadow-lg border border-indigo-500/20 aspect-[63/88] object-cover" }
+                                        if let Some(img_url) = url {
+                                            img { 
+                                                src: "{img_url}", 
+                                                sizes: "(max-width: 768px) 192px, 224px",
+                                                width: "400", height: "560", 
+                                                class: "w-48 md:w-full rounded-xl shadow-lg border border-indigo-500/20 aspect-[63/88] object-cover" 
+                                            }
                                         } else {
                                             div { class: "w-48 aspect-[63/88] bg-slate-800 rounded-xl flex items-center justify-center border border-indigo-500/15", "🃏" }
                                         }

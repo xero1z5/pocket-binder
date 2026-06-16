@@ -207,13 +207,13 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
 
-        div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen p-6 font-sans relative",
+        div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen font-sans relative",
             
             // --- TOP SECTIONS ---
             Header { auth_token, user_email, show_login_modal }
             
             // --- MODULAR ACTION BAR ---
-            div { class: "flex flex-col w-full mb-8 relative",
+            div { class: "flex flex-col w-full mb-8 relative px-2 md:px-0",
                 div { class: "flex flex-col md:flex-row justify-between items-end gap-4 w-full",
                     
                     // LEFT: Search Input

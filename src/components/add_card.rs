@@ -232,7 +232,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                             }
                         }
                     } else {
-                        div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3",
+                        div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3",
                             for api_card in filtered_api_cards() {
                                 {
                                     let c = api_card.clone();

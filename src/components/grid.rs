@@ -12,6 +12,23 @@ pub struct CardGridProps {
     pub selected_card_id: Signal<Option<String>>, 
 }
 
+fn get_rarity_priority(rarity_code: &str) -> usize {
+    match rarity_code {
+        "UR" => 1,
+        "SSR" => 2,
+        "S" => 3,
+        "IM" => 4,
+        "SAR" => 5,
+        "SR" => 6,
+        "AR" => 7,
+        "RR" => 8,
+        "R" => 9,
+        "U" => 10,
+        "C" => 11,
+        _ => 12,
+    }
+}
+
 #[component]
 pub fn CardGrid(mut props: CardGridProps) -> Element {
     // Memoized filtering: only recalculates when collection, search_query, or account filter change
@@ -19,15 +36,21 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
         let query = props.search_query.read().to_lowercase();
         let selected_acc = props.selected_account_filter.read().clone();
 
-        props.collection.read().inventory.iter().filter(|e| {
+        let mut entries: Vec<Inventory> = props.collection.read().inventory.iter().filter(|e| {
             let matches_search = query.is_empty() || e.card.name.to_lowercase().contains(&query);
             let matches_account = selected_acc == "All" || e.owners.contains_key(&selected_acc);
             matches_search && matches_account
-        }).cloned().collect::<Vec<Inventory>>()
+        }).cloned().collect();
+
+        entries.sort_by(|a, b| {
+            get_rarity_priority(&a.card.rarity).cmp(&get_rarity_priority(&b.card.rarity))
+        });
+
+        entries
     });
 
     rsx! {
-        div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1 sm:gap-2 md:gap-4 pb-24",
+        div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-4 pb-24 px-1",
             for entry in visible_entries() {
                 {
                     // Clone the ID up front so both closures can own their own copy

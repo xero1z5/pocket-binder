@@ -207,7 +207,7 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
 
-        div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen font-sans relative",
+        div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen font-sans relative overflow-x-hidden",
             
             // --- TOP SECTIONS ---
             Header { auth_token, user_email, show_login_modal }

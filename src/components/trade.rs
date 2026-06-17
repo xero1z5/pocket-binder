@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
 use crate::models::*;
+use crate::models::optimized_image_url;
 use crate::components::add_card::RarityDisplay;
 
 #[derive(PartialEq, Clone, Props)]
@@ -268,7 +269,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
 #[component]
 fn TradeCardSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard>>>, on_click: EventHandler<MouseEvent>) -> Element {
     let url = if let Some(Some(api_map)) = &*image_db.read() {
-        api_map.get(&card.id).map(|c| c.full_image_url.clone())
+        api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
     } else { None };
 
     rsx! {
@@ -292,7 +293,7 @@ fn TradeCardSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialC
 #[component]
 fn PickerSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard>>>, onclick: EventHandler<MouseEvent>) -> Element {
     let url = if let Some(Some(api_map)) = &*image_db.read() {
-        api_map.get(&card.id).map(|c| c.full_image_url.clone())
+        api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
     } else { None };
 
     rsx! {
@@ -302,6 +303,8 @@ fn PickerSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard
             if let Some(img_url) = url {
                 img { 
                     src: "{img_url}", 
+                    loading: "lazy", decoding: "async",
+                    width: "400", height: "560",
                     class: "w-full rounded-lg mb-2 shadow-md aspect-[63/88] object-cover" 
                 }
             } else {

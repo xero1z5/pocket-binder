@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
 use crate::models::*;
+use crate::models::optimized_image_url;
 use crate::components::add_card::RarityDisplay;
 
 #[derive(PartialEq, Clone, Props)]
@@ -58,7 +59,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     let card_id_for_hover = entry.card.id.clone();
 
                     let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
-                        api_map.get(&entry.card.id).map(|c| c.full_image_url.clone())
+                        api_map.get(&entry.card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
                     } else { None };
 
                     let card_name = entry.card.name.clone();
@@ -73,7 +74,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                 let cid = card_id_for_hover.clone();
                                 if let Some(Some(api_map)) = &*props.image_db.read() {
                                     if let Some(api_card) = api_map.get(&cid) {
-                                        let detail_url = format!("https://wsrv.nl/?url={}&w=400&output=webp", api_card.full_image_url.replace("https://", ""));
+                                        let detail_url = optimized_image_url(&api_card.full_image_url, 600);
                                         spawn(async move {
                                             let _ = reqwest::get(&detail_url).await;
                                         });

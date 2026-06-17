@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
 use crate::models::*;
+use crate::models::optimized_image_url;
 
 // --- 1. LOAD ASSETS AT COMPILE TIME ---
 const DIAMOND_IMG: Asset = asset!("/assets/diamond.webp");
@@ -78,7 +79,6 @@ pub fn AddCardButton(mut props: AddCardButtonProps) -> Element {
 #[derive(PartialEq, Clone, Props)]
 pub struct AddCardModalProps {
     pub show_add_modal: Signal<bool>,
-    pub add_search_query: Signal<String>,
     pub collection: Signal<CardCollection>,
     pub image_db: Resource<Option<HashMap<String, OfficialCard>>>,
     pub toast_message: Signal<Option<String>>,
@@ -88,25 +88,13 @@ pub struct AddCardModalProps {
 pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
 
-    // Local raw input for instant typing feedback
+    // Local raw input — filtering happens directly from this (no debounce needed,
+    // the in-memory HashMap scan is fast enough)
     let mut raw_add_input = use_signal(|| String::new());
-    let mut add_debounce_version = use_signal(|| 0u64);
 
-    // Debounce the add-card search input (150ms)
-    use_effect(move || {
-        let version = *add_debounce_version.read();
-        let value = raw_add_input.read().clone();
-
-        spawn(async move {
-            gloo_timers::future::sleep(std::time::Duration::from_millis(150)).await;
-            if *add_debounce_version.peek() == version {
-                props.add_search_query.set(value);
-            }
-        });
-    });
-    // Memoized filtered results from the API database
+    // Memoized filtered results — reads raw_add_input directly for instant results
     let filtered_api_cards = use_memo(move || {
-        let query = props.add_search_query.read().to_lowercase();
+        let query = raw_add_input.read().to_lowercase();
         if query.is_empty() {
             return Vec::new();
         }
@@ -139,7 +127,6 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         value: "{raw_add_input}", 
                         oninput: move |evt| {
                             raw_add_input.set(evt.value());
-                            *add_debounce_version.write() += 1;
                             selected_card_to_add.set(None);
                         }
                     }
@@ -156,13 +143,9 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     
                                     // LEFT: Card Image + Metadata
                                     div { class: "flex flex-col items-center gap-3 flex-shrink-0",
-                                        {
-                                            rsx! {
-                                                img { 
-                                                    src: "{card.full_image_url}", 
-                                                    class: "w-44 md:w-56 rounded-2xl border border-indigo-500/20 shadow-2xl transition-all" 
-                                                }
-                                            }
+                                        img { 
+                                            src: "{optimized_image_url(&card.full_image_url, 600)}", 
+                                            class: "w-44 md:w-56 rounded-2xl border border-indigo-500/20 shadow-2xl transition-all" 
                                         }
                                         
                                         // Card info below image
@@ -243,7 +226,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                             class: "bg-slate-800/60 border border-indigo-500/15 rounded-xl p-2 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all flex flex-col backdrop-blur-sm",
                                             onclick: move |_| selected_card_to_add.set(Some(c.clone())),
                                             img { 
-                                                src: "{api_card.full_image_url}", 
+                                                src: "{optimized_image_url(&api_card.full_image_url, 400)}", 
                                                 loading: "lazy", decoding: "async",
                                                 width: "400", height: "560",
                                                 class: "w-full rounded-lg mb-2 shadow-sm border border-indigo-500/10 aspect-[63/88] object-cover" 

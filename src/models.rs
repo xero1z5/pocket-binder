@@ -1,6 +1,16 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Generate a resized/optimized image URL via the wsrv.nl proxy.
+/// `width` controls the output pixel width (e.g. 400 for grid thumbnails, 600 for detail views).
+pub fn optimized_image_url(original_url: &str, width: u16) -> String {
+    // Strip the scheme so wsrv.nl can proxy it
+    let stripped = original_url
+        .replace("https://", "")
+        .replace("http://", "");
+    format!("https://wsrv.nl/?url={}&w={}&output=webp&q=85", stripped, width)
+}
+
 // this represents the entire database file state
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CardCollection {

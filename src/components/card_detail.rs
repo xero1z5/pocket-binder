@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
 use crate::models::*;
+use crate::models::optimized_image_url;
 use crate::components::add_card::RarityDisplay;
 
 #[derive(PartialEq, Clone, Props)]
@@ -23,7 +24,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                 if let Some(entry) = entry_opt {
                     // Fetch the optimized image
                     let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
-                        api_map.get(&entry.card.id).map(|c| c.full_image_url.clone())
+                        api_map.get(&entry.card.id).map(|c| optimized_image_url(&c.full_image_url, 600))
                     } else { None };
                     
                     let url = image_url.clone();

@@ -232,54 +232,25 @@ fn App() -> Element {
                         // The Square Action Buttons
                         div { class: "flex items-center gap-2 md:gap-3",
         
-                            // THE NEW "HEAL DATABASE" BUTTON
+                            // REFRESH BUTTON
                             button {
                                 class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-indigo-600/15 border border-indigo-500/30 rounded-xl md:rounded-2xl hover:bg-indigo-500 hover:border-indigo-400 transition-all shadow-lg backdrop-blur-sm",
-                                title: "Fix Broken Legacy Cards",
+                                title: "Refresh Collection",
                                 onclick: move |_| {
-                                    if let Some(Some(api_map)) = &*image_db.read() {
-                                        sync_status.set("🛠️ Fixing Cards...".to_string());
-                                        let mut col = collection.write();
-                                        let mut needs_save = false;
-
-                                        for entry in col.inventory.iter_mut() {
-                                            let mut found_api_card = api_map.get(&entry.card.id);
-                                            
-                                            // 1. If ID is broken, find the card by its exact name
-                                            if found_api_card.is_none() {
-                                                if let Some((_, matching_card)) = api_map.iter().find(|(_, c)| c.name.to_lowercase() == entry.card.name.to_lowercase()) {
-                                                    entry.card.id = matching_card.generated_id.clone();
-                                                    found_api_card = Some(matching_card);
-                                                    needs_save = true;
-                                                }
+                                    let token = auth_token.read().clone();
+                                    if !token.is_empty() {
+                                        sync_status.set("🔄 Refreshing...".to_string());
+                                        spawn(async move {
+                                            if let Ok(data) = load_from_supabase(&token).await {
+                                                collection.set(data);
+                                                sync_status.set("✅ Refreshed!".to_string());
+                                            } else {
+                                                sync_status.set("❌ Refresh failed.".to_string());
                                             }
-                                            
-                                            // 2. Update the old "☆☆" text to the new "SAR" code
-                                            if let Some(api_card) = found_api_card {
-                                                let new_pack = if api_card.packs.is_empty() { "Promo".to_string() } else { api_card.packs.join(", ") };
-                                                if entry.card.rarity != api_card.rarity || entry.card.pack != new_pack {
-                                                    entry.card.rarity = api_card.rarity.clone();
-                                                    entry.card.pack = new_pack;
-                                                    needs_save = true;
-                                                }
-                                            }
-                                        }
-
-                                        // 3. Upload the fixed database to Supabase
-                                        if needs_save {
-                                            let current_collection = col.clone();
-                                            let token = auth_token.read().clone();
-                                            spawn(async move {
-                                                if save_to_supabase(current_collection, token).await.is_ok() {
-                                                    sync_status.set("✅ Cards Fixed & Synced!".to_string());
-                                                }
-                                            });
-                                        } else {
-                                            sync_status.set("✅ Cards already up to date.".to_string());
-                                        }
+                                        });
                                     }
                                 },
-                                span { class: "text-xl group-hover:scale-110 transition-transform", "✨" }
+                                span { class: "text-xl group-hover:rotate-180 transition-transform duration-500", "🔄" }
                             }
                             FilterButton { show_filter_menu }
                             AccountButton { show_account_modal }

@@ -7,3 +7,4 @@ pub mod account;
 pub mod login;
 pub mod card_detail;
 pub mod trade;
+pub mod hamburger;

@@ -51,10 +51,12 @@ pub struct OfficialCard {
     #[serde(default)]
     pub packs: Vec<String>,
 
-    #[serde(rename="type", default)]
-    pub card_type: String,
+    #[serde(default)]
+    pub image: String,
 
     // Generated dynamically in main.rs
+    #[serde(default)]
+    pub card_type: String,
     #[serde(default)]
     pub full_image_url: String,
     #[serde(default)]
@@ -147,6 +149,23 @@ impl CardCollection {
     pub fn set_account_main_status(&mut self, account_name: &str, is_main: bool){
         if let Some(acc) = self.accounts.iter_mut().find(|a| a.name==account_name){
             acc.main=is_main;
+        }
+    }
+
+    pub fn update_account(&mut self, old_name: &str, new_name: &str, new_id: &str, new_main: bool) {
+        if let Some(acc) = self.accounts.iter_mut().find(|a| a.name == old_name) {
+            acc.name = new_name.to_string();
+            acc.id = new_id.to_string();
+            acc.main = new_main;
+        }
+
+        // Rename the key in every inventory entry's owners map
+        if old_name != new_name {
+            for entry in &mut self.inventory {
+                if let Some(count) = entry.owners.remove(old_name) {
+                    entry.owners.insert(new_name.to_string(), count);
+                }
+            }
         }
     }
 }

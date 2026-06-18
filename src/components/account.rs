@@ -1,23 +1,6 @@
 use dioxus::prelude::*;
 use crate::models::*;
 
-// Keep AccountButtonProps and AccountButton as they were, but update colors to indigo
-#[derive(PartialEq, Clone, Props)]
-pub struct AccountButtonProps { pub show_account_modal: Signal<bool> }
-
-#[component]
-pub fn AccountButton(mut props: AccountButtonProps) -> Element {
-    rsx! {
-        button {
-            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-indigo-500/20 rounded-xl hover:bg-slate-700/80 hover:border-indigo-400/40 transition-all shadow-lg backdrop-blur-sm",
-            onclick: move |_| props.show_account_modal.set(true),
-            svg { class: "w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" }
-            }
-        }
-    }
-}
-
 #[derive(PartialEq, Clone, Props)]
 pub struct AccountModalProps {
     pub show_account_modal: Signal<bool>,
@@ -30,8 +13,13 @@ pub struct AccountModalProps {
 
 #[component]
 pub fn AccountModal(mut props: AccountModalProps) -> Element {
-    // NEW: Toggle between viewing accounts and adding a new one
     let mut show_add_form = use_signal(|| false);
+
+    // Edit mode state: which account name is being edited
+    let mut editing_account = use_signal(|| None::<String>);
+    let mut edit_name = use_signal(|| String::new());
+    let mut edit_id = use_signal(|| String::new());
+    let mut edit_main = use_signal(|| false);
 
     rsx! {
         if *props.show_account_modal.read() {
@@ -40,21 +28,25 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                     
                     // Header
                     div { class: "flex justify-between items-center",
-                        h2 { class: "text-lg font-bold text-white tracking-tight", if *show_add_form.read() { "New Account" } else { "Accounts" } }
+                        h2 { class: "text-lg font-bold text-white tracking-tight", 
+                            if *show_add_form.read() { "New Account" } 
+                            else if editing_account.read().is_some() { "Edit Account" } 
+                            else { "Accounts" } 
+                        }
                         
                         div { class: "flex items-center gap-2",
-                            // The "+" Button (Only show if not already adding)
-                            if !*show_add_form.read() {
+                            // "+" button only when listing
+                            if !*show_add_form.read() && editing_account.read().is_none() {
                                 button { 
                                     class: "p-1.5 text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors", 
                                     onclick: move |_| show_add_form.set(true),
                                     svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" } }
                                 }
                             }
-                            // Close Modal Button
+                            // Close modal
                             button { 
                                 class: "p-1.5 text-slate-500 hover:bg-slate-800 rounded-lg transition-colors", 
-                                onclick: move |_| { props.show_account_modal.set(false); show_add_form.set(false); }, 
+                                onclick: move |_| { props.show_account_modal.set(false); show_add_form.set(false); editing_account.set(None); }, 
                                 svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" } }
                             }
                         }
@@ -89,6 +81,44 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                 }
                             }
                         }
+                    } else if let Some(ref original_name) = *editing_account.read() {
+                        // --- EDIT ACCOUNT FORM ---
+                        {
+                            let orig = original_name.clone();
+                            rsx! {
+                                div { class: "flex flex-col gap-3",
+                                    label { class: "text-[10px] text-slate-500 uppercase font-black tracking-wider", "Account Name" }
+                                    input { class: "bg-slate-950/50 border border-indigo-500/15 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors", value: "{edit_name}", oninput: move |evt| edit_name.set(evt.value()) }
+                                    
+                                    label { class: "text-[10px] text-slate-500 uppercase font-black tracking-wider", "Friend ID" }
+                                    input { class: "bg-slate-950/50 border border-indigo-500/15 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors", placeholder: "Optional", value: "{edit_id}", oninput: move |evt| edit_id.set(evt.value()) }
+                                    
+                                    div { class: "flex items-center gap-3 py-2",
+                                        input { r#type: "checkbox", class: "w-4 h-4 accent-indigo-500 rounded cursor-pointer", checked: *edit_main.read(), onchange: move |evt| edit_main.set(evt.value().parse().unwrap_or(false)) }
+                                        label { class: "text-sm text-slate-300", "Main Account" }
+                                    }
+                                    
+                                    div { class: "flex gap-2 mt-2",
+                                        button { class: "flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 transition-colors", onclick: move |_| editing_account.set(None), "Cancel" }
+                                        button {
+                                            class: "flex-1 py-2.5 rounded-xl text-sm font-bold text-slate-900 bg-gradient-to-r from-indigo-400 to-purple-400 hover:from-indigo-300 hover:to-purple-300 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]",
+                                            onclick: move |_| {
+                                                let new_name = edit_name.read().clone();
+                                                let new_id_val = edit_id.read().clone();
+                                                let new_main_val = *edit_main.read();
+                                                if !new_name.is_empty() {
+                                                    props.collection.write().update_account(&orig, &new_name, &new_id_val, new_main_val);
+                                                    editing_account.set(None);
+                                                    props.toast_message.set(Some(format!("Account '{}' updated", new_name)));
+                                                    let mut t = props.toast_message.clone(); spawn(async move { gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await; t.set(None); });
+                                                }
+                                            },
+                                            "Save"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     } else {
                         // --- ACCOUNT LIST ---
                         div { class: "flex flex-col gap-2 max-h-64 overflow-y-auto pr-1",
@@ -98,7 +128,8 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                 for acc in props.collection.read().accounts.iter() {
                                     {
                                         let acc_name = acc.name.clone(); let acc_id = acc.id.clone(); let is_main = acc.main;
-                                        let n1 = acc_name.clone(); let n2 = acc_name.clone();
+                                        let n1 = acc_name.clone(); let n2 = acc_name.clone(); let n3 = acc_name.clone();
+                                        let edit_id_val = acc_id.clone();
                                         
                                         rsx! {
                                             div { class: "flex justify-between items-center bg-slate-800/50 p-3 rounded-xl border border-indigo-500/15 group",
@@ -109,11 +140,25 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                                 
                                                 div { class: "flex items-center gap-2",
                                                     // Main Toggle
-                                                    label { class: "relative inline-flex items-center cursor-pointer mr-2",
+                                                    label { class: "relative inline-flex items-center cursor-pointer mr-1",
                                                         input { r#type: "checkbox", class: "sr-only peer", checked: is_main, onchange: move |evt| { props.collection.write().set_account_main_status(&n1, evt.value().parse().unwrap_or(false)); } }
                                                         div { class: "w-8 h-4.5 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-500" }
                                                     }
                                                     
+                                                    // Edit Button
+                                                    button {
+                                                        class: "text-slate-600 hover:text-indigo-400 transition-colors p-1",
+                                                        onclick: move |_| {
+                                                            edit_name.set(n3.clone());
+                                                            edit_id.set(edit_id_val.clone());
+                                                            edit_main.set(is_main);
+                                                            editing_account.set(Some(n3.clone()));
+                                                        },
+                                                        svg { class: "w-4 h-4", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", 
+                                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" }
+                                                        }
+                                                    }
+
                                                     // Delete Button
                                                     button {
                                                         class: "text-slate-600 hover:text-rose-400 transition-colors p-1",

@@ -91,3 +91,79 @@ body {
     background-size: 200% 100%;
     animation: shimmer 1.8s ease-in-out infinite;
 }
+
+/* Slide-in from right (hamburger menu) */
+.animate-slide-in-right {
+    animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-in-right {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(0); }
+}
+
+/* Fade-in for overlays */
+.animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+}
+
+@keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes fade-in-down {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* SAR (Special Art Rare) — Rainbow chip */
+.sar-chip {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.08),
+        rgba(249, 115, 22, 0.08),
+        rgba(234, 179, 8, 0.08),
+        rgba(34, 197, 94, 0.08),
+        rgba(59, 130, 246, 0.08),
+        rgba(168, 85, 247, 0.08),
+        rgba(236, 72, 153, 0.08)
+    );
+    border-color: rgba(168, 85, 247, 0.3);
+    color: #c4b5fd;
+    background-size: 300% 300%;
+    animation: rainbow-shift 4s ease infinite;
+}
+
+.sar-chip:hover {
+    border-color: rgba(168, 85, 247, 0.5);
+    color: #ddd6fe;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.2), 0 0 20px rgba(236, 72, 153, 0.1);
+}
+
+.sar-chip-active {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.15),
+        rgba(249, 115, 22, 0.15),
+        rgba(234, 179, 8, 0.15),
+        rgba(34, 197, 94, 0.15),
+        rgba(59, 130, 246, 0.15),
+        rgba(168, 85, 247, 0.15),
+        rgba(236, 72, 153, 0.15)
+    );
+    border-color: transparent;
+    background-clip: padding-box;
+    color: #f5f3ff;
+    background-size: 300% 300%;
+    animation: rainbow-shift 3s ease infinite;
+    box-shadow: 
+        0 0 0 1px rgba(168, 85, 247, 0.5),
+        0 0 15px rgba(168, 85, 247, 0.25),
+        0 0 25px rgba(236, 72, 153, 0.15),
+        0 0 35px rgba(59, 130, 246, 0.1);
+}
+
+@keyframes rainbow-shift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}

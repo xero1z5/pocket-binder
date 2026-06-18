@@ -9,6 +9,8 @@ pub struct CardGridProps {
     pub collection: Signal<CardCollection>,
     pub search_query: Signal<String>,
     pub selected_account_filter: Signal<String>,
+    pub selected_rarities: Signal<Vec<String>>,
+    pub selected_types: Signal<Vec<String>>,
     pub image_db: Resource<Option<HashMap<String, OfficialCard>>>,
     pub selected_card_id: Signal<Option<String>>, 
 }
@@ -32,27 +34,43 @@ fn get_rarity_priority(rarity_code: &str) -> usize {
 
 #[component]
 pub fn CardGrid(mut props: CardGridProps) -> Element {
-    // Memoized filtering: only recalculates when collection, search_query, or account filter change
-    let visible_entries = use_memo(move || {
-        let query = props.search_query.read().to_lowercase();
-        let selected_acc = props.selected_account_filter.read().clone();
+    let query = props.search_query.read().to_lowercase();
+    let selected_acc = props.selected_account_filter.read().clone();
+    let active_rarities = props.selected_rarities.read().clone();
+    let active_types = props.selected_types.read().clone();
 
-        let mut entries: Vec<Inventory> = props.collection.read().inventory.iter().filter(|e| {
-            let matches_search = query.is_empty() || e.card.name.to_lowercase().contains(&query);
-            let matches_account = selected_acc == "All" || e.owners.contains_key(&selected_acc);
-            matches_search && matches_account
-        }).cloned().collect();
+    // Read image_db directly during render so we always have the latest state
+    let db_snapshot = props.image_db.read().clone();
 
-        entries.sort_by(|a, b| {
-            get_rarity_priority(&a.card.rarity).cmp(&get_rarity_priority(&b.card.rarity))
-        });
+    let mut visible_entries: Vec<Inventory> = props.collection.read().inventory.iter().filter(|e| {
+        let matches_search = query.is_empty() || e.card.name.to_lowercase().contains(&query);
+        let matches_account = selected_acc == "All" || e.owners.contains_key(&selected_acc);
+        let matches_rarity = active_rarities.is_empty() || active_rarities.contains(&e.card.rarity);
+        let matches_type = if active_types.is_empty() {
+            true
+        } else {
+            // Look up type from the image_db if inventory card doesn't have it
+            let card_type = if e.card.card_type.is_empty() {
+                if let Some(Some(ref api_map)) = db_snapshot {
+                    api_map.get(&e.card.id).map(|c| c.card_type.clone()).unwrap_or_default()
+                } else {
+                    String::new()
+                }
+            } else {
+                e.card.card_type.clone()
+            };
+            active_types.iter().any(|t| card_type == *t)
+        };
+        matches_search && matches_account && matches_rarity && matches_type
+    }).cloned().collect();
 
-        entries
+    visible_entries.sort_by(|a, b| {
+        get_rarity_priority(&a.card.rarity).cmp(&get_rarity_priority(&b.card.rarity))
     });
 
     rsx! {
         div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-4 pb-24 px-1",
-            for entry in visible_entries() {
+            for entry in visible_entries {
                 {
                     // Clone the ID up front so both closures can own their own copy
                     let card_id_for_click = entry.card.id.clone();

@@ -16,9 +16,10 @@ use components::{
     login::LoginModal,
     card_detail::CardDetailModal,
     filter::{SearchInput, FilterButton, FilterTray},
-    add_card::{AddCardButton, AddCardModal},
-    account::{AccountButton, AccountModal},
-    trade::{TradeButton, TradeModal},
+    add_card::AddCardModal,
+    account::AccountModal,
+    trade::TradeModal,
+    hamburger::HamburgerMenu,
 };
 
 //======================= DX ===================
@@ -50,6 +51,8 @@ fn App() -> Element {
     // UI Toggles & Search
     let mut search_query = use_signal(|| String::new());
     let mut selected_account_filter = use_signal(|| String::from("All"));
+    let mut selected_rarities = use_signal(|| Vec::<String>::new());
+    let mut selected_types = use_signal(|| Vec::<String>::new());
     let mut show_add_modal = use_signal(|| false);
     let mut show_filter_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
@@ -159,6 +162,12 @@ fn App() -> Element {
             for mut card in cards {
                 card.full_image_url = format!("{}/{}/{}.webp", base_image_url, card.set, card.number);
                 card.generated_id = format!("{}-{}", card.set, card.number);
+                // Derive card type from image filename prefix
+                card.card_type = if card.image.starts_with("cTR") {
+                    "Trainer".to_string()
+                } else {
+                    "Pokémon".to_string()
+                };
                 api_db.insert(card.generated_id.clone(), card);
             }
             api_db
@@ -210,7 +219,7 @@ fn App() -> Element {
         div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen font-sans relative overflow-x-hidden",
             
             // --- TOP SECTIONS ---
-            Header { auth_token, user_email, show_login_modal }
+            Header {}
             
             // --- MODULAR ACTION BAR ---
             div { class: "flex flex-col w-full mb-8 relative px-2 md:px-0",
@@ -219,7 +228,7 @@ fn App() -> Element {
                     // LEFT: Search Input
                     SearchInput { search_query }
 
-                    // RIGHT: Action Buttons & Sync Status
+                    // RIGHT: Filter button + Hamburger + Sync Status
                     div { class: "flex flex-col items-end gap-2 w-full md:w-auto",
                         
                         // Sync Status
@@ -229,43 +238,29 @@ fn App() -> Element {
                             }
                         }
 
-                        // The Square Action Buttons
+                        // Action Buttons: Filter + Hamburger only
                         div { class: "flex items-center gap-2 md:gap-3",
-        
-                            // REFRESH BUTTON
-                            button {
-                                class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-indigo-600/15 border border-indigo-500/30 rounded-xl md:rounded-2xl hover:bg-indigo-500 hover:border-indigo-400 transition-all shadow-lg backdrop-blur-sm",
-                                title: "Refresh Collection",
-                                onclick: move |_| {
-                                    let token = auth_token.read().clone();
-                                    if !token.is_empty() {
-                                        sync_status.set("🔄 Refreshing...".to_string());
-                                        spawn(async move {
-                                            if let Ok(data) = load_from_supabase(&token).await {
-                                                collection.set(data);
-                                                sync_status.set("✅ Refreshed!".to_string());
-                                            } else {
-                                                sync_status.set("❌ Refresh failed.".to_string());
-                                            }
-                                        });
-                                    }
-                                },
-                                span { class: "text-xl group-hover:rotate-180 transition-transform duration-500", "🔄" }
-                            }
                             FilterButton { show_filter_menu }
-                            AccountButton { show_account_modal }
-                            AddCardButton { show_add_modal }
-                            TradeButton { show_trade_modal }
+                            HamburgerMenu {
+                                show_account_modal,
+                                show_add_modal,
+                                show_trade_modal,
+                                auth_token,
+                                user_email,
+                                show_login_modal,
+                                collection,
+                                sync_status,
+                            }
                         }
                     }
                 }
                 
                 // The Dropdown Filters Tray
-                FilterTray { show_filter_menu, selected_account_filter, collection }
+                FilterTray { show_filter_menu, selected_account_filter, selected_rarities, selected_types, collection }
             }
 
             // --- THE VISUAL GRID ---
-            CardGrid { collection, search_query, selected_account_filter, image_db, selected_card_id }
+            CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, image_db, selected_card_id }
         }
 
         // --- OVERLAYS & MODALS ---

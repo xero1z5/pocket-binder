@@ -12,22 +12,6 @@ pub fn SearchInput(mut props: SearchInputProps) -> Element {
     // Local raw input that updates instantly (no lag for the user)
     let mut raw_input = use_signal(|| props.search_query.read().clone());
 
-    // Debounce: only push to the real search_query after 150ms of inactivity
-    let mut debounce_version = use_signal(|| 0u64);
-
-    use_effect(move || {
-        let version = *debounce_version.read();
-        let value = raw_input.read().clone();
-
-        spawn(async move {
-            gloo_timers::future::sleep(std::time::Duration::from_millis(150)).await;
-            // Only update if no newer keystroke happened during the wait
-            if *debounce_version.peek() == version {
-                props.search_query.set(value);
-            }
-        });
-    });
-
     rsx! {
         div { class: "w-full md:w-96",
             div { class: "relative group",
@@ -38,11 +22,15 @@ pub fn SearchInput(mut props: SearchInputProps) -> Element {
                 }
                 input {
                     class: "w-full bg-slate-800/60 border border-indigo-500/20 rounded-2xl pl-11 pr-4 py-3.5 text-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 shadow-inner transition-all placeholder-slate-500 backdrop-blur-sm",
-                    placeholder: "Search cards...",
+                    placeholder: "Search card name...",
                     value: "{raw_input}",
                     oninput: move |evt| {
                         raw_input.set(evt.value());
-                        *debounce_version.write() += 1;
+                    },
+                    onkeydown: move |evt| {
+                        if evt.key() == Key::Enter {
+                            props.search_query.set(raw_input.read().clone());
+                        }
                     }
                 }
             }

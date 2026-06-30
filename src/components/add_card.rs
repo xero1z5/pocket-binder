@@ -80,7 +80,7 @@ pub fn AddCardButton(mut props: AddCardButtonProps) -> Element {
 pub struct AddCardModalProps {
     pub show_add_modal: Signal<bool>,
     pub collection: Signal<CardCollection>,
-    pub image_db: Resource<Option<HashMap<String, OfficialCard>>>,
+    pub image_db: Signal<Option<HashMap<String, OfficialCard>>>,
     pub toast_message: Signal<Option<String>>,
 }
 
@@ -88,17 +88,16 @@ pub struct AddCardModalProps {
 pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
 
-    // Local raw input — filtering happens directly from this (no debounce needed,
-    // the in-memory HashMap scan is fast enough)
     let mut raw_add_input = use_signal(|| String::new());
+    let mut active_search_query = use_signal(|| String::new());
 
-    // Memoized filtered results — reads raw_add_input directly for instant results
+    // Memoized filtered results — reads active_search_query directly for instant results
     let filtered_api_cards = use_memo(move || {
-        let query = raw_add_input.read().to_lowercase();
+        let query = active_search_query.read().to_lowercase();
         if query.is_empty() {
             return Vec::new();
         }
-        if let Some(Some(api_map)) = &*props.image_db.read() {
+        if let Some(api_map) = &*props.image_db.read() {
             api_map.values()
                 .filter(|c| c.name.to_lowercase().contains(&query))
                 .take(30)
@@ -127,7 +126,12 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         value: "{raw_add_input}", 
                         oninput: move |evt| {
                             raw_add_input.set(evt.value());
-                            selected_card_to_add.set(None);
+                        },
+                        onkeydown: move |evt| {
+                            if evt.key() == Key::Enter {
+                                active_search_query.set(raw_add_input.read().clone());
+                                selected_card_to_add.set(None);
+                            }
                         }
                     }
                 }

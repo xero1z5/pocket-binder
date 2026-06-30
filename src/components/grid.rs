@@ -11,7 +11,7 @@ pub struct CardGridProps {
     pub selected_account_filter: Signal<String>,
     pub selected_rarities: Signal<Vec<String>>,
     pub selected_types: Signal<Vec<String>>,
-    pub image_db: Resource<Option<HashMap<String, OfficialCard>>>,
+    pub image_db: Signal<Option<HashMap<String, OfficialCard>>>,
     pub selected_card_id: Signal<Option<String>>, 
 }
 
@@ -51,7 +51,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
         } else {
             // Look up type from the image_db if inventory card doesn't have it
             let card_type = if e.card.card_type.is_empty() {
-                if let Some(Some(ref api_map)) = db_snapshot {
+                if let Some(ref api_map) = db_snapshot {
                     api_map.get(&e.card.id).map(|c| c.card_type.clone()).unwrap_or_default()
                 } else {
                     String::new()
@@ -76,7 +76,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     let card_id_for_click = entry.card.id.clone();
                     let card_id_for_hover = entry.card.id.clone();
 
-                    let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
+                    let image_url = if let Some(api_map) = &*props.image_db.read() {
                         api_map.get(&entry.card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
                     } else { None };
 
@@ -90,7 +90,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                             // Prefetch the larger detail image on hover so it's cached when clicked
                             onmouseenter: move |_| {
                                 let cid = card_id_for_hover.clone();
-                                if let Some(Some(api_map)) = &*props.image_db.read() {
+                                if let Some(api_map) = &*props.image_db.read() {
                                     if let Some(api_card) = api_map.get(&cid) {
                                         let detail_url = optimized_image_url(&api_card.full_image_url, 600);
                                         spawn(async move {

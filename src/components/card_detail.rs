@@ -8,7 +8,7 @@ use crate::components::add_card::RarityDisplay;
 pub struct CardDetailModalProps {
     pub selected_card_id: Signal<Option<String>>,
     pub collection: Signal<CardCollection>,
-    pub image_db: Resource<Option<HashMap<String, OfficialCard>>>,
+    pub image_db: Signal<Option<HashMap<String, OfficialCard>>>,
     pub toast_message: Signal<Option<String>>,
 }
 
@@ -23,7 +23,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                 
                 if let Some(entry) = entry_opt {
                     // Fetch the optimized image
-                    let image_url = if let Some(Some(api_map)) = &*props.image_db.read() {
+                    let image_url = if let Some(api_map) = &*props.image_db.read() {
                         api_map.get(&entry.card.id).map(|c| optimized_image_url(&c.full_image_url, 600))
                     } else { None };
                     

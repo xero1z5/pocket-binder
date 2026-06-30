@@ -148,57 +148,48 @@ fn App() -> Element {
     });
 
     // Fetch Official API Database with LocalStorage caching (stale-while-revalidate)
-    let image_db = use_resource(move || async move {
-        let cache_key = "cached_card_db";
-        
-        // 1. Try to load from LocalStorage cache instantly
-        let cached: Option<Vec<OfficialCard>> = LocalStorage::get(cache_key).ok();
-        
-        // 2. Build the HashMap from cache if available
-        let base_image_url = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-exchange/main/public/images/cards-by-set";
-        
-        let build_db = |cards: Vec<OfficialCard>| -> HashMap<String, OfficialCard> {
-            let mut api_db: HashMap<String, OfficialCard> = HashMap::new();
-            for mut card in cards {
-                card.full_image_url = format!("{}/{}/{}.webp", base_image_url, card.set, card.number);
-                card.generated_id = format!("{}-{}", card.set, card.number);
-                // Derive card type from image filename prefix
-                card.card_type = if card.image.starts_with("cTR") {
-                    "Trainer".to_string()
-                } else {
-                    "Pokémon".to_string()
-                };
-                api_db.insert(card.generated_id.clone(), card);
-            }
-            api_db
-        };
-        
-        if let Some(cards) = cached {
-            // Return cached data immediately, then refresh in background
-            let db = build_db(cards);
+    let mut image_db = use_signal(|| None::<HashMap<String, OfficialCard>>);
+
+    use_effect(move || {
+        spawn(async move {
+            let cache_key = "cached_card_db";
             
-            // Background refresh: fetch latest and update cache silently
-            spawn(async move {
-                let url = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/cards.json";
-                if let Ok(response) = reqwest::get(url).await {
-                    if let Ok(fresh_cards) = response.json::<Vec<OfficialCard>>().await {
-                        let _ = LocalStorage::set(cache_key, &fresh_cards);
-                    }
+            // 1. Try to load from LocalStorage cache instantly
+            let cached: Option<Vec<OfficialCard>> = LocalStorage::get(cache_key).ok();
+            
+            let base_image_url = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-exchange/main/public/images/cards-by-set";
+            
+            let build_db = |cards: Vec<OfficialCard>| -> HashMap<String, OfficialCard> {
+                let mut api_db: HashMap<String, OfficialCard> = HashMap::new();
+                for mut card in cards {
+                    card.full_image_url = format!("{}/{}/{}.webp", base_image_url, card.set, card.number);
+                    card.generated_id = format!("{}-{}", card.set, card.number);
+                    // Derive card type from image filename prefix
+                    card.card_type = if card.image.starts_with("cTR") {
+                        "Trainer".to_string()
+                    } else {
+                        "Pokémon".to_string()
+                   };
+                    api_db.insert(card.generated_id.clone(), card);
                 }
-            });
+                api_db
+            };
             
-            Some(db)
-        } else {
-            // First ever load: must fetch from network
-            let url = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/cards.json";
-            let response = reqwest::get(url).await.ok()?;
-            let official_cards = response.json::<Vec<OfficialCard>>().await.ok()?;
-            
-            // Cache for next time
-            let _ = LocalStorage::set(cache_key, &official_cards);
-            
-            Some(build_db(official_cards))
-        }
+            if let Some(cards) = cached {
+                image_db.set(Some(build_db(cards)));
+            }
+
+            // Background refresh: fetch latest and update cache + UI
+            // Unpkg handles @latest without caching forever, and timestamp bypasses browser cache
+            let timestamp = js_sys::Date::now();
+            let url = format!("https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/cards.json?t={}", timestamp);
+            if let Ok(response) = reqwest::get(&url).await {
+                if let Ok(fresh_cards) = response.json::<Vec<OfficialCard>>().await {
+                    let _ = LocalStorage::set(cache_key, &fresh_cards);
+                    image_db.set(Some(build_db(fresh_cards)));
+                }
+            }
+        });
     });
 
     // =========================================================================

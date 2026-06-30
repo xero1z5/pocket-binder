@@ -27,7 +27,7 @@ pub fn TradeButton(mut props: TradeButtonProps) -> Element {
 pub struct TradeModalProps {
     pub show_trade_modal: Signal<bool>,
     pub collection: Signal<CardCollection>,
-    pub image_db: Resource<Option<HashMap<String, OfficialCard>>>,
+    pub image_db: Signal<Option<HashMap<String, OfficialCard>>>,
     pub toast_message: Signal<Option<String>>,
 }
 
@@ -41,6 +41,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
     
     let mut view_state = use_signal(|| "main".to_string());
     let mut search_query = use_signal(|| String::new());
+    let mut raw_search_query = use_signal(|| String::new());
 
     use_effect(move || {
         let accounts = &props.collection.read().accounts;
@@ -199,9 +200,14 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                 button { class: "bg-slate-800/80 border border-indigo-500/20 p-2 rounded-lg text-slate-400 hover:text-white hover:border-indigo-400/40 transition-colors", onclick: move |_| view_state.set("main".to_string()), "← Back" }
                                 input {
                                     class: "flex-1 bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-3 text-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors",
-                                    placeholder: "Search to pick card...",
-                                    value: "{search_query}",
-                                    oninput: move |evt| search_query.set(evt.value())
+                                    placeholder: "Search card name...",
+                                    value: "{raw_search_query}",
+                                    oninput: move |evt| raw_search_query.set(evt.value()),
+                                    onkeydown: move |evt| {
+                                        if evt.key() == Key::Enter {
+                                            search_query.set(raw_search_query.read().clone());
+                                        }
+                                    }
                                 }
                             }
 
@@ -213,7 +219,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                     let m_acc = my_acc.read().clone();
 
                                     if v_state == "pick_taking" && p_acc == "Other" {
-                                        if let Some(Some(api_map)) = &*props.image_db.read() {
+                                        if let Some(api_map) = &*props.image_db.read() {
                                             rsx! {
                                                 for (_, api_card) in api_map.iter().filter(|(_, c)| query.is_empty() || c.name.to_lowercase().contains(&query)).take(30) {
                                                     {
@@ -222,7 +228,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                                             id: c.generated_id.clone(), name: c.name.clone(), rarity: c.rarity.clone(), card_type: c.card_type.clone(), pack: if c.packs.is_empty() { "Promo".to_string() } else { c.packs.join(", ") }
                                                         };
                                                         rsx! {
-                                                            PickerSlot { card: new_card.clone(), image_db: props.image_db, onclick: move |_| { card_taking.set(Some(new_card.clone())); view_state.set("main".to_string()); search_query.set(String::new()); } }
+                                                            PickerSlot { card: new_card.clone(), image_db: props.image_db, onclick: move |_| { card_taking.set(Some(new_card.clone())); view_state.set("main".to_string()); search_query.set(String::new()); raw_search_query.set(String::new()); } }
                                                         }
                                                     }
                                                 }
@@ -250,6 +256,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                                             if view_state.read().clone() == "pick_giving" { card_giving.set(Some(c.clone())); } else { card_taking.set(Some(c.clone())); }
                                                             view_state.set("main".to_string());
                                                             search_query.set(String::new());
+                                                            raw_search_query.set(String::new());
                                                         }}
                                                     }
                                                 }
@@ -267,8 +274,8 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
 }
 
 #[component]
-fn TradeCardSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard>>>, on_click: EventHandler<MouseEvent>) -> Element {
-    let url = if let Some(Some(api_map)) = &*image_db.read() {
+fn TradeCardSlot(card: Card, image_db: Signal<Option<HashMap<String, OfficialCard>>>, on_click: EventHandler<MouseEvent>) -> Element {
+    let url = if let Some(api_map) = &*image_db.read() {
         api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
     } else { None };
 
@@ -291,8 +298,8 @@ fn TradeCardSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialC
 }
 
 #[component]
-fn PickerSlot(card: Card, image_db: Resource<Option<HashMap<String, OfficialCard>>>, onclick: EventHandler<MouseEvent>) -> Element {
-    let url = if let Some(Some(api_map)) = &*image_db.read() {
+fn PickerSlot(card: Card, image_db: Signal<Option<HashMap<String, OfficialCard>>>, onclick: EventHandler<MouseEvent>) -> Element {
+    let url = if let Some(api_map) = &*image_db.read() {
         api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
     } else { None };
 

@@ -3857,6 +3857,7 @@ dependencies = [
  "dioxus",
  "gloo-storage",
  "gloo-timers 0.4.0",
+ "js-sys",
  "reqwest 0.11.27",
  "serde",
  "serde_json",

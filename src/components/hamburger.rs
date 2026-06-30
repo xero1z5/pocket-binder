@@ -13,11 +13,14 @@ pub struct HamburgerMenuProps {
     pub show_login_modal: Signal<bool>,
     pub collection: Signal<CardCollection>,
     pub sync_status: Signal<String>,
+    pub active_view: Signal<String>,
+    pub pack_db: Signal<Option<Vec<PackSet>>>,
 }
 
 #[component]
 pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
     let mut is_open = use_signal(|| false);
+    let mut show_packs = use_signal(|| false);
 
     rsx! {
         // Hamburger Toggle Button
@@ -101,6 +104,84 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
 
                     // Divider
                     div { class: "h-px bg-indigo-500/10 my-2" }
+
+                    // My Collection
+                    MenuItemButton {
+                        label: "My Collection",
+                        icon_path: "M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25",
+                        onclick: move |_| {
+                            props.active_view.set("collection".to_string());
+                            is_open.set(false);
+                        },
+                    }
+
+                    // Wishlist
+                    MenuItemButton {
+                        label: "Wishlist",
+                        icon_path: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z",
+                        onclick: move |_| {
+                            props.active_view.set("wishlist".to_string());
+                            is_open.set(false);
+                        },
+                    }
+
+                    // Tradable
+                    MenuItemButton {
+                        label: "Tradable",
+                        icon_path: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.016 4.356v4.992",
+                        onclick: move |_| {
+                            props.active_view.set("tradable".to_string());
+                            is_open.set(false);
+                        },
+                    }
+
+                    // Divider
+                    div { class: "h-px bg-indigo-500/10 my-2" }
+
+                    // Browse Sets
+                    if let Some(packs) = props.pack_db.read().as_ref() {
+                        div { class: "flex flex-col",
+                            button { 
+                                class: "px-4 py-3 hover:bg-slate-800 rounded-xl transition-all flex items-center justify-between cursor-pointer",
+                                onclick: move |_| show_packs.set(!show_packs()),
+                                div { class: "flex items-center gap-3 text-slate-300",
+                                    svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 01-1.125-1.125v-3.75zM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-8.25zM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 01-1.125-1.125v-2.25z" }
+                                    }
+                                    span { class: "font-medium text-sm", "Packs" }
+                                }
+                                svg { class: "w-4 h-4 text-slate-400 transition-transform duration-200", class: if *show_packs.read() { "rotate-180" } else { "" }, fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M19.5 8.25l-7.5 7.5-7.5-7.5" }
+                                }
+                            }
+                            if *show_packs.read() {
+                                div { class: "pl-4 pr-2 py-2 flex flex-col gap-1 border-l-2 border-indigo-500/20 ml-6 mt-1 mb-2",
+                                    for pack in packs.iter() {
+                                        {
+                                            let code_for_click = pack.code.clone();
+                                            let img_src = format!("https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main/dist/images/sets/LOGO_expansion_{}_en_US.webp", pack.code);
+                                            let title = pack.name.get("en").cloned().unwrap_or_else(|| pack.code.clone());
+                                            
+                                            rsx! {
+                                                button {
+                                                    class: "flex items-center gap-3 px-3 py-2 hover:bg-indigo-500/10 text-slate-400 hover:text-white transition-all text-sm rounded-xl text-left",
+                                                    onclick: move |_| {
+                                                        props.active_view.set(format!("pack:{}", code_for_click));
+                                                        is_open.set(false);
+                                                    },
+                                                    img { src: "{img_src}", alt: "{title}", class: "h-5 w-14 object-contain" }
+                                                    span { class: "truncate flex-1 text-xs", "{title}" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Divider
+                        div { class: "h-px bg-indigo-500/10 my-2" }
+                    }
 
                     // Refresh
                     MenuItemButton {

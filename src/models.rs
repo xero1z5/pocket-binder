@@ -12,6 +12,10 @@ pub fn optimized_image_url(original_url: &str, _width: u16) -> String {
 pub struct CardCollection {
     pub accounts: Vec<Account>,
     pub inventory: Vec<Inventory>,
+    #[serde(default)]
+    pub wishlist: Vec<Card>,
+    #[serde(default)]
+    pub tradable: Vec<String>,
 }
 
 // account definition
@@ -35,6 +39,18 @@ pub struct Card {
 pub struct Inventory {
     pub card: Card,
     pub owners: HashMap<String, i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PackSet {
+    pub code: String,
+    #[serde(rename = "releaseDate")]
+    #[serde(default)]
+    pub release_date: String,
+    #[serde(default)]
+    pub name: HashMap<String, String>,
+    #[serde(default)]
+    pub packs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -163,5 +179,29 @@ impl CardCollection {
                 }
             }
         }
+    }
+
+    pub fn toggle_wishlist(&mut self, card: Card) {
+        if let Some(pos) = self.wishlist.iter().position(|c| c.id == card.id) {
+            self.wishlist.remove(pos);
+        } else {
+            self.wishlist.push(card);
+        }
+    }
+
+    pub fn is_wishlisted(&self, card_id: &str) -> bool {
+        self.wishlist.iter().any(|c| c.id == card_id)
+    }
+
+    pub fn toggle_tradable(&mut self, card_id: &str) {
+        if let Some(pos) = self.tradable.iter().position(|id| id == card_id) {
+            self.tradable.remove(pos);
+        } else {
+            self.tradable.push(card_id.to_string());
+        }
+    }
+
+    pub fn is_tradable(&self, card_id: &str) -> bool {
+        self.tradable.contains(&card_id.to_string())
     }
 }

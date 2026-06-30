@@ -198,14 +198,21 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                         div { class: "w-full max-w-5xl flex flex-col gap-4",
                             div { class: "flex items-center gap-4 mb-4",
                                 button { class: "bg-slate-800/80 border border-indigo-500/20 p-2 rounded-lg text-slate-400 hover:text-white hover:border-indigo-400/40 transition-colors", onclick: move |_| view_state.set("main".to_string()), "← Back" }
-                                input {
-                                    class: "flex-1 bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-3 text-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors",
-                                    placeholder: "Search card name...",
-                                    value: "{raw_search_query}",
-                                    oninput: move |evt| raw_search_query.set(evt.value()),
-                                    onkeydown: move |evt| {
-                                        if evt.key() == Key::Enter {
-                                            search_query.set(raw_search_query.read().clone());
+                                div { class: "relative group flex-1",
+                                    div { class: "absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors",
+                                        svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-5 h-5",
+                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" }
+                                        }
+                                    }
+                                    input {
+                                        class: "w-full bg-slate-900/80 border border-indigo-500/20 rounded-xl pl-11 pr-4 py-3 text-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors",
+                                        placeholder: "Search card name...",
+                                        value: "{raw_search_query}",
+                                        oninput: move |evt| raw_search_query.set(evt.value()),
+                                        onkeydown: move |evt| {
+                                            if evt.key() == Key::Enter {
+                                                search_query.set(raw_search_query.read().clone());
+                                            }
                                         }
                                     }
                                 }

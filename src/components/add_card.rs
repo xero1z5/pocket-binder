@@ -120,17 +120,24 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                             svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" } }
                         }
                     }
-                    input { 
-                        class: "bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none w-full transition-colors shadow-inner", 
-                        placeholder: "Search card name...", 
-                        value: "{raw_add_input}", 
-                        oninput: move |evt| {
-                            raw_add_input.set(evt.value());
-                        },
-                        onkeydown: move |evt| {
-                            if evt.key() == Key::Enter {
-                                active_search_query.set(raw_add_input.read().clone());
-                                selected_card_to_add.set(None);
+                    div { class: "relative group w-full",
+                        div { class: "absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors",
+                            svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-5 h-5",
+                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" }
+                            }
+                        }
+                        input { 
+                            class: "w-full bg-slate-900/80 border border-indigo-500/20 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors shadow-inner", 
+                            placeholder: "Search card name...", 
+                            value: "{raw_add_input}", 
+                            oninput: move |evt| {
+                                raw_add_input.set(evt.value());
+                            },
+                            onkeydown: move |evt| {
+                                if evt.key() == Key::Enter {
+                                    active_search_query.set(raw_add_input.read().clone());
+                                    selected_card_to_add.set(None);
+                                }
                             }
                         }
                     }
@@ -160,8 +167,34 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                         }
                                     }
 
-                                    // RIGHT: Account Selection
+                                    // RIGHT: Actions
                                     div { class: "flex flex-col gap-3 w-full md:w-64 md:pt-2",
+                                        {
+                                            let is_wishlisted = props.collection.read().is_wishlisted(&card.generated_id);
+                                            let c = card.clone();
+                                            rsx! {
+                                                button {
+                                                    class: "w-full py-3.5 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] group backdrop-blur-sm mb-1",
+                                                    class: if is_wishlisted { "bg-pink-500/20 text-pink-400 border border-pink-500/30 hover:bg-pink-500/30" } else { "bg-slate-800/60 text-slate-300 border border-slate-600/30 hover:bg-slate-700/80 hover:text-white" },
+                                                    onclick: move |_| {
+                                                        let card_to_add = Card { 
+                                                            id: c.generated_id.clone(), 
+                                                            name: c.name.clone(), 
+                                                            rarity: c.rarity.clone(),
+                                                            card_type: c.card_type.clone(), 
+                                                            pack: if c.packs.is_empty() { "Promo".to_string() } else { c.packs.join(", ") }
+                                                        };
+                                                        props.collection.write().toggle_wishlist(card_to_add);
+                                                    },
+                                                    svg { class: "w-5 h-5 flex-shrink-0 transition-all", class: if is_wishlisted { "fill-pink-400 text-pink-400" } else { "fill-none text-slate-400 group-hover:text-pink-400" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
+                                                    }
+                                                    span { class: "text-sm", if is_wishlisted { "Wishlisted" } else { "Add to Wishlist" } }
+                                                }
+                                            }
+                                        }
+
+                                        div { class: "h-px w-full bg-slate-700/50 my-1" }
                                         span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1", "Add to Account" }
                                         
                                         for acc in props.collection.read().accounts.iter() {

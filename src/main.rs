@@ -40,7 +40,7 @@ fn App() -> Element {
     // =========================================================================
     
     // Core Data
-    let mut collection = use_signal(|| CardCollection { accounts: Vec::new(), inventory: Vec::new() });
+    let mut collection = use_signal(|| CardCollection { accounts: Vec::new(), inventory: Vec::new(), wishlist: Vec::new(), tradable: Vec::new() });
     let mut sync_status = use_signal(|| String::new());
 
     // sync engine flags
@@ -49,10 +49,12 @@ fn App() -> Element {
     let mut last_saved_version = use_signal(|| 0u64); // tracks what we last saved
     
     // UI Toggles & Search
-    let mut search_query = use_signal(|| String::new());
+    let mut active_view = use_signal(|| "collection".to_string());
     let mut selected_account_filter = use_signal(|| String::from("All"));
     let mut selected_rarities = use_signal(|| Vec::<String>::new());
     let mut selected_types = use_signal(|| Vec::<String>::new());
+    let mut selected_packs = use_signal(|| Vec::<String>::new());
+    let mut search_query = use_signal(|| String::new());
     let mut show_add_modal = use_signal(|| false);
     let mut show_filter_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
@@ -149,13 +151,16 @@ fn App() -> Element {
 
     // Fetch Official API Database with LocalStorage caching (stale-while-revalidate)
     let mut image_db = use_signal(|| None::<HashMap<String, OfficialCard>>);
+    let mut pack_db = use_signal(|| None::<Vec<PackSet>>);
 
     use_effect(move || {
         spawn(async move {
             let cache_key = "cached_card_db";
+            let pack_cache_key = "cached_pack_db";
             
             // 1. Try to load from LocalStorage cache instantly
             let cached: Option<Vec<OfficialCard>> = LocalStorage::get(cache_key).ok();
+            let cached_packs: Option<HashMap<String, Vec<PackSet>>> = LocalStorage::get(pack_cache_key).ok();
             
             let base_image_url = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-exchange/main/public/images/cards-by-set";
             
@@ -178,17 +183,40 @@ fn App() -> Element {
             if let Some(cards) = cached {
                 image_db.set(Some(build_db(cards)));
             }
+            if let Some(pack_map) = cached_packs {
+                let mut flattened: Vec<PackSet> = pack_map.into_values().flatten().collect();
+                flattened.sort_by(|a, b| b.release_date.cmp(&a.release_date));
+                pack_db.set(Some(flattened));
+            }
 
             // Background refresh: fetch latest and update cache + UI
             // Unpkg handles @latest without caching forever, and timestamp bypasses browser cache
             let timestamp = js_sys::Date::now();
             let url = format!("https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/cards.json?t={}", timestamp);
-            if let Ok(response) = reqwest::get(&url).await {
-                if let Ok(fresh_cards) = response.json::<Vec<OfficialCard>>().await {
-                    let _ = LocalStorage::set(cache_key, &fresh_cards);
-                    image_db.set(Some(build_db(fresh_cards)));
+            let sets_url = format!("https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/sets.json?t={}", timestamp);
+            
+            let fetch_cards = async {
+                if let Ok(response) = reqwest::get(&url).await {
+                    if let Ok(fresh_cards) = response.json::<Vec<OfficialCard>>().await {
+                        let _ = LocalStorage::set(cache_key, &fresh_cards);
+                        image_db.set(Some(build_db(fresh_cards)));
+                    }
                 }
-            }
+            };
+            
+            let fetch_packs = async {
+                if let Ok(response) = reqwest::get(&sets_url).await {
+                    if let Ok(fresh_packs) = response.json::<HashMap<String, Vec<PackSet>>>().await {
+                        let _ = LocalStorage::set(pack_cache_key, &fresh_packs);
+                        let mut flattened: Vec<PackSet> = fresh_packs.into_values().flatten().collect();
+                        flattened.sort_by(|a, b| b.release_date.cmp(&a.release_date));
+                        pack_db.set(Some(flattened));
+                    }
+                }
+            };
+            
+            fetch_cards.await;
+            fetch_packs.await;
         });
     });
 
@@ -241,17 +269,19 @@ fn App() -> Element {
                                 show_login_modal,
                                 collection,
                                 sync_status,
+                                active_view,
+                                pack_db,
                             }
                         }
                     }
                 }
                 
                 // The Dropdown Filters Tray
-                FilterTray { show_filter_menu, selected_account_filter, selected_rarities, selected_types, collection }
+                FilterTray { show_filter_menu, selected_account_filter, selected_rarities, selected_types, selected_packs, collection, pack_db }
             }
 
             // --- THE VISUAL GRID ---
-            CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, image_db, selected_card_id }
+            CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view }
         }
 
         // --- OVERLAYS & MODALS ---

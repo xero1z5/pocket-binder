@@ -65,7 +65,9 @@ pub struct FilterTrayProps {
     pub selected_account_filter: Signal<String>,
     pub selected_rarities: Signal<Vec<String>>,
     pub selected_types: Signal<Vec<String>>,
+    pub selected_packs: Signal<Vec<String>>,
     pub collection: Signal<CardCollection>,
+    pub pack_db: Signal<Option<Vec<PackSet>>>,
 }
 
 // All rarity codes in display order (highest to lowest priority)
@@ -183,6 +185,50 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                             },
                                             span { "{icon}" }
                                             "{type_str}"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // --- FILTER BY PACK ---
+                    if let Some(packs) = props.pack_db.read().as_ref() {
+                        div { class: "flex flex-col gap-2 pt-2 border-t border-indigo-500/10",
+                            div { class: "flex items-center justify-between",
+                                label { class: "text-[10px] text-slate-400 uppercase font-black tracking-wider", "Sets / Packs" }
+                                if !props.selected_packs.read().is_empty() {
+                                    button { 
+                                        class: "text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors",
+                                        onclick: move |_| props.selected_packs.set(Vec::new()),
+                                        "Clear"
+                                    }
+                                }
+                            }
+                            div { class: "flex flex-wrap gap-2",
+                                for pack in packs.iter() {
+                                    {
+                                        let code_for_click = pack.code.clone();
+                                        let is_active = props.selected_packs.read().contains(&code_for_click);
+                                        let img_src = format!("https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main/dist/images/sets/LOGO_expansion_{}_en_US.webp", pack.code);
+                                        let title = pack.name.get("en").cloned().unwrap_or_else(|| pack.code.clone());
+                                        
+                                        rsx! {
+                                            button {
+                                                class: "relative overflow-hidden rounded-xl border transition-all h-12 px-3 flex items-center justify-center",
+                                                class: if is_active { "bg-indigo-500/20 border-indigo-400/50 shadow-[0_0_8px_rgba(99,102,241,0.2)]" } else { "bg-slate-900/50 border-slate-700/50 hover:border-slate-600 grayscale opacity-60 hover:grayscale-0 hover:opacity-100" },
+                                                onclick: move |_| {
+                                                    let mut current = props.selected_packs.read().clone();
+                                                    if current.contains(&code_for_click) {
+                                                        current.retain(|c| c != &code_for_click);
+                                                    } else {
+                                                        current.push(code_for_click.clone());
+                                                    }
+                                                    props.selected_packs.set(current);
+                                                },
+                                                title: "{title}",
+                                                img { src: "{img_src}", alt: "{title}", class: "h-8 object-contain" }
+                                            }
                                         }
                                     }
                                 }

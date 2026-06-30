@@ -68,7 +68,7 @@ pub async fn load_from_supabase(token: &str) -> Result<CardCollection, String> {
             }
         }
         // If they have no rows, they are a new user! Return an empty binder.
-        return Ok(CardCollection { accounts: Vec::new(), inventory: Vec::new() });
+        return Ok(CardCollection { accounts: Vec::new(), inventory: Vec::new(), wishlist: Vec::new(), tradable: Vec::new() });
     }
     
     Err(format!("Load failed with status: {}", status))

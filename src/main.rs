@@ -57,6 +57,7 @@ fn App() -> Element {
     let mut search_query = use_signal(|| String::new());
     let mut show_add_modal = use_signal(|| false);
     let mut show_filter_menu = use_signal(|| false);
+    let mut show_hamburger_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
 
     let mut show_trade_modal = use_signal(|| false);
@@ -79,6 +80,22 @@ fn App() -> Element {
     // =========================================================================
     // EFFECTS & DATA FETCHING
     // =========================================================================
+
+    use_effect(move || {
+        let any_modal_open = *show_add_modal.read() || 
+            *show_filter_menu.read() || 
+            selected_card_id.read().is_some() || 
+            *show_trade_modal.read() || 
+            *show_login_modal.read() || 
+            *show_account_modal.read() ||
+            *show_hamburger_menu.read();
+
+        if any_modal_open {
+            let _ = document::eval("document.body.style.overflow = 'hidden'");
+        } else {
+            let _ = document::eval("document.body.style.overflow = ''");
+        }
+    });
 
     // Initial Database Load
     use_effect(move || {
@@ -261,6 +278,7 @@ fn App() -> Element {
                         div { class: "flex items-center gap-2 md:gap-3",
                             FilterButton { show_filter_menu }
                             HamburgerMenu {
+                                is_open: show_hamburger_menu,
                                 show_account_modal,
                                 show_add_modal,
                                 show_trade_modal,

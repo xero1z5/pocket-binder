@@ -87,6 +87,7 @@ pub struct AddCardModalProps {
 #[component]
 pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
+    let mut show_account_list = use_signal(|| false);
 
     let mut raw_add_input = use_signal(|| String::new());
     let mut active_search_query = use_signal(|| String::new());
@@ -113,10 +114,10 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
             div { class: "fixed inset-0 bg-slate-950/90 flex flex-col z-50 animate-fade-in-down backdrop-blur-sm",
                 div { class: "bg-slate-900/80 border-b border-indigo-500/20 p-4 pt-6 flex flex-col gap-4 shadow-xl z-10 backdrop-blur-xl",
                     div { class: "flex justify-between items-center",
-                        h2 { class: "text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300", "Add Cards" }
+                        h2 { class: "text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300", "Search Cards" }
                         button { 
                             class: "text-slate-500 hover:text-white p-2 transition-colors", 
-                            onclick: move |_| { props.show_add_modal.set(false); selected_card_to_add.set(None); }, 
+                            onclick: move |_| { props.show_add_modal.set(false); selected_card_to_add.set(None); show_account_list.set(false); }, 
                             svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" } }
                         }
                     }
@@ -137,6 +138,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                 if evt.key() == Key::Enter {
                                     active_search_query.set(raw_add_input.read().clone());
                                     selected_card_to_add.set(None);
+                                    show_account_list.set(false);
                                 }
                             }
                         }
@@ -194,48 +196,69 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                             }
                                         }
 
-                                        div { class: "h-px w-full bg-slate-700/50 my-1" }
-                                        span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1", "Add to Account" }
-                                        
-                                        for acc in props.collection.read().accounts.iter() {
-                                            {
-                                                let c = card.clone(); 
-                                                let target_acc = acc.name.clone();
-                                                let is_main = acc.main;
-                                                rsx! {
+                                        if !*show_account_list.read() {
+                                            button {
+                                                class: "w-full py-3.5 px-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] shadow-lg shadow-indigo-500/20",
+                                                onclick: move |_| show_account_list.set(true),
+                                                svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
+                                                }
+                                                span { class: "text-sm", "Add Card" }
+                                            }
+                                        }
+
+                                        if *show_account_list.read() {
+                                            div { class: "flex flex-col animate-fade-in-down w-full",
+                                                div { class: "flex items-center justify-between mb-2 mt-1",
+                                                    span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest", "Select Account" }
                                                     button {
-                                                        class: "w-full py-3.5 px-4 bg-slate-800/60 hover:bg-indigo-500/15 border border-indigo-500/15 hover:border-indigo-500/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group backdrop-blur-sm",
-                                                        onclick: move |_| {
-                                                            let card_to_add = Card { 
-                                                                id: c.generated_id.clone(), 
-                                                                name: c.name.clone(), 
-                                                                rarity: c.rarity.clone(),
-                                                                card_type: c.card_type.clone(), 
-                                                                pack: if c.packs.is_empty() { "Promo".to_string() } else { c.packs.join(", ") }
-                                                            };
-                                                            props.collection.write().add_card(card_to_add, &target_acc, 1);
-                                                            
-                                                            props.toast_message.set(Some(format!("Added to {}", target_acc)));
-                                                            let mut t = props.toast_message.clone(); 
-                                                            spawn(async move { 
-                                                                gloo_timers::future::sleep(std::time::Duration::from_secs(2)).await; 
-                                                                t.set(None); 
-                                                            });
-                                                            selected_card_to_add.set(None);
-                                                        },
-                                                        // Account icon
-                                                        div { class: "w-9 h-9 rounded-lg bg-slate-700/60 group-hover:bg-indigo-500/20 flex items-center justify-center transition-colors flex-shrink-0",
-                                                            span { class: "text-sm", if is_main { "⭐" } else { "👤" } }
-                                                        }
-                                                        div { class: "flex flex-col items-start",
-                                                            span { class: "text-sm font-semibold group-hover:text-indigo-400 transition-colors", "{acc.name}" }
-                                                            if is_main {
-                                                                span { class: "text-[10px] text-slate-500", "Main Account" }
+                                                        class: "text-[10px] text-slate-400 hover:text-white transition-colors",
+                                                        onclick: move |_| show_account_list.set(false),
+                                                        "Cancel"
+                                                    }
+                                                }
+                                                
+                                                div { class: "flex flex-col gap-2",
+                                                    for acc in props.collection.read().accounts.iter() {
+                                                        {
+                                                            let c = card.clone(); 
+                                                            let target_acc = acc.name.clone();
+                                                            let is_main = acc.main;
+                                                            rsx! {
+                                                                button {
+                                                                    class: "w-full py-3 px-4 bg-slate-800/60 hover:bg-indigo-500/15 border border-indigo-500/15 hover:border-indigo-500/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group backdrop-blur-sm",
+                                                                    onclick: move |_| {
+                                                                        let card_to_add = Card { 
+                                                                            id: c.generated_id.clone(), 
+                                                                            name: c.name.clone(), 
+                                                                            rarity: c.rarity.clone(),
+                                                                            card_type: c.card_type.clone(), 
+                                                                            pack: if c.packs.is_empty() { "Promo".to_string() } else { c.packs.join(", ") }
+                                                                        };
+                                                                        props.collection.write().add_card(card_to_add, &target_acc, 1);
+                                                                        
+                                                                        props.toast_message.set(Some(format!("Added to {}", target_acc)));
+                                                                        let mut t = props.toast_message.clone(); 
+                                                                        spawn(async move { 
+                                                                            gloo_timers::future::sleep(std::time::Duration::from_secs(2)).await; 
+                                                                            t.set(None); 
+                                                                        });
+                                                                        selected_card_to_add.set(None);
+                                                                        show_account_list.set(false);
+                                                                    },
+                                                                    // Account icon
+                                                                    div { class: "w-8 h-8 rounded-lg bg-slate-700/60 group-hover:bg-indigo-500/20 flex items-center justify-center transition-colors flex-shrink-0",
+                                                                        span { class: "text-xs", if is_main { "⭐" } else { "👤" } }
+                                                                    }
+                                                                    div { class: "flex flex-col items-start",
+                                                                        span { class: "text-sm font-semibold group-hover:text-indigo-400 transition-colors", "{acc.name}" }
+                                                                    }
+                                                                    // Arrow icon on the right
+                                                                    svg { class: "w-4 h-4 text-slate-600 group-hover:text-indigo-400 ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                                                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
+                                                                    }
+                                                                }
                                                             }
-                                                        }
-                                                        // Arrow icon on the right
-                                                        svg { class: "w-4 h-4 text-slate-600 group-hover:text-indigo-400 ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
-                                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
                                                         }
                                                     }
                                                 }
@@ -243,8 +266,11 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                         }
                                         
                                         button { 
-                                            class: "text-slate-500 hover:text-white text-sm mt-2 py-2 transition-colors", 
-                                            onclick: move |_| selected_card_to_add.set(None), 
+                                            class: "text-slate-500 hover:text-white text-sm mt-4 py-2 transition-colors border border-slate-700/50 hover:border-slate-500 rounded-xl", 
+                                            onclick: move |_| {
+                                                selected_card_to_add.set(None);
+                                                show_account_list.set(false);
+                                            }, 
                                             "← Back to results" 
                                         }
                                     }

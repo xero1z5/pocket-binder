@@ -89,21 +89,22 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
     let mut show_account_list = use_signal(|| false);
 
-    let mut raw_add_input = use_signal(|| String::new());
-    let mut active_search_query = use_signal(|| String::new());
+    let mut search_input = use_signal(|| String::new());
 
-    // Memoized filtered results — reads active_search_query directly for instant results
+    // Memoized filtered results — live search as-you-type
     let filtered_api_cards = use_memo(move || {
-        let query = active_search_query.read().to_lowercase();
+        let query = search_input.read().trim().to_lowercase();
         if query.is_empty() {
             return Vec::new();
         }
         if let Some(api_map) = &*props.image_db.read() {
-            api_map.values()
+            let mut results: Vec<OfficialCard> = api_map.values()
                 .filter(|c| c.name.to_lowercase().contains(&query))
-                .take(30)
                 .cloned()
-                .collect::<Vec<OfficialCard>>()
+                .collect();
+            results.sort_by(|a, b| a.set.cmp(&b.set).then(a.number.cmp(&b.number)));
+            results.truncate(100);
+            results
         } else {
             Vec::new()
         }
@@ -129,18 +130,13 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         }
                         input { 
                             class: "w-full bg-slate-900/80 border border-indigo-500/20 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors shadow-inner", 
-                            placeholder: "Search card name...", 
-                            value: "{raw_add_input}", 
+                            placeholder: "Type to search cards...", 
+                            value: "{search_input}", 
                             oninput: move |evt| {
-                                raw_add_input.set(evt.value());
+                                search_input.set(evt.value());
+                                selected_card_to_add.set(None);
+                                show_account_list.set(false);
                             },
-                            onkeydown: move |evt| {
-                                if evt.key() == Key::Enter {
-                                    active_search_query.set(raw_add_input.read().clone());
-                                    selected_card_to_add.set(None);
-                                    show_account_list.set(false);
-                                }
-                            }
                         }
                     }
                 }

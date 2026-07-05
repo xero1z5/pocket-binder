@@ -210,7 +210,14 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                     {
                                         let code_for_click = pack.code.clone();
                                         let is_active = props.selected_packs.read().contains(&code_for_click);
-                                        let img_src = format!("https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main/dist/images/sets/LOGO_expansion_{}_en_US.webp", pack.code);
+                                        
+                                        let flib_code = match pack.code.as_str() {
+                                            "P-A" => "PROMO-A",
+                                            "P-B" => "PROMO-B",
+                                            other => other,
+                                        };
+                                        let img_src = format!("https://cdn.jsdelivr.net/gh/flibustier/pokemon-tcg-pocket-database@main/dist/images/sets/LOGO_expansion_{}_en_US.webp", flib_code);
+                                        
                                         let title = pack.name.get("en").cloned().unwrap_or_else(|| pack.code.clone());
                                         
                                         rsx! {

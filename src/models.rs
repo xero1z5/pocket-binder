@@ -204,4 +204,150 @@ impl CardCollection {
     pub fn is_tradable(&self, card_id: &str) -> bool {
         self.tradable.contains(&card_id.to_string())
     }
+
+    /// Automatically repairs orphaned cards (e.g., from old database IDs like TCGdex) 
+    /// by matching their name and rarity against the new image_db.
+    pub fn migrate_orphaned_cards(&mut self, api_map: &HashMap<String, OfficialCard>) -> bool {
+        let mut modified = false;
+
+        // Helper closure to fix a single card
+        let fix_card = |card: &mut Card, api_map: &HashMap<String, OfficialCard>| -> bool {
+            if !api_map.contains_key(&card.id) {
+                // Try to find a match by name and rarity
+                if let Some(new_card) = api_map.values().find(|c| c.name == card.name && c.rarity == card.rarity) {
+                    card.id = new_card.generated_id.clone();
+                    card.pack = new_card.set.clone();
+                    if card.card_type.is_empty() {
+                        card.card_type = new_card.card_type.clone();
+                    }
+                    return true;
+                }
+            }
+            false
+        };
+
+        // Migrate inventory
+        for entry in &mut self.inventory {
+            if fix_card(&mut entry.card, api_map) {
+                modified = true;
+            }
+        }
+
+        // Migrate wishlist
+        for card in &mut self.wishlist {
+            if fix_card(card, api_map) {
+                modified = true;
+            }
+        }
+        
+        // Migrate tradable (this is an array of IDs, so we need to find the inventory entry to get the name/rarity, or just wipe orphaned tradables if they can't be mapped easily)
+        // Since we already migrated inventory, we should map tradables based on the NEW inventory IDs if they changed.
+        // Actually, tradable just holds IDs. It's safer to just let the user re-mark them if they get orphaned, 
+        // OR we can map them if we had a mapping dictionary. Since we mutate the inventory in place, 
+        // we can just check if the tradable ID exists in inventory. If not, maybe it was migrated to a new ID?
+        // To be safe and simple, we'll just clean up tradable IDs that no longer exist in inventory.
+        let mut valid_tradables = Vec::new();
+        for id in &self.tradable {
+            if self.inventory.iter().any(|e| &e.card.id == id) {
+                valid_tradables.push(id.clone());
+            } else {
+                // Try to see if this ID was an old ID that got migrated.
+                // We'd have to find it in the old state. Since we didn't track old->new maps,
+                // we'll just drop invalid tradables. The user can click the trade button again.
+                modified = true;
+            }
+        }
+        self.tradable = valid_tradables;
+
+        modified
+    }
 }
+
+//=================== TCGDEX API RESPONSE MODELS =======================
+
+/// TCGdex: /v2/en/series/tcgp → .sets[]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TcgdexSetBrief {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub logo: Option<String>,
+}
+
+/// TCGdex: /v2/en/sets/{id} → full set with cards and boosters
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TcgdexSetDetail {
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub logo: Option<String>,
+    #[serde(default)]
+    pub cards: Vec<TcgdexCardBrief>,
+    #[serde(default)]
+    pub boosters: Vec<TcgdexBooster>,
+}
+
+/// TCGdex: card entry inside a set response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TcgdexCardBrief {
+    pub id: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub image: Option<String>,
+    #[serde(rename = "localId")]
+    #[serde(default)]
+    pub local_id: String,
+}
+
+/// TCGdex: booster/pack entry inside a set response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TcgdexBooster {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub name: String,
+}
+
+/// TCGdex: /v2/en/series/tcgp response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TcgdexSeriesResponse {
+    #[serde(default)]
+    pub sets: Vec<TcgdexSetBrief>,
+}
+
+/// Flibustier npm CDN: PRIMARY card data source
+/// Fetched from: https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/cards.json
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FlibustierCard {
+    #[serde(default)]
+    pub set: String,
+    #[serde(default)]
+    pub number: u32,
+    #[serde(default)]
+    pub rarity: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub image: String,
+    #[serde(default)]
+    pub packs: Vec<String>,
+}
+
+/// Flibustier npm CDN: set data
+/// Fetched from: https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/sets.json
+/// Response is a HashMap<String, Vec<FlibustierSet>> keyed by series letter (A, B, PROMO)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FlibustierSet {
+    pub code: String,
+    #[serde(rename = "releaseDate")]
+    #[serde(default)]
+    pub release_date: String,
+    #[serde(default)]
+    pub count: u32,
+    #[serde(default)]
+    pub name: HashMap<String, String>,
+    #[serde(default)]
+    pub packs: Vec<String>,
+}
+

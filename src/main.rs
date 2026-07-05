@@ -81,21 +81,13 @@ fn App() -> Element {
     // EFFECTS & DATA FETCHING
     // =========================================================================
 
-    use_effect(move || {
-        let any_modal_open = *show_add_modal.read() || 
-            *show_filter_menu.read() || 
-            selected_card_id.read().is_some() || 
-            *show_trade_modal.read() || 
-            *show_login_modal.read() || 
-            *show_account_modal.read() ||
-            *show_hamburger_menu.read();
-
-        if any_modal_open {
-            let _ = document::eval("document.body.style.overflow = 'hidden'");
-        } else {
-            let _ = document::eval("document.body.style.overflow = ''");
-        }
-    });
+    let any_modal_open = *show_add_modal.read() || 
+        *show_filter_menu.read() || 
+        selected_card_id.read().is_some() || 
+        *show_trade_modal.read() || 
+        *show_login_modal.read() || 
+        *show_account_modal.read() ||
+        *show_hamburger_menu.read();
 
     // Initial Database Load
     use_effect(move || {
@@ -170,28 +162,42 @@ fn App() -> Element {
     let mut image_db = use_signal(|| None::<HashMap<String, OfficialCard>>);
     let mut pack_db = use_signal(|| None::<Vec<PackSet>>);
 
+    // Auto-Migrate orphaned cards when collection or image_db changes
+    use_effect(move || {
+        if let Some(db) = &*image_db.read() {
+            let mut col = collection.read().clone();
+            if col.migrate_orphaned_cards(db) {
+                // If migration actually changed something, save it
+                collection.set(col.clone());
+                let _ = LocalStorage::set("binder_state", &col);
+                
+                let token = auth_token.read().clone();
+                if !token.is_empty() {
+                    spawn(async move {
+                        let _ = save_to_supabase(col, token).await;
+                    });
+                }
+            }
+        }
+    });
+
     use_effect(move || {
         spawn(async move {
-            let cache_key = "cached_card_db";
-            let pack_cache_key = "cached_pack_db";
+            let cache_key = "cached_card_db_v9";
+            let pack_cache_key = "cached_pack_db_v9";
             
             // 1. Try to load from LocalStorage cache instantly
             let cached: Option<Vec<OfficialCard>> = LocalStorage::get(cache_key).ok();
-            let cached_packs: Option<HashMap<String, Vec<PackSet>>> = LocalStorage::get(pack_cache_key).ok();
-            
-            let base_image_url = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-exchange/main/public/images/cards-by-set";
             
             let build_db = |cards: Vec<OfficialCard>| -> HashMap<String, OfficialCard> {
                 let mut api_db: HashMap<String, OfficialCard> = HashMap::new();
                 for mut card in cards {
-                    card.full_image_url = format!("{}/{}/{}.webp", base_image_url, card.set, card.number);
-                    card.generated_id = format!("{}-{}", card.set, card.number);
-                    // Derive card type from image filename prefix
-                    card.card_type = if card.image.starts_with("cTR") {
-                        "Trainer".to_string()
-                    } else {
-                        "Pokémon".to_string()
-                   };
+                    if card.generated_id.is_empty() {
+                        card.generated_id = format!("{}-{:03}", card.set, card.number);
+                    }
+                    if card.full_image_url.is_empty() {
+                        card.full_image_url = format!("https://assets.tcgdex.net/en/tcgp/{}/{:03}/high.webp", card.set, card.number);
+                    }
                     api_db.insert(card.generated_id.clone(), card);
                 }
                 api_db
@@ -200,40 +206,98 @@ fn App() -> Element {
             if let Some(cards) = cached {
                 image_db.set(Some(build_db(cards)));
             }
-            if let Some(pack_map) = cached_packs {
-                let mut flattened: Vec<PackSet> = pack_map.into_values().flatten().collect();
-                flattened.sort_by(|a, b| b.release_date.cmp(&a.release_date));
-                pack_db.set(Some(flattened));
+            
+            if let Some(packs) = LocalStorage::get::<Vec<PackSet>>(pack_cache_key).ok() {
+                pack_db.set(Some(packs));
             }
 
-            // Background refresh: fetch latest and update cache + UI
-            // Unpkg handles @latest without caching forever, and timestamp bypasses browser cache
-            let timestamp = js_sys::Date::now();
-            let url = format!("https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/cards.json?t={}", timestamp);
-            let sets_url = format!("https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/sets.json?t={}", timestamp);
+            // ===================================================================
+            // 2. Background refresh — Flibustier as PRIMARY source
+            // ===================================================================
+            let cdn_base = "https://unpkg.com/pokemon-tcg-pocket-database@latest/dist";
             
-            let fetch_cards = async {
-                if let Ok(response) = reqwest::get(&url).await {
-                    if let Ok(fresh_cards) = response.json::<Vec<OfficialCard>>().await {
-                        let _ = LocalStorage::set(cache_key, &fresh_cards);
-                        image_db.set(Some(build_db(fresh_cards)));
-                    }
+            // Sets that exist on TCGdex CDN (for high-quality images)
+            let tcgdex_sets: Vec<&str> = vec![
+                "P-A", "A1", "A1a", "A2", "A2a", "A2b", "A3", "A3a", "A3b",
+                "A4", "A4a", "B1", "B1a", "B2", "B2a",
+            ];
+            
+            // Normalize flibustier set IDs (PROMO-A → P-A) to a common format
+            let normalize_set = |s: &str| -> String {
+                match s {
+                    "PROMO-A" => "P-A".to_string(),
+                    "PROMO-B" => "P-B".to_string(),
+                    other => other.to_string(),
                 }
             };
             
-            let fetch_packs = async {
-                if let Ok(response) = reqwest::get(&sets_url).await {
-                    if let Ok(fresh_packs) = response.json::<HashMap<String, Vec<PackSet>>>().await {
-                        let _ = LocalStorage::set(pack_cache_key, &fresh_packs);
-                        let mut flattened: Vec<PackSet> = fresh_packs.into_values().flatten().collect();
-                        flattened.sort_by(|a, b| b.release_date.cmp(&a.release_date));
-                        pack_db.set(Some(flattened));
-                    }
-                }
-            };
+            // --- Fetch cards from flibustier (primary, complete list) ---
+            let cards_url = format!("{}/cards.json", cdn_base);
+            let sets_url = format!("{}/sets.json", cdn_base);
             
-            fetch_cards.await;
-            fetch_packs.await;
+            let cards_future = reqwest::get(&cards_url);
+            let sets_future = reqwest::get(&sets_url);
+            
+            // Fetch both in parallel
+            let (cards_result, sets_result) = (cards_future.await, sets_future.await);
+            
+            // Process cards
+            if let Ok(cards_resp) = cards_result {
+                if let Ok(flib_cards) = cards_resp.json::<Vec<FlibustierCard>>().await {
+                    let all_cards: Vec<OfficialCard> = flib_cards.into_iter().map(|fc| {
+                        let set_id = normalize_set(&fc.set);
+                        let generated_id = format!("{}-{:03}", set_id, fc.number);
+                        
+                        // Use LimitlessTCG CDN for all images as requested (fastest updates for new sets)
+                        let image_url = format!("https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/pocket/{}/{}_{:03}_EN.webp", set_id, set_id, fc.number);
+                        
+                        // Detect card type from the image name pattern
+                        let card_type = if fc.image.starts_with("cTR") {
+                            "Trainer".to_string()
+                        } else {
+                            "Pokémon".to_string()
+                        };
+                        
+                        OfficialCard {
+                            set: set_id,
+                            number: fc.number,
+                            name: fc.name,
+                            rarity: fc.rarity,
+                            packs: fc.packs,
+                            image: fc.image,
+                            card_type,
+                            full_image_url: image_url,
+                            generated_id,
+                        }
+                    }).collect();
+                    
+                    let _ = LocalStorage::set(cache_key, &all_cards);
+                    image_db.set(Some(build_db(all_cards)));
+                }
+            }
+            
+            // Process sets
+            if let Ok(sets_resp) = sets_result {
+                if let Ok(sets_map) = sets_resp.json::<HashMap<String, Vec<FlibustierSet>>>().await {
+                    let mut all_packs: Vec<PackSet> = Vec::new();
+                    for (_series, sets) in &sets_map {
+                        for fset in sets {
+                            let code = normalize_set(&fset.code);
+                            all_packs.push(PackSet {
+                                code,
+                                release_date: fset.release_date.clone(),
+                                name: fset.name.clone(),
+                                packs: fset.packs.clone(),
+                            });
+                        }
+                    }
+                    // Sort by release date (newest first)
+                    all_packs.sort_by(|a, b| b.release_date.cmp(&a.release_date));
+                    
+                    let _ = LocalStorage::set(pack_cache_key, &all_packs);
+                    pack_db.set(Some(all_packs));
+                }
+            }
         });
     });
 
@@ -244,13 +308,16 @@ fn App() -> Element {
         document::Meta { name: "viewport", content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" }
 
         // pre warm the network connections
-        document::Link { rel: "preconnect", href: "https://wsrv.nl" }
-        document::Link { rel: "preconnect", href: "https://raw.githubusercontent.com" }
-        document::Link { rel: "preconnect", href: "https://cdn.jsdelivr.net" }
+        document::Link { rel: "preconnect", href: "https://api.tcgdex.net" }
+        document::Link { rel: "preconnect", href: "https://assets.tcgdex.net" }
 
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+
+        if any_modal_open {
+            style { "body {{ overflow: hidden !important; }}" }
+        }
 
         div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen font-sans relative overflow-x-hidden",
             

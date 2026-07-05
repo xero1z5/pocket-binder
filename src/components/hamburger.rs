@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use std::collections::HashSet;
 use gloo_storage::{LocalStorage, Storage};
 use crate::models::*;
 use crate::supabase::*;
@@ -21,6 +22,7 @@ pub struct HamburgerMenuProps {
 #[component]
 pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
     let mut show_packs = use_signal(|| false);
+    let mut failed_images = use_signal(|| HashSet::new());
 
     rsx! {
         // Hamburger Toggle Button
@@ -159,7 +161,15 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                                     for pack in packs.iter() {
                                         {
                                             let code_for_click = pack.code.clone();
-                                            let img_src = format!("https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main/dist/images/sets/LOGO_expansion_{}_en_US.webp", pack.code);
+                                            
+                                            let flib_code = match pack.code.as_str() {
+                                                "P-A" => "PROMO-A",
+                                                "P-B" => "PROMO-B",
+                                                other => other,
+                                            };
+                                            let img_src = format!("https://cdn.jsdelivr.net/gh/flibustier/pokemon-tcg-pocket-database@main/dist/images/sets/LOGO_expansion_{}_en_US.webp", flib_code);
+                                            
+                                            let is_failed = failed_images.read().contains(&img_src);
                                             let title = pack.name.get("en").cloned().unwrap_or_else(|| pack.code.clone());
                                             
                                             rsx! {
@@ -169,7 +179,21 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                                                         props.active_view.set(format!("pack:{}", code_for_click));
                                                         props.is_open.set(false);
                                                     },
-                                                    img { src: "{img_src}", alt: "{title}", class: "h-5 w-14 object-contain" }
+                                                    if is_failed {
+                                                        div {
+                                                            class: "h-5 w-14 rounded bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center font-bold text-[10px] text-indigo-300 overflow-hidden",
+                                                            "{pack.code}"
+                                                        }
+                                                    } else {
+                                                        img {
+                                                            src: "{img_src}",
+                                                            alt: "{title}",
+                                                            class: "h-5 w-14 object-contain",
+                                                            onerror: move |_| {
+                                                                failed_images.write().insert(img_src.clone());
+                                                            }
+                                                        }
+                                                    }
                                                     span { class: "truncate flex-1 text-xs", "{title}" }
                                                 }
                                             }

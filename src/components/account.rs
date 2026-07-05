@@ -23,8 +23,9 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
 
     rsx! {
         if *props.show_account_modal.read() {
-            div { class: "fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
-                div { class: "bg-slate-900 border border-indigo-500/20 rounded-2xl p-5 w-full max-w-sm shadow-2xl flex flex-col gap-4 animate-fade-in-down",
+            div { class: "fixed inset-0 flex items-center justify-center p-4 z-50",
+                div { class: "absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-fade-in", onclick: move |_| props.show_account_modal.set(false) }
+                div { class: "glass-panel rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 animate-fade-in-down",
                     
                     // Header
                     div { class: "flex justify-between items-center",

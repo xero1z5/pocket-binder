@@ -113,7 +113,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     rsx! {
         if *props.show_add_modal.read() {
             div { class: "fixed inset-0 bg-slate-950/90 flex flex-col z-50 animate-fade-in-down backdrop-blur-sm",
-                div { class: "bg-slate-900/80 border-b border-indigo-500/20 p-4 pt-6 flex flex-col gap-4 shadow-xl z-10 backdrop-blur-xl",
+                div { class: "glass-panel border-b border-indigo-500/20 p-4 pt-6 flex flex-col gap-4 shadow-xl z-10",
                     div { class: "flex justify-between items-center",
                         h2 { class: "text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300", "Search Cards" }
                         button { 

@@ -43,7 +43,7 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
             }
 
             // Slide-out sidebar panel
-            div { class: "fixed top-0 right-0 h-full w-72 md:w-80 bg-slate-900/95 border-l border-indigo-500/20 z-50 flex flex-col shadow-2xl backdrop-blur-xl animate-slide-in-right",
+            div { class: "fixed top-0 right-0 h-full w-72 md:w-80 glass-panel border-l border-indigo-500/20 z-50 flex flex-col shadow-2xl animate-slide-in-right",
 
                 // Header area
                 div { class: "flex items-center justify-between p-5 border-b border-indigo-500/10",

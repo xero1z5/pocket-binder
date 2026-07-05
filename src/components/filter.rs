@@ -80,17 +80,43 @@ const ALL_TYPES: &[&str] = &["Pokémon", "Trainer"];
 pub fn FilterTray(mut props: FilterTrayProps) -> Element {
     rsx! {
         if *props.show_filter_menu.read() {
-            div { class: "w-full bg-slate-800/60 border border-indigo-500/20 rounded-2xl p-4 mt-4 shadow-xl backdrop-blur-xl animate-fade-in-down",
-                div { class: "flex flex-col gap-5",
+            // Backdrop
+            div { 
+                class: "fixed inset-0 bg-slate-950/60 z-[60] backdrop-blur-sm animate-fade-in",
+                onclick: move |_| props.show_filter_menu.set(false),
+            }
+
+            // Drawer
+            div { class: "fixed top-0 right-0 h-full w-80 md:w-96 z-[70] glass-panel border-l border-indigo-500/20 shadow-2xl flex flex-col animate-slide-in-right",
+                
+                // Header
+                div { class: "flex items-center justify-between p-5 border-b border-white/10",
+                    div { class: "flex items-center gap-3",
+                        svg { class: "w-5 h-5 text-indigo-400", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" }
+                        }
+                        h2 { class: "text-lg font-bold text-white tracking-tight", "Filters" }
+                    }
+                    button {
+                        class: "p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all",
+                        onclick: move |_| props.show_filter_menu.set(false),
+                        svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" }
+                        }
+                    }
+                }
+
+                // Scrollable Content
+                div { class: "flex-1 overflow-y-auto p-5 flex flex-col gap-6",
                     
                     // --- FILTER BY ACCOUNT ---
-                    div { class: "flex flex-col gap-2",
-                        label { class: "text-[10px] text-slate-400 uppercase font-black tracking-wider flex items-center gap-1", 
-                            svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-3 h-3", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" } }
+                    div { class: "flex flex-col gap-3",
+                        label { class: "text-[10px] text-slate-400 uppercase font-black tracking-wider flex items-center gap-2", 
+                            svg { class: "w-3 h-3 text-indigo-400", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" } }
                             "Account" 
                         }
                         select {
-                            class: "bg-slate-900/80 border border-indigo-500/20 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 cursor-pointer min-w-[200px] shadow-inner transition-colors",
+                            class: "w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/50 cursor-pointer shadow-inner transition-colors",
                             onchange: move |evt| props.selected_account_filter.set(evt.value()),
                             option { value: "All", "All Accounts" }
                             for account in props.collection.read().accounts.iter() {
@@ -100,18 +126,18 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                     }
 
                     // --- FILTER BY RARITY (icon chips) ---
-                    div { class: "flex flex-col gap-2",
+                    div { class: "flex flex-col gap-3",
                         div { class: "flex items-center justify-between",
                             label { class: "text-[10px] text-slate-400 uppercase font-black tracking-wider", "Rarity" }
                             if !props.selected_rarities.read().is_empty() {
                                 button { 
-                                    class: "text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors",
+                                    class: "text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors bg-indigo-500/10 px-2 py-1 rounded-md",
                                     onclick: move |_| props.selected_rarities.set(Vec::new()),
                                     "Clear"
                                 }
                             }
                         }
-                        div { class: "flex flex-wrap gap-1.5",
+                        div { class: "flex flex-wrap gap-2",
                             for code in ALL_RARITIES.iter() {
                                 {
                                     let code_str = code.to_string();
@@ -119,12 +145,12 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                     let is_active = props.selected_rarities.read().contains(&code_str);
                                     let is_sar = *code == "SAR";
                                     
-                                    let base = "flex items-center gap-1 px-2.5 py-1.5 rounded-lg border transition-all text-xs font-medium";
+                                    let base = "flex items-center gap-1 px-3 py-2 rounded-xl border transition-all text-xs font-bold shadow-sm";
                                     let state_class = match (is_sar, is_active) {
-                                        (true, true) => "sar-chip-active",
-                                        (true, false) => "sar-chip",
-                                        (false, true) => "bg-indigo-500/20 border-indigo-400/50 text-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.2)]",
-                                        (false, false) => "bg-slate-900/50 border-slate-700/50 text-slate-500 hover:border-slate-600 hover:text-slate-400",
+                                        (true, true) => "sar-chip-active scale-105",
+                                        (true, false) => "sar-chip hover:scale-105",
+                                        (false, true) => "bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-400 text-white shadow-[0_4px_15px_rgba(99,102,241,0.4)] scale-105",
+                                        (false, false) => "bg-slate-900/60 border-white/10 text-slate-400 hover:border-white/30 hover:bg-slate-800/80 hover:text-slate-200",
                                     };
                                     let full_class = format!("{base} {state_class}");
 
@@ -149,31 +175,30 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                     }
 
                     // --- FILTER BY TYPE (toggle chips) ---
-                    div { class: "flex flex-col gap-2",
+                    div { class: "flex flex-col gap-3 pt-4 border-t border-white/5",
                         div { class: "flex items-center justify-between",
                             label { class: "text-[10px] text-slate-400 uppercase font-black tracking-wider", "Type" }
                             if !props.selected_types.read().is_empty() {
                                 button { 
-                                    class: "text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors",
+                                    class: "text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors bg-indigo-500/10 px-2 py-1 rounded-md",
                                     onclick: move |_| props.selected_types.set(Vec::new()),
                                     "Clear"
                                 }
                             }
                         }
-                        div { class: "flex gap-2",
+                        div { class: "flex gap-3",
                             for type_name in ALL_TYPES.iter() {
                                 {
                                     let type_str = type_name.to_string();
                                     let type_for_click = type_str.clone();
                                     let is_active = props.selected_types.read().contains(&type_str);
                                     
-                                    // Choose icon for each type
                                     let icon = if *type_name == "Pokémon" { "⚡" } else { "🎴" };
                                     
                                     rsx! {
                                         button {
-                                            class: "flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium",
-                                            class: if is_active { "bg-indigo-500/20 border-indigo-400/50 text-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.2)]" } else { "bg-slate-900/50 border-slate-700/50 text-slate-500 hover:border-slate-600 hover:text-slate-400" },
+                                            class: "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-all text-sm font-bold shadow-sm",
+                                            class: if is_active { "bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-400 text-white shadow-[0_4px_15px_rgba(99,102,241,0.4)]" } else { "bg-slate-900/60 border-white/10 text-slate-400 hover:border-white/30 hover:bg-slate-800/80 hover:text-slate-200" },
                                             onclick: move |_| {
                                                 let mut current = props.selected_types.read().clone();
                                                 if current.contains(&type_for_click) {
@@ -194,18 +219,18 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
 
                     // --- FILTER BY PACK ---
                     if let Some(packs) = props.pack_db.read().as_ref() {
-                        div { class: "flex flex-col gap-2 pt-2 border-t border-indigo-500/10",
+                        div { class: "flex flex-col gap-3 pt-4 border-t border-white/5 pb-10",
                             div { class: "flex items-center justify-between",
-                                label { class: "text-[10px] text-slate-400 uppercase font-black tracking-wider", "Sets / Packs" }
+                                label { class: "text-[10px] text-slate-400 uppercase font-black tracking-wider", "Expansions" }
                                 if !props.selected_packs.read().is_empty() {
                                     button { 
-                                        class: "text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors",
+                                        class: "text-[10px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors bg-indigo-500/10 px-2 py-1 rounded-md",
                                         onclick: move |_| props.selected_packs.set(Vec::new()),
                                         "Clear"
                                     }
                                 }
                             }
-                            div { class: "flex flex-wrap gap-2",
+                            div { class: "grid grid-cols-2 gap-3",
                                 for pack in packs.iter() {
                                     {
                                         let code_for_click = pack.code.clone();
@@ -222,8 +247,8 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                         
                                         rsx! {
                                             button {
-                                                class: "relative overflow-hidden rounded-xl border transition-all h-12 px-3 flex items-center justify-center",
-                                                class: if is_active { "bg-indigo-500/20 border-indigo-400/50 shadow-[0_0_8px_rgba(99,102,241,0.2)]" } else { "bg-slate-900/50 border-slate-700/50 hover:border-slate-600 grayscale opacity-60 hover:grayscale-0 hover:opacity-100" },
+                                                class: "relative overflow-hidden rounded-xl border transition-all h-14 flex items-center justify-center p-2 shadow-sm",
+                                                class: if is_active { "bg-indigo-500/20 border-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.3)] ring-2 ring-indigo-500/30" } else { "bg-slate-900/60 border-white/10 hover:border-white/30 hover:bg-slate-800/80 grayscale opacity-70 hover:grayscale-0 hover:opacity-100" },
                                                 onclick: move |_| {
                                                     let mut current = props.selected_packs.read().clone();
                                                     if current.contains(&code_for_click) {
@@ -234,7 +259,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                                     props.selected_packs.set(current);
                                                 },
                                                 title: "{title}",
-                                                img { src: "{img_src}", alt: "{title}", class: "h-8 object-contain" }
+                                                img { src: "{img_src}", alt: "{title}", class: "max-h-full max-w-full object-contain drop-shadow-md" }
                                             }
                                         }
                                     }

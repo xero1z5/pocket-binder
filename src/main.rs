@@ -9,17 +9,16 @@ use gloo_storage::{LocalStorage, Storage};
 use models::*;
 use supabase::*;
 
-use components::{
-    header::Header,
-    grid::CardGrid,
-    toast::Toast,
-    login::LoginModal,
-    card_detail::CardDetailModal,
+use crate::components::{
     filter::{SearchInput, FilterButton, FilterTray},
+    grid::CardGrid,
     add_card::AddCardModal,
     account::AccountModal,
+    login::LoginModal,
+    card_detail::CardDetailModal,
     trade::TradeModal,
-    hamburger::HamburgerMenu,
+    toast::Toast,
+    navigation::{DesktopSidebar, MobileBottomNav},
 };
 
 //======================= DX ===================
@@ -49,7 +48,7 @@ fn App() -> Element {
     let mut last_saved_version = use_signal(|| 0u64); // tracks what we last saved
     
     // UI Toggles & Search
-    let mut active_view = use_signal(|| "collection".to_string());
+    let mut active_view = use_signal(|| "collection".to_string()); // "collection", "wishlist", "tradable", or "pack:A1"
     let mut selected_account_filter = use_signal(|| String::from("All"));
     let mut selected_rarities = use_signal(|| Vec::<String>::new());
     let mut selected_types = use_signal(|| Vec::<String>::new());
@@ -59,6 +58,7 @@ fn App() -> Element {
     let mut show_filter_menu = use_signal(|| false);
     let mut show_hamburger_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
+    let mut is_sidebar_expanded = use_signal(|| true);
 
     let mut show_trade_modal = use_signal(|| false);
 
@@ -319,54 +319,104 @@ fn App() -> Element {
             style { "body {{ overflow: hidden !important; }}" }
         }
 
-        div { class: "bg-slate-950 bg-cyber-grid text-white min-h-screen font-sans relative overflow-x-hidden",
+        // Forces dx serve reload for animations shrink fix
+        div { class: "bg-slate-950 text-slate-200 min-h-screen font-sans relative overflow-x-hidden flex selection:bg-teal-500/30",
             
-            // --- TOP SECTIONS ---
-            Header {}
+            // --- Ambient Animated Backgrounds ---
+            div { class: "bg-blob bg-blob-1" }
+            div { class: "bg-blob bg-blob-2" }
+            div { class: "bg-blob bg-blob-3" }
             
-            // --- MODULAR ACTION BAR ---
-            div { class: "flex flex-col w-full mb-8 relative px-2 md:px-0",
-                div { class: "flex flex-col md:flex-row justify-between items-end gap-4 w-full",
-                    
-                    // LEFT: Search Input
-                    SearchInput { search_query }
-
-                    // RIGHT: Filter button + Hamburger + Sync Status
-                    div { class: "flex flex-col items-end gap-2 w-full md:w-auto",
-                        
-                        // Sync Status
-                        div { class: "h-4 flex items-center pr-1",
-                            if !sync_status.read().is_empty() {
-                                span { class: "text-[10px] text-gray-400 font-mono tracking-widest", "{sync_status}" }
-                            }
-                        }
-
-                        // Action Buttons: Filter + Hamburger only
-                        div { class: "flex items-center gap-2 md:gap-3",
-                            FilterButton { show_filter_menu }
-                            HamburgerMenu {
-                                is_open: show_hamburger_menu,
-                                show_account_modal,
-                                show_add_modal,
-                                show_trade_modal,
-                                auth_token,
-                                user_email,
-                                show_login_modal,
-                                collection,
-                                sync_status,
-                                active_view,
-                                pack_db,
-                            }
-                        }
+            // --- Floating Particles ---
+            div { class: "particles-container",
+                for i in 0..50 {
+                    div {
+                        class: "particle",
+                        style: format!("left: {}vw; animation-delay: -{}s; animation-duration: {}s; width: {}px; height: {}px;", 
+                            (i as f32 * 7.33) % 100.0, 
+                            (i as f32 * 1.7) % 15.0, 
+                            8.0 + (i as f32 % 10.0),
+                            2.0 + (i as f32 % 3.0),
+                            2.0 + (i as f32 % 3.0)
+                        )
                     }
                 }
-                
-                // The Dropdown Filters Tray
-                FilterTray { show_filter_menu, selected_account_filter, selected_rarities, selected_types, selected_packs, collection, pack_db }
             }
 
-            // --- THE VISUAL GRID ---
-            CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view }
+            // --- Desktop Sidebar (md+) ---
+            DesktopSidebar {
+                show_account_modal,
+                show_add_modal,
+                show_trade_modal,
+                auth_token,
+                user_email,
+                show_login_modal,
+                collection,
+                sync_status,
+                active_view,
+                pack_db,
+                is_sidebar_expanded,
+            }
+
+            // --- Main Content Area ---
+            div { 
+                class: "flex-1 flex flex-col min-h-screen pb-24 md:pb-0 relative z-10 transition-all duration-300",
+                class: if *is_sidebar_expanded.read() { "md:ml-64 lg:ml-72" } else { "md:ml-20" },
+                
+                div { class: "max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-6 md:py-8 flex flex-col gap-6",
+                    
+                    // Mobile Header (sm only)
+                    div { class: "flex items-center justify-center md:hidden mb-2",
+                        h1 { class: "text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-indigo-400 drop-shadow-md tracking-tighter",
+                            "POCKET BINDER"
+                        }
+                    }
+
+                    // --- MODULAR ACTION BAR ---
+                    div { class: "flex flex-col md:flex-row justify-between items-center gap-4 w-full bg-white/5 backdrop-blur-md border border-white/10 p-3 md:p-4 rounded-2xl shadow-lg",
+                        
+                        // LEFT: Search Input (takes available space)
+                        div { class: "w-full md:w-96",
+                            SearchInput { search_query }
+                        }
+
+                        // RIGHT: Filter button + Sync Status
+                        div { class: "flex items-center justify-between md:justify-end gap-4 w-full md:w-auto",
+                            
+                            // Sync Status (Hidden on very small screens if empty)
+                            div { class: "flex items-center justify-center",
+                                if !sync_status.read().is_empty() {
+                                    span { class: "text-[10px] text-indigo-300 font-mono tracking-widest uppercase bg-indigo-500/20 px-2 py-1 rounded-md", "{sync_status}" }
+                                }
+                            }
+
+                            // Filter Button
+                            FilterButton { show_filter_menu }
+                        }
+                    }
+
+                    // --- THE VISUAL GRID ---
+                    CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view }
+                }
+            }
+
+            // --- Mobile Bottom Nav (sm only) ---
+            MobileBottomNav {
+                show_account_modal,
+                show_add_modal,
+                show_trade_modal,
+                auth_token,
+                user_email,
+                show_login_modal,
+                collection,
+                sync_status,
+                active_view,
+                pack_db,
+                is_sidebar_expanded,
+            }
+
+            // --- Filter Drawer ---
+            FilterTray { show_filter_menu, selected_account_filter, selected_rarities, selected_types, selected_packs, collection, pack_db }
         }
 
         // --- OVERLAYS & MODALS ---

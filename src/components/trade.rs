@@ -54,7 +54,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
         if *props.show_trade_modal.read() {
             div { class: "fixed inset-0 bg-slate-950/95 flex flex-col z-50 animate-fade-in-down",
                 
-                div { class: "bg-slate-900/80 border-b border-indigo-500/20 p-4 pt-6 flex justify-between items-center shadow-xl z-10 backdrop-blur-xl",
+                div { class: "glass-panel border-b border-indigo-500/20 p-4 pt-6 flex justify-between items-center shadow-xl z-10",
                     h2 { class: "text-xl font-bold tracking-tight flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300", 
                         "Trade Room" 
                     }

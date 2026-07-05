@@ -122,7 +122,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
 
     rsx! {
         div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-4 pb-24 px-1",
-            for card in visible_cards {
+            for (i, card) in visible_cards.into_iter().enumerate() {
                 {
                     // Clone the ID up front so both closures can own their own copy
                     let card_id_for_click = card.id.clone();
@@ -147,7 +147,8 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
 
                     rsx! {
                         div { 
-                            class: "bg-slate-800/40 border border-indigo-500/10 rounded-xl p-2 flex flex-col items-center shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_10px_20px_rgba(99,102,241,0.15)] cursor-pointer active:scale-95 group backdrop-blur-sm relative {op}",
+                            class: "card-3d-container w-full h-full cursor-pointer relative group animate-fade-in-up {op}",
+                            style: "animation-delay: {i as f32 * 0.05}s;",
                             onclick: move |_| props.selected_card_id.set(Some(card_id_for_click.clone())),
                             // Prefetch the larger detail image on hover so it's cached when clicked
                             onmouseenter: move |_| {
@@ -161,6 +162,11 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                     }
                                 }
                             },
+
+                            div { class: "card-3d-element frosted-card rounded-xl p-2.5 flex flex-col items-center h-full relative overflow-hidden",
+                                
+                                // The holographic sweep effect
+                                div { class: "holo-shimmer" }
 
                             // Overlay Icons
                             div { class: "absolute top-3 right-3 flex flex-col gap-1.5 z-10",
@@ -188,19 +194,20 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                             alt: "{card_name}", 
                                             loading: "lazy", decoding: "async",
                                             width: "400", height: "560",
-                                            class: "w-full rounded-lg mb-2 shadow-md border border-indigo-500/10 aspect-[63/88] object-cover group-hover:border-indigo-400/50 transition-colors"
+                                            class: "w-full rounded-lg mb-3 shadow-md border border-white/5 aspect-[63/88] object-cover relative z-10"
                                         } 
                                     }
                                 }
                             } else {
-                                div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-indigo-500/10 animate-pulse" }
+                                div { class: "w-full aspect-[63/88] bg-slate-800/50 rounded-lg mb-3 border border-white/5 animate-pulse relative z-10" }
                             }
                             
-                            h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-indigo-400 transition-colors tracking-tight", "{card_name}" }
+                            h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-white transition-colors tracking-tight relative z-10", "{card_name}" }
                             
-                            div { class: "mt-1",
+                            div { class: "mt-auto pt-2 relative z-10",
                                 RarityDisplay { rarity_code }
                             }
+                        }
                         }
                     }
                 }

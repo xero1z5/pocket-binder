@@ -18,8 +18,9 @@ pub struct LoginModalProps {
 pub fn LoginModal(mut props: LoginModalProps) -> Element {
     rsx! {
         if *props.show_login_modal.read() {
-            div { class: "fixed inset-0 bg-slate-950/85 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
-                div { class: "bg-slate-900 border border-indigo-500/20 rounded-xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 animate-fade-in-down",
+            div { class: "fixed inset-0 flex items-center justify-center p-4 z-50",
+                div { class: "absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-fade-in", onclick: move |_| props.show_login_modal.set(false) }
+                div { class: "glass-panel rounded-xl p-6 w-full max-w-md flex flex-col gap-4 animate-fade-in-down",
                     h2 { class: "text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400", "Welcome to Pocket Binder" }
                     div { class: "flex flex-col gap-1.5",
                         label { class: "text-xs text-slate-400 font-bold uppercase", "Email Address" }

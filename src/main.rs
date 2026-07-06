@@ -19,6 +19,7 @@ use crate::components::{
     trade::TradeModal,
     toast::Toast,
     navigation::{DesktopSidebar, MobileBottomNav},
+    hamburger::HamburgerMenu,
 };
 
 //======================= DX ===================
@@ -366,9 +367,22 @@ fn App() -> Element {
                 div { class: "max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-6 md:py-8 flex flex-col gap-6",
                     
                     // Mobile Header (sm only)
-                    div { class: "flex items-center justify-center md:hidden mb-2",
+                    div { class: "flex items-center justify-between md:hidden mb-2 px-1",
                         h1 { class: "text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-indigo-400 drop-shadow-md tracking-tighter",
                             "POCKET BINDER"
+                        }
+                        HamburgerMenu {
+                            show_account_modal,
+                            show_add_modal,
+                            show_trade_modal,
+                            auth_token,
+                            user_email,
+                            show_login_modal,
+                            collection,
+                            sync_status,
+                            active_view,
+                            pack_db,
+                            is_open: show_hamburger_menu,
                         }
                     }
 

@@ -4,19 +4,11 @@
 
 /* App-wide styling */
 body {
-    background: linear-gradient(-45deg, #020617, #064e3b, #020617, #164e63);
-    background-size: 400% 400%;
-    animation: gradient-bg 20s ease infinite;
-    color: #ffffff;
+    background-color: #0f172a;
+    color: #f8fafc;
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     overflow-x: hidden;
-}
-
-@keyframes gradient-bg {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
 }
 
 /* Custom Sleek Scrollbar */
@@ -184,33 +176,9 @@ body {
     100% { opacity: 1; transform: translateY(0) rotateX(0deg) scale(1); }
 }
 
-/* Floating Particles Container */
+/* Floating Particles Container - Disabled for sleek design */
 .particles-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-
-.particle {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: rgba(45, 212, 191, 0.8);
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(45, 212, 191, 1), 0 0 20px rgba(6, 182, 212, 0.8);
-    animation: float-particle 15s infinite linear;
-}
-
-@keyframes float-particle {
-    0% { transform: translateY(100vh) scale(0); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+    display: none;
 }
 
 /* SAR (Special Art Rare) — Rainbow chip */
@@ -280,10 +248,17 @@ body {
     will-change: transform;
 }
 
-.card-3d-container:hover .card-3d-element {
-    transform: rotateY(15deg) rotateX(10deg) scale(1.08) translateZ(20px) !important;
-    box-shadow: -15px 20px 40px -10px rgba(45, 212, 191, 0.6), 
-                15px 20px 30px -15px rgba(6, 182, 212, 0.4) !important;
+@media (hover: hover) and (pointer: fine) {
+    .card-3d-container:hover .card-3d-element {
+        transform: rotateY(15deg) rotateX(10deg) scale(1.08) translateZ(20px) !important;
+        box-shadow: -15px 20px 40px -10px rgba(45, 212, 191, 0.6), 
+                    15px 20px 30px -15px rgba(6, 182, 212, 0.4) !important;
+    }
+    
+    .card-3d-container:hover .holo-shimmer {
+        opacity: 1;
+        animation: holo-sweep 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
 }
 
 .card-3d-container:active .card-3d-element {
@@ -311,75 +286,33 @@ body {
     mix-blend-mode: color-dodge;
 }
 
-.card-3d-container:hover .holo-shimmer {
-    opacity: 1;
-    animation: holo-sweep 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
 @keyframes holo-sweep {
     0% { background-position: 200% center; }
     100% { background-position: -100% center; }
 }
 
-/* Dynamic Ambient Background Blobs */
+/* Dynamic Ambient Background Blobs - Disabled for sleek design */
 .bg-blob {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(140px);
-    z-index: -1;
-    opacity: 0.7;
-    animation: blob-float 25s infinite alternate ease-in-out;
-    pointer-events: none;
+    display: none;
 }
 
-.bg-blob-1 { 
-    top: -10%; left: -10%; 
-    width: 60vw; height: 60vw; 
-    background: rgba(45, 212, 191, 0.25); /* Teal-400 */
-    animation-delay: 0s; 
-}
-
-.bg-blob-2 { 
-    bottom: -20%; right: -10%; 
-    width: 70vw; height: 70vw; 
-    background: rgba(6, 182, 212, 0.2); /* Cyan-500 */
-    animation-delay: -5s; 
-}
-
-.bg-blob-3 { 
-    top: 30%; left: 40%; 
-    width: 50vw; height: 50vw; 
-    background: rgba(14, 116, 144, 0.15); /* Cyan-700 */
-    animation-delay: -10s; 
-}
-
-@keyframes blob-float {
-    0% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(8%, 12%) scale(1.1); }
-    66% { transform: translate(-5%, -8%) scale(0.9); }
-    100% { transform: translate(-10%, 5%) scale(1.05); }
-}
-
-/* Premium True Acrylic Glassmorphism (Arch/Hyprland Style) */
+/* Premium True Acrylic Glassmorphism (Sleek Minimalist Style) */
 .glass-panel {
-    background-color: rgba(15, 23, 42, 0.70) !important;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E") !important;
-    backdrop-filter: blur(24px) saturate(200%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
-    will-change: transform, backdrop-filter !important;
-    transform: translateZ(0);
+    background-color: rgba(15, 23, 42, 0.75) !important; /* Slightly more opaque slate */
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.3) !important;
+    will-change: transform, opacity !important;
 }
 
 .frosted-card {
-    background-color: rgba(15, 23, 42, 0.45) !important;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E") !important;
-    backdrop-filter: blur(16px) saturate(150%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    will-change: transform, backdrop-filter !important;
-    transform: translateZ(0);
+    background-color: rgba(30, 41, 59, 0.6) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.2) !important;
+    will-change: transform, opacity !important;
 }
 
 .glass-nav-item {

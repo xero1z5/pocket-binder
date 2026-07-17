@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use crate::models::*;
+use gloo_storage::{LocalStorage, Storage};
 
 #[derive(PartialEq, Clone, Props)]
 pub struct AccountModalProps {
@@ -9,6 +10,8 @@ pub struct AccountModalProps {
     pub new_acc_is_main: Signal<bool>,
     pub collection: Signal<CardCollection>,
     pub toast_message: Signal<Option<String>>,
+    pub user_email: Signal<String>,
+    pub auth_token: Signal<String>,
 }
 
 #[component]
@@ -39,7 +42,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                             // "+" button only when listing
                             if !*show_add_form.read() && editing_account.read().is_none() {
                                 button { 
-                                    class: "p-1.5 text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors", 
+                                    class: "p-1.5 text-white hover:bg-white/30/20 rounded-lg transition-colors", 
                                     onclick: move |_| show_add_form.set(true),
                                     svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" } }
                                 }
@@ -53,21 +56,47 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                         }
                     }
 
+                    if !*show_add_form.read() && editing_account.read().is_none() {
+                        div { class: "flex items-center justify-between bg-slate-900/50 p-3 rounded-xl border border-white/5",
+                            div { class: "flex items-center gap-2",
+                                div { class: "w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center",
+                                    svg { class: "w-4 h-4", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" } }
+                                }
+                                div { class: "flex flex-col",
+                                    span { class: "text-[10px] text-slate-400 font-bold uppercase", "Logged In As" }
+                                    span { class: "text-xs font-semibold text-white", "{props.user_email}" }
+                                }
+                            }
+                            button {
+                                class: "px-3 py-1.5 text-[10px] font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors border border-rose-500/20 uppercase",
+                                onclick: move |_| {
+                                    let _ = LocalStorage::delete("supabase_token");
+                                    let _ = LocalStorage::delete("user_email");
+                                    props.auth_token.set(String::new());
+                                    props.user_email.set(String::new());
+                                    props.collection.set(CardCollection { accounts: Vec::new(), inventory: Vec::new(), wishlist: Vec::new(), tradable: Vec::new() });
+                                    props.show_account_modal.set(false);
+                                },
+                                "Logout"
+                            }
+                        }
+                    }
+
                     if *show_add_form.read() {
                         // --- ADD NEW ACCOUNT FORM ---
                         div { class: "flex flex-col gap-3",
-                            input { class: "bg-slate-950/50 border border-indigo-500/15 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors", placeholder: "Account Name (e.g., Main)", value: "{props.new_acc_name}", oninput: move |evt| props.new_acc_name.set(evt.value()) }
-                            input { class: "bg-slate-950/50 border border-indigo-500/15 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors", placeholder: "Friend ID (Optional)", value: "{props.new_acc_id}", oninput: move |evt| props.new_acc_id.set(evt.value()) }
+                            input { class: "bg-slate-950/50 border border-white/30/15 rounded-xl px-4 py-3 text-white text-sm focus:border-white focus:ring-1 focus:ring-white/30 outline-none transition-colors", placeholder: "Account Name (e.g., Main)", value: "{props.new_acc_name}", oninput: move |evt| props.new_acc_name.set(evt.value()) }
+                            input { class: "bg-slate-950/50 border border-white/30/15 rounded-xl px-4 py-3 text-white text-sm focus:border-white focus:ring-1 focus:ring-white/30 outline-none transition-colors", placeholder: "Friend ID (Optional)", value: "{props.new_acc_id}", oninput: move |evt| props.new_acc_id.set(evt.value()) }
                             
                             div { class: "flex items-center gap-3 py-2",
-                                input { r#type: "checkbox", class: "w-4 h-4 accent-indigo-500 rounded cursor-pointer", checked: *props.new_acc_is_main.read(), onchange: move |evt| props.new_acc_is_main.set(evt.value().parse().unwrap_or(false)) }
+                                input { r#type: "checkbox", class: "w-4 h-4 accent-white/30 rounded cursor-pointer", checked: *props.new_acc_is_main.read(), onchange: move |evt| props.new_acc_is_main.set(evt.value().parse().unwrap_or(false)) }
                                 label { class: "text-sm text-slate-300", "Set as Main Account" }
                             }
                             
                             div { class: "flex gap-2 mt-2",
                                 button { class: "flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 transition-colors", onclick: move |_| show_add_form.set(false), "Cancel" }
                                 button {
-                                    class: "flex-1 py-2.5 rounded-xl text-sm font-bold text-slate-900 bg-gradient-to-r from-indigo-400 to-purple-400 hover:from-indigo-300 hover:to-purple-300 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]",
+                                    class: "flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-white/20 hover:bg-white/30 transition-all shadow-md",
                                     onclick: move |_| {
                                         let name = props.new_acc_name.read().clone();
                                         if !name.is_empty() {
@@ -89,20 +118,20 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                             rsx! {
                                 div { class: "flex flex-col gap-3",
                                     label { class: "text-[10px] text-slate-500 uppercase font-black tracking-wider", "Account Name" }
-                                    input { class: "bg-slate-950/50 border border-indigo-500/15 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors", value: "{edit_name}", oninput: move |evt| edit_name.set(evt.value()) }
+                                    input { class: "bg-slate-950/50 border border-white/30/15 rounded-xl px-4 py-3 text-white text-sm focus:border-white focus:ring-1 focus:ring-white/30 outline-none transition-colors", value: "{edit_name}", oninput: move |evt| edit_name.set(evt.value()) }
                                     
                                     label { class: "text-[10px] text-slate-500 uppercase font-black tracking-wider", "Friend ID" }
-                                    input { class: "bg-slate-950/50 border border-indigo-500/15 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors", placeholder: "Optional", value: "{edit_id}", oninput: move |evt| edit_id.set(evt.value()) }
+                                    input { class: "bg-slate-950/50 border border-white/30/15 rounded-xl px-4 py-3 text-white text-sm focus:border-white focus:ring-1 focus:ring-white/30 outline-none transition-colors", placeholder: "Optional", value: "{edit_id}", oninput: move |evt| edit_id.set(evt.value()) }
                                     
                                     div { class: "flex items-center gap-3 py-2",
-                                        input { r#type: "checkbox", class: "w-4 h-4 accent-indigo-500 rounded cursor-pointer", checked: *edit_main.read(), onchange: move |evt| edit_main.set(evt.value().parse().unwrap_or(false)) }
+                                        input { r#type: "checkbox", class: "w-4 h-4 accent-white/30 rounded cursor-pointer", checked: *edit_main.read(), onchange: move |evt| edit_main.set(evt.value().parse().unwrap_or(false)) }
                                         label { class: "text-sm text-slate-300", "Main Account" }
                                     }
                                     
                                     div { class: "flex gap-2 mt-2",
                                         button { class: "flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 transition-colors", onclick: move |_| editing_account.set(None), "Cancel" }
                                         button {
-                                            class: "flex-1 py-2.5 rounded-xl text-sm font-bold text-slate-900 bg-gradient-to-r from-indigo-400 to-purple-400 hover:from-indigo-300 hover:to-purple-300 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]",
+                                            class: "flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-white/20 hover:bg-white/30 transition-all shadow-md",
                                             onclick: move |_| {
                                                 let new_name = edit_name.read().clone();
                                                 let new_id_val = edit_id.read().clone();
@@ -133,7 +162,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                         let edit_id_val = acc_id.clone();
                                         
                                         rsx! {
-                                            div { class: "flex justify-between items-center bg-slate-800/50 p-3 rounded-xl border border-indigo-500/15 group",
+                                            div { class: "flex justify-between items-center bg-slate-800/50 p-3 rounded-xl border border-white/30/15 group",
                                                 div { class: "flex flex-col gap-0.5",
                                                     span { class: "text-sm font-semibold text-white", "{acc_name}" }
                                                     if !acc_id.is_empty() { span { class: "text-[10px] text-slate-500 font-mono", "ID: {acc_id}" } }
@@ -143,12 +172,12 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                                     // Main Toggle
                                                     label { class: "relative inline-flex items-center cursor-pointer mr-1",
                                                         input { r#type: "checkbox", class: "sr-only peer", checked: is_main, onchange: move |evt| { props.collection.write().set_account_main_status(&n1, evt.value().parse().unwrap_or(false)); } }
-                                                        div { class: "w-8 h-4.5 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-500" }
+                                                        div { class: "w-8 h-4.5 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-500 shadow-inner" }
                                                     }
                                                     
                                                     // Edit Button
                                                     button {
-                                                        class: "text-slate-600 hover:text-indigo-400 transition-colors p-1",
+                                                        class: "text-slate-600 hover:text-white transition-colors p-1",
                                                         onclick: move |_| {
                                                             edit_name.set(n3.clone());
                                                             edit_id.set(edit_id_val.clone());

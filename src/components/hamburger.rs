@@ -27,29 +27,28 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
     rsx! {
         // Hamburger Toggle Button
         button {
-            class: "group w-11 h-11 md:w-12 md:h-12 flex flex-col items-center justify-center gap-[5px] bg-slate-800/60 border border-indigo-500/20 rounded-xl hover:bg-slate-700/80 hover:border-indigo-400/40 transition-all shadow-lg backdrop-blur-sm",
+            class: "group w-11 h-11 flex flex-col items-center justify-center gap-[5px] bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all backdrop-blur-md",
             onclick: move |_| props.is_open.set(true),
-            // Three-line hamburger icon
-            span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-indigo-400 transition-colors rounded-full" }
-            span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-indigo-400 transition-colors rounded-full" }
-            span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-indigo-400 transition-colors rounded-full" }
+            span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-white transition-colors rounded-full" }
+            span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-white transition-colors rounded-full" }
+            span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-white transition-colors rounded-full" }
         }
 
         if *props.is_open.read() {
             // Backdrop overlay
             div {
-                class: "fixed inset-0 bg-slate-950/60 z-40 backdrop-blur-sm animate-fade-in",
+                class: "fixed inset-0 bg-black/50 z-40 backdrop-blur-sm animate-fade-in",
                 onclick: move |_| props.is_open.set(false),
             }
 
             // Slide-out sidebar panel
-            div { class: "fixed top-0 right-0 h-full w-72 md:w-80 glass-panel border-l border-indigo-500/20 z-50 flex flex-col shadow-2xl animate-slide-in-right",
+            div { class: "fixed top-0 right-0 h-full w-72 md:w-80 glass-panel border-l border-white/10 z-50 flex flex-col shadow-2xl animate-slide-in-right",
 
                 // Header area
-                div { class: "flex items-center justify-between p-5 border-b border-indigo-500/10",
-                    h2 { class: "text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300 tracking-tight", "Menu" }
+                div { class: "flex items-center justify-between p-5 border-b border-white/8",
+                    h2 { class: "text-lg font-semibold text-white tracking-tight", "Menu" }
                     button {
-                        class: "p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-xl transition-all",
+                        class: "p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-lg transition-all",
                         onclick: move |_| props.is_open.set(false),
                         svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                             path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" }
@@ -59,22 +58,21 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
 
                 // User info (if logged in)
                 if !props.auth_token.read().is_empty() {
-                    div { class: "px-5 py-3 border-b border-indigo-500/10",
+                    div { class: "px-5 py-3 border-b border-white/5",
                         div { class: "flex items-center gap-3",
-                            div { class: "w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0",
+                            div { class: "w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center flex-shrink-0",
                                 svg { class: "w-4 h-4 text-indigo-400", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" }
                                 }
                             }
-                            span { class: "text-xs text-indigo-400 font-mono font-bold truncate", "{props.user_email}" }
+                            span { class: "text-xs text-slate-400 font-mono truncate", "{props.user_email}" }
                         }
                     }
                 }
 
                 // Menu items
-                div { class: "flex-1 flex flex-col p-3 gap-1 overflow-y-auto",
+                div { class: "flex-1 flex flex-col p-3 gap-0.5 overflow-y-auto",
 
-                    // Accounts
                     MenuItemButton {
                         label: "My Accounts",
                         icon_path: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z",
@@ -84,7 +82,6 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                         },
                     }
 
-                    // Add Cards
                     MenuItemButton {
                         label: "Search Cards",
                         icon_path: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z",
@@ -94,7 +91,6 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                         },
                     }
 
-                    // Trade Room
                     MenuItemButton {
                         label: "Trade Room",
                         icon_path: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5",
@@ -105,9 +101,8 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                     }
 
                     // Divider
-                    div { class: "h-px bg-indigo-500/10 my-2" }
+                    div { class: "h-px bg-white/5 my-2 mx-2" }
 
-                    // My Collection
                     MenuItemButton {
                         label: "My Collection",
                         icon_path: "M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25",
@@ -117,7 +112,6 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                         },
                     }
 
-                    // Wishlist
                     MenuItemButton {
                         label: "Wishlist",
                         icon_path: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z",
@@ -127,7 +121,6 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                         },
                     }
 
-                    // Tradable
                     MenuItemButton {
                         label: "Tradable",
                         icon_path: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.016 4.356v4.992",
@@ -137,14 +130,13 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                         },
                     }
 
-                    // Divider
-                    div { class: "h-px bg-indigo-500/10 my-2" }
+                    div { class: "h-px bg-white/5 my-2 mx-2" }
 
                     // Browse Sets
                     if let Some(packs) = props.pack_db.read().as_ref() {
                         div { class: "flex flex-col",
                             button { 
-                                class: "px-4 py-3 hover:bg-slate-800 rounded-xl transition-all flex items-center justify-between cursor-pointer",
+                                class: "px-4 py-3 hover:bg-white/5 rounded-xl transition-all flex items-center justify-between cursor-pointer",
                                 onclick: move |_| show_packs.set(!show_packs()),
                                 div { class: "flex items-center gap-3 text-slate-300",
                                     svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
@@ -152,12 +144,12 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                                     }
                                     span { class: "font-medium text-sm", "Packs" }
                                 }
-                                svg { class: "w-4 h-4 text-slate-400 transition-transform duration-200", class: if *show_packs.read() { "rotate-180" } else { "" }, fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                svg { class: "w-4 h-4 text-slate-500 transition-transform duration-200", class: if *show_packs.read() { "rotate-180" } else { "" }, fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "M19.5 8.25l-7.5 7.5-7.5-7.5" }
                                 }
                             }
                             if *show_packs.read() {
-                                div { class: "pl-4 pr-2 py-2 flex flex-col gap-1 border-l-2 border-indigo-500/20 ml-6 mt-1 mb-2",
+                                div { class: "pl-4 pr-2 py-2 flex flex-col gap-0.5 border-l-2 border-white/5 ml-6 mt-1 mb-2",
                                     for pack in packs.iter() {
                                         {
                                             let code_for_click = pack.code.clone();
@@ -174,14 +166,14 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                                             
                                             rsx! {
                                                 button {
-                                                    class: "flex items-center gap-3 px-3 py-2 hover:bg-indigo-500/10 text-slate-400 hover:text-white transition-all text-sm rounded-xl text-left",
+                                                    class: "flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 text-slate-400 hover:text-white transition-all text-sm rounded-lg text-left",
                                                     onclick: move |_| {
                                                         props.active_view.set(format!("pack:{}", code_for_click));
                                                         props.is_open.set(false);
                                                     },
                                                     if is_failed {
                                                         div {
-                                                            class: "h-5 w-14 rounded bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center font-bold text-[10px] text-indigo-300 overflow-hidden",
+                                                            class: "h-5 w-14 rounded bg-white/5 border border-white/10 flex items-center justify-center font-bold text-[10px] text-slate-400 overflow-hidden",
                                                             "{pack.code}"
                                                         }
                                                     } else {
@@ -203,8 +195,7 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                             }
                         }
 
-                        // Divider
-                        div { class: "h-px bg-indigo-500/10 my-2" }
+                        div { class: "h-px bg-white/5 my-2 mx-2" }
                     }
 
                     // Refresh
@@ -230,10 +221,10 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                 }
 
                 // Bottom: Logout / Login
-                div { class: "p-4 border-t border-indigo-500/10 mt-auto",
+                div { class: "p-4 border-t border-white/5 mt-auto",
                     if props.auth_token.read().is_empty() {
                         button {
-                            class: "w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]",
+                            class: "w-full py-3 px-4 rounded-xl font-semibold text-sm bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg",
                             onclick: move |_| {
                                 props.show_login_modal.set(true);
                                 props.is_open.set(false);
@@ -242,7 +233,7 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                         }
                     } else {
                         button {
-                            class: "w-full py-3 px-4 rounded-xl font-medium text-sm text-slate-400 bg-slate-800/60 border border-slate-700 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 transition-all",
+                            class: "w-full py-3 px-4 rounded-xl font-medium text-sm text-slate-400 bg-white/5 border border-white/10 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 transition-all",
                             onclick: move |_| {
                                 props.auth_token.set(String::new());
                                 props.user_email.set(String::new());
@@ -263,10 +254,10 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
 fn MenuItemButton(label: String, icon_path: String, onclick: EventHandler<MouseEvent>) -> Element {
     rsx! {
         button {
-            class: "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-indigo-500/10 transition-all group",
+            class: "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group",
             onclick: move |e| onclick.call(e),
-            div { class: "w-9 h-9 rounded-lg bg-slate-800/80 group-hover:bg-indigo-500/20 flex items-center justify-center transition-colors flex-shrink-0",
-                svg { class: "w-5 h-5 text-slate-400 group-hover:text-indigo-400 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+            div { class: "w-8 h-8 rounded-lg bg-white/5 group-hover:bg-indigo-500/15 flex items-center justify-center transition-all flex-shrink-0",
+                svg { class: "w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "{icon_path}" }
                 }
             }

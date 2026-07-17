@@ -18,8 +18,8 @@ use crate::components::{
     card_detail::CardDetailModal,
     trade::TradeModal,
     toast::Toast,
-    navigation::{DesktopSidebar, MobileBottomNav},
-    hamburger::HamburgerMenu,
+    navigation::FloatingDock,
+    mass_action::MassActionBar,
 };
 
 //======================= DX ===================
@@ -59,7 +59,9 @@ fn App() -> Element {
     let mut show_filter_menu = use_signal(|| false);
     let mut show_hamburger_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
-    let mut is_sidebar_expanded = use_signal(|| true);
+    let mut current_view_cards = use_signal(|| Vec::<String>::new());
+    let mut mass_select_mode = use_signal(|| false);
+    let mut selected_mass_cards = use_signal(|| Vec::<String>::new());
 
     let mut show_trade_modal = use_signal(|| false);
 
@@ -87,8 +89,7 @@ fn App() -> Element {
         selected_card_id.read().is_some() || 
         *show_trade_modal.read() || 
         *show_login_modal.read() || 
-        *show_account_modal.read() ||
-        *show_hamburger_menu.read();
+        *show_account_modal.read();
 
     // Initial Database Load
     use_effect(move || {
@@ -305,6 +306,47 @@ fn App() -> Element {
     // =========================================================================
     // 3. UI LAYOUT
     // =========================================================================
+    let vanilla_tilt_js = r#"
+        // Use MutationObserver to initialize vanilla-tilt on new cards automatically
+        const observer = new MutationObserver((mutations) => {
+            let newCards = [];
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { 
+                        if (node.classList && node.classList.contains('js-tilt')) {
+                            newCards.push(node);
+                        }
+                        if (node.querySelectorAll) {
+                            const children = node.querySelectorAll('.js-tilt');
+                            children.forEach(c => newCards.push(c));
+                        }
+                    }
+                });
+            });
+            const isHoverDevice = window.matchMedia("(hover: hover)").matches;
+            if (newCards.length > 0 && window.VanillaTilt && isHoverDevice) {
+                window.VanillaTilt.init(newCards, {
+                    max: 12,
+                    speed: 400,
+                    glare: true,
+                    "max-glare": 0.35,
+                    scale: 1.05
+                });
+            }
+        });
+        // Initialize observer when document is ready
+        document.addEventListener("DOMContentLoaded", () => {
+            observer.observe(document.body, { childList: true, subtree: true });
+            // init any existing on load
+            const isHoverDevice = window.matchMedia("(hover: hover)").matches;
+            if (window.VanillaTilt && isHoverDevice) {
+                window.VanillaTilt.init(document.querySelectorAll(".js-tilt"), {
+                    max: 12, speed: 400, glare: true, "max-glare": 0.35, scale: 1.05
+                });
+            }
+        });
+    "#;
+
     rsx! {
         document::Meta { name: "viewport", content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" }
 
@@ -321,7 +363,12 @@ fn App() -> Element {
         }
 
         // Forces dx serve reload for animations shrink fix
-        div { class: "bg-slate-950 text-slate-200 min-h-screen font-sans relative overflow-x-hidden flex selection:bg-teal-500/30",
+        div { class: "bg-[#0c0f1a] text-slate-200 min-h-screen font-sans relative overflow-x-hidden flex selection:bg-indigo-500/30",
+            
+            // Script injection for 3D Tilt
+            script { src: "https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" }
+            script { dangerous_inner_html: "{vanilla_tilt_js}" }
+
             
             // --- Ambient Animated Backgrounds ---
             div { class: "bg-blob bg-blob-1" }
@@ -344,78 +391,74 @@ fn App() -> Element {
                 }
             }
 
-            // --- Desktop Sidebar (md+) ---
-            DesktopSidebar {
-                show_account_modal,
-                show_add_modal,
-                show_trade_modal,
-                auth_token,
-                user_email,
-                show_login_modal,
-                collection,
-                sync_status,
-                active_view,
-                pack_db,
-                is_sidebar_expanded,
+            // --- Floating Action Bar (Top) ---
+            div { class: "fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 glass-panel rounded-2xl px-4 py-2 flex justify-between items-center shadow-lg border border-white/10 animate-fade-in-down backdrop-blur-xl",
+                
+                // LEFT: Search Input
+                div { class: "w-full max-w-md",
+                    SearchInput { search_query }
+                }
+
+                // RIGHT: Filter & Status
+                div { class: "flex items-center gap-3",
+                    if !sync_status.read().is_empty() {
+                        {
+                            let is_syncing = sync_status.read().contains("Syncing") || sync_status.read().contains("Downloading");
+                            let is_error = sync_status.read().contains("Failed") || sync_status.read().contains("expired") || sync_status.read().contains("❌");
+                            let color_class = if is_error { "text-rose-400" } else if is_syncing { "text-sky-400" } else { "text-emerald-400" };
+                            
+                            rsx! {
+                                div {
+                                    class: "flex items-center justify-center w-11 h-11 md:w-12 md:h-12 transition-all {color_class}",
+                                    title: "{sync_status}",
+                                    if is_syncing {
+                                        svg { class: "w-5 h-5 md:w-6 md:h-6 animate-spin", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.016 4.356v4.992" }
+                                        }
+                                    } else {
+                                        svg { class: "w-5 h-5 md:w-6 md:h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    button {
+                        class: "group w-11 h-11 md:w-12 md:h-12 flex items-center justify-center border rounded-xl md:rounded-2xl transition-all backdrop-blur-md cursor-pointer",
+                        class: if *mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-400 hover:text-white" },
+                        title: if *mass_select_mode.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
+                        onclick: move |_| {
+                            let curr = *mass_select_mode.read();
+                            mass_select_mode.set(!curr);
+                            if curr {
+                                selected_mass_cards.set(Vec::new());
+                            }
+                        },
+                        if *mass_select_mode.read() {
+                            svg { class: "w-5 h-5 md:w-6 md:h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2.5", stroke: "currentColor",
+                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" }
+                            }
+                        } else {
+                            svg { class: "w-5 h-5 md:w-5 md:h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" }
+                            }
+                        }
+                    }
+                    FilterButton { show_filter_menu }
+                }
             }
 
             // --- Main Content Area ---
             div { 
-                class: "flex-1 flex flex-col min-h-screen pb-24 md:pb-0 relative z-10 transition-all duration-300",
-                class: if *is_sidebar_expanded.read() { "md:ml-64 lg:ml-72" } else { "md:ml-20" },
+                class: "w-full min-h-screen pt-20 pb-28 px-1 sm:px-2 md:px-4 relative z-10",
                 
-                div { class: "max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-6 md:py-8 flex flex-col gap-6",
-                    
-                    // Mobile Header (sm only)
-                    div { class: "flex items-center justify-between md:hidden mb-2 px-1",
-                        h1 { class: "text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-indigo-400 drop-shadow-md tracking-tighter",
-                            "POCKET BINDER"
-                        }
-                        HamburgerMenu {
-                            show_account_modal,
-                            show_add_modal,
-                            show_trade_modal,
-                            auth_token,
-                            user_email,
-                            show_login_modal,
-                            collection,
-                            sync_status,
-                            active_view,
-                            pack_db,
-                            is_open: show_hamburger_menu,
-                        }
-                    }
-
-                    // --- MODULAR ACTION BAR ---
-                    div { class: "flex flex-col md:flex-row justify-between items-center gap-4 w-full bg-white/5 backdrop-blur-md border border-white/10 p-3 md:p-4 rounded-2xl shadow-lg",
-                        
-                        // LEFT: Search Input (takes available space)
-                        div { class: "w-full md:w-96",
-                            SearchInput { search_query }
-                        }
-
-                        // RIGHT: Filter button + Sync Status
-                        div { class: "flex items-center justify-between md:justify-end gap-4 w-full md:w-auto",
-                            
-                            // Sync Status (Hidden on very small screens if empty)
-                            div { class: "flex items-center justify-center",
-                                if !sync_status.read().is_empty() {
-                                    span { class: "text-[10px] text-indigo-300 font-mono tracking-widest uppercase bg-indigo-500/20 px-2 py-1 rounded-md", "{sync_status}" }
-                                }
-                            }
-
-                            // Filter Button
-                            FilterButton { show_filter_menu }
-                        }
-                    }
-
-                    // --- THE VISUAL GRID ---
-                    CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view }
-                }
+                // --- THE VISUAL GRID ---
+                CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view, current_view_cards, mass_select_mode, selected_mass_cards }
             }
 
-            // --- Mobile Bottom Nav (sm only) ---
-            MobileBottomNav {
+            // --- Floating Navigation Dock (Bottom) ---
+            FloatingDock {
                 show_account_modal,
                 show_add_modal,
                 show_trade_modal,
@@ -426,7 +469,6 @@ fn App() -> Element {
                 sync_status,
                 active_view,
                 pack_db,
-                is_sidebar_expanded,
             }
 
             // --- Filter Drawer ---
@@ -434,12 +476,17 @@ fn App() -> Element {
         }
 
         // --- OVERLAYS & MODALS ---
-        AddCardModal { show_add_modal, collection, image_db, toast_message }
-        AccountModal { show_account_modal, new_acc_name, new_acc_id, new_acc_is_main, collection, toast_message }
+        AddCardModal { 
+            show_add_modal, collection, image_db, toast_message,
+            mass_select_mode: mass_select_mode.clone(),
+            selected_mass_cards: selected_mass_cards.clone(),
+        }
+        AccountModal { show_account_modal, new_acc_name, new_acc_id, new_acc_is_main, collection, toast_message, auth_token, user_email }
         LoginModal { show_login_modal, user_email, user_password, auth_token, sync_status, collection }
 
-        CardDetailModal { selected_card_id, collection, image_db, toast_message }
+        CardDetailModal { selected_card_id, collection, image_db, toast_message, current_view_cards }
         TradeModal { show_trade_modal, collection, image_db, toast_message }
+        MassActionBar { selected_mass_cards, mass_select_mode, collection, image_db, toast_message }
         Toast { toast_message }
     }
 

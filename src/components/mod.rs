@@ -9,3 +9,4 @@ pub mod card_detail;
 pub mod trade;
 pub mod navigation;
 pub mod hamburger;
+pub mod mass_action;

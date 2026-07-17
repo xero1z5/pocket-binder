@@ -39,7 +39,7 @@ pub fn RarityDisplay(props: RarityDisplayProps) -> Element {
 
     if count == 0 || image_asset.is_none() {
         return rsx! {
-            span { class: "text-[10px] font-bold text-indigo-400", "{label}" }
+            span { class: "text-[10px] font-bold text-white", "{label}" }
         };
     }
 
@@ -66,9 +66,9 @@ pub struct AddCardButtonProps {
 pub fn AddCardButton(mut props: AddCardButtonProps) -> Element {
     rsx! {
         button {
-            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-indigo-500/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-indigo-400/40 transition-all shadow-lg backdrop-blur-sm",
+            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-white/30/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-white/40 transition-all shadow-lg backdrop-blur-sm",
             onclick: move |_| props.show_add_modal.set(true),
-            svg { class: "w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-indigo-400 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+            svg { class: "w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-white transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                 path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
             }
         }
@@ -82,61 +82,172 @@ pub struct AddCardModalProps {
     pub collection: Signal<CardCollection>,
     pub image_db: Signal<Option<HashMap<String, OfficialCard>>>,
     pub toast_message: Signal<Option<String>>,
+    pub mass_select_mode: Signal<bool>,
+    pub selected_mass_cards: Signal<Vec<String>>,
 }
 
 #[component]
 pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
     let mut show_account_list = use_signal(|| false);
-
     let mut search_input = use_signal(|| String::new());
+
+    // Local filter state — isolated from the main collection filters
+    let mut local_rarities = use_signal(|| Vec::<String>::new());
+    let mut local_types   = use_signal(|| Vec::<String>::new());
+    let mut show_local_filters = use_signal(|| false);
 
     // Memoized filtered results — live search as-you-type
     let filtered_api_cards = use_memo(move || {
         let query = search_input.read().trim().to_lowercase();
-        if query.is_empty() {
-            return Vec::new();
-        }
+        let is_mass = *props.mass_select_mode.read();
+
         if let Some(api_map) = &*props.image_db.read() {
+            let selected_r = local_rarities.read().clone();
+            let selected_t = local_types.read().clone();
+
+            // Show nothing unless: query entered, filters applied, or mass-select is on
+            if !is_mass && query.is_empty() && selected_r.is_empty() && selected_t.is_empty() {
+                return Vec::new();
+            }
+
             let mut results: Vec<OfficialCard> = api_map.values()
-                .filter(|c| c.name.to_lowercase().contains(&query))
+                .filter(|c| {
+                    let matches_q = query.is_empty() || c.name.to_lowercase().contains(&query);
+                    let matches_r = selected_r.is_empty() || selected_r.contains(&c.rarity);
+                    let matches_t = selected_t.is_empty() || selected_t.contains(&c.card_type);
+                    matches_q && matches_r && matches_t
+                })
                 .cloned()
                 .collect();
             results.sort_by(|a, b| a.set.cmp(&b.set).then(a.number.cmp(&b.number)));
-            results.truncate(100);
+            // In normal mode cap results to keep it snappy; mass-select shows all matches
+            if !is_mass { results.truncate(100); }
             results
         } else {
             Vec::new()
         }
     });
 
+
     rsx! {
         if *props.show_add_modal.read() {
-            div { class: "fixed inset-0 bg-slate-950/90 flex flex-col z-50 animate-fade-in-down backdrop-blur-sm",
-                div { class: "glass-panel border-b border-indigo-500/20 p-4 pt-6 flex flex-col gap-4 shadow-xl z-10",
+            // Semi-transparent overlay so the background collection is still visible
+            div { class: "fixed inset-0 bg-slate-950/70 flex flex-col z-50 animate-fade-in-down backdrop-blur-sm",
+                div { class: "glass-panel border-b border-white/10 p-4 pt-6 flex flex-col gap-3 shadow-2xl z-10 backdrop-blur-2xl",
                     div { class: "flex justify-between items-center",
-                        h2 { class: "text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300", "Search Cards" }
+                        h2 { class: "text-xl font-bold tracking-tight text-white", "Add Cards" }
                         button { 
-                            class: "text-slate-500 hover:text-white p-2 transition-colors", 
+                            class: "text-slate-500 hover:text-rose-400 p-2 rounded-lg hover:bg-rose-500/10 transition-all", 
+                            title: "Close",
                             onclick: move |_| { props.show_add_modal.set(false); selected_card_to_add.set(None); show_account_list.set(false); }, 
                             svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" } }
                         }
                     }
-                    div { class: "relative group w-full",
-                        div { class: "absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors",
-                            svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-5 h-5",
-                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" }
+                    div { class: "flex items-center gap-2",
+                        div { class: "relative group flex-1",
+                            div { class: "absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within:text-sky-400 transition-colors",
+                                svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-5 h-5",
+                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" }
+                                }
+                            }
+                            input { 
+                                class: "w-full bg-slate-900/80 border border-white/20 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30 outline-none transition-colors shadow-inner", 
+                                placeholder: if *props.mass_select_mode.read() { "Filter cards to bulk-select..." } else { "Search by name..." },
+                                value: "{search_input}", 
+                                oninput: move |evt| {
+                                    search_input.set(evt.value());
+                                    selected_card_to_add.set(None);
+                                    show_account_list.set(false);
+                                },
                             }
                         }
-                        input { 
-                            class: "w-full bg-slate-900/80 border border-indigo-500/20 rounded-xl pl-11 pr-4 py-3 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/30 outline-none transition-colors shadow-inner", 
-                            placeholder: "Type to search cards...", 
-                            value: "{search_input}", 
-                            oninput: move |evt| {
-                                search_input.set(evt.value());
-                                selected_card_to_add.set(None);
-                                show_account_list.set(false);
+
+                        // Multi-select toggle
+                        button {
+                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all backdrop-blur-md cursor-pointer flex-shrink-0",
+                            class: if *props.mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-white" },
+                            title: if *props.mass_select_mode.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
+                            onclick: move |_| {
+                                let curr = *props.mass_select_mode.read();
+                                props.mass_select_mode.set(!curr);
+                                if curr { props.selected_mass_cards.set(Vec::new()); }
                             },
+                            if *props.mass_select_mode.read() {
+                                svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2.5", stroke: "currentColor",
+                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" }
+                                }
+                            } else {
+                                svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" }
+                                }
+                            }
+                        }
+
+                        // Local filter button — does NOT affect the main collection view
+                        button {
+                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all backdrop-blur-md cursor-pointer flex-shrink-0",
+                            class: if *show_local_filters.read() || !local_rarities.read().is_empty() || !local_types.read().is_empty() { "bg-pink-500/20 border-pink-500/50 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.3)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-pink-400" },
+                            title: "Filter by rarity / type (local only)",
+                            onclick: move |_| { let v = *show_local_filters.read(); show_local_filters.set(!v); },
+                            svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor", class: "w-5 h-5",
+                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" }
+                            }
+                        }
+                    }
+
+                    // Local filter chips (does NOT touch global collection filters)
+                    if *show_local_filters.read() {
+                        div { class: "flex flex-col gap-2 pt-1 pb-1 animate-fade-in-down",
+                            div { class: "flex flex-wrap gap-1.5 items-center",
+                                span { class: "text-[10px] text-slate-500 uppercase font-bold tracking-widest mr-1", "Rarity" }
+                                for rarity in ["C", "U", "R", "RR", "AR", "SR", "SAR", "IM", "UR", "S", "SSR", "PROMO"] {
+                                    {
+                                        let r = rarity.to_string();
+                                        let is_active = local_rarities.read().contains(&r);
+                                        rsx! {
+                                            button {
+                                                class: "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all",
+                                                class: if is_active { "bg-indigo-500/30 border-indigo-400/60 text-indigo-300" } else { "bg-slate-800/60 border-white/10 text-slate-400 hover:border-white/30 hover:text-white" },
+                                                onclick: move |_| {
+                                                    let mut v = local_rarities.read().clone();
+                                                    if v.contains(&r) { v.retain(|x| x != &r); } else { v.push(r.clone()); }
+                                                    local_rarities.set(v);
+                                                },
+                                                "{rarity}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            div { class: "flex flex-wrap gap-1.5 items-center",
+                                span { class: "text-[10px] text-slate-500 uppercase font-bold tracking-widest mr-1", "Type" }
+                                for card_type in ["Pokémon", "Trainer"] {
+                                    {
+                                        let t = card_type.to_string();
+                                        let is_active = local_types.read().contains(&t);
+                                        rsx! {
+                                            button {
+                                                class: "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all",
+                                                class: if is_active { "bg-emerald-500/30 border-emerald-400/60 text-emerald-300" } else { "bg-slate-800/60 border-white/10 text-slate-400 hover:border-white/30 hover:text-white" },
+                                                onclick: move |_| {
+                                                    let mut v = local_types.read().clone();
+                                                    if v.contains(&t) { v.retain(|x| x != &t); } else { v.push(t.clone()); }
+                                                    local_types.set(v);
+                                                },
+                                                "{card_type}"
+                                            }
+                                        }
+                                    }
+                                }
+                                if !local_rarities.read().is_empty() || !local_types.read().is_empty() {
+                                    button {
+                                        class: "px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 transition-all",
+                                        onclick: move |_| { local_rarities.set(Vec::new()); local_types.set(Vec::new()); },
+                                        "✕ Clear filters"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -154,7 +265,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     div { class: "flex flex-col items-center gap-3 flex-shrink-0",
                                         img { 
                                             src: "{optimized_image_url(&card.full_image_url, 600)}", 
-                                            class: "w-44 md:w-56 rounded-2xl border border-indigo-500/20 shadow-2xl transition-all" 
+                                            class: "w-44 md:w-56 rounded-2xl border border-white/30/20 shadow-2xl transition-all" 
                                         }
                                         
                                         // Card info below image
@@ -194,7 +305,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
                                         if !*show_account_list.read() {
                                             button {
-                                                class: "w-full py-3.5 px-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] shadow-lg shadow-indigo-500/20",
+                                                class: "w-full py-3.5 px-4 bg-white/30 hover:bg-white text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] shadow-lg shadow-white/30/20",
                                                 onclick: move |_| show_account_list.set(true),
                                                 svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
@@ -208,12 +319,11 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                 div { class: "flex items-center justify-between mb-2 mt-1",
                                                     span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest", "Select Account" }
                                                     button {
-                                                        class: "text-[10px] text-slate-400 hover:text-white transition-colors",
+                                                        class: "text-[10px] text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all px-2 py-1 rounded-lg",
                                                         onclick: move |_| show_account_list.set(false),
                                                         "Cancel"
                                                     }
                                                 }
-                                                
                                                 div { class: "flex flex-col gap-2",
                                                     for acc in props.collection.read().accounts.iter() {
                                                         {
@@ -222,7 +332,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                             let is_main = acc.main;
                                                             rsx! {
                                                                 button {
-                                                                    class: "w-full py-3 px-4 bg-slate-800/60 hover:bg-indigo-500/15 border border-indigo-500/15 hover:border-indigo-500/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group backdrop-blur-sm",
+                                                                    class: "w-full py-3 px-4 bg-slate-950/80 hover:bg-slate-900/90 border border-white/20 hover:border-white/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group backdrop-blur-2xl",
                                                                     onclick: move |_| {
                                                                         let card_to_add = Card { 
                                                                             id: c.generated_id.clone(), 
@@ -243,14 +353,14 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                                         show_account_list.set(false);
                                                                     },
                                                                     // Account icon
-                                                                    div { class: "w-8 h-8 rounded-lg bg-slate-700/60 group-hover:bg-indigo-500/20 flex items-center justify-center transition-colors flex-shrink-0",
+                                                                    div { class: "w-8 h-8 rounded-lg bg-slate-700/60 group-hover:bg-white/30/20 flex items-center justify-center transition-colors flex-shrink-0",
                                                                         span { class: "text-xs", if is_main { "⭐" } else { "👤" } }
                                                                     }
                                                                     div { class: "flex flex-col items-start",
-                                                                        span { class: "text-sm font-semibold group-hover:text-indigo-400 transition-colors", "{acc.name}" }
+                                                                        span { class: "text-sm font-semibold group-hover:text-white transition-colors", "{acc.name}" }
                                                                     }
                                                                     // Arrow icon on the right
-                                                                    svg { class: "w-4 h-4 text-slate-600 group-hover:text-indigo-400 ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                                                    svg { class: "w-4 h-4 text-slate-600 group-hover:text-white ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
                                                                     }
                                                                 }
@@ -262,7 +372,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                         }
                                         
                                         button { 
-                                            class: "text-slate-500 hover:text-white text-sm mt-4 py-2 transition-colors border border-slate-700/50 hover:border-slate-500 rounded-xl", 
+                                            class: "text-slate-500 hover:text-rose-400 text-sm mt-4 py-2 transition-all border border-slate-700/50 hover:border-rose-500/30 rounded-xl", 
                                             onclick: move |_| {
                                                 selected_card_to_add.set(None);
                                                 show_account_list.set(false);
@@ -280,15 +390,35 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     let c = api_card.clone();
                                     let packs_display = if api_card.packs.is_empty() { "Promo".to_string() } else { api_card.packs.join(", ") };
 
+                                    let is_selected = props.selected_mass_cards.read().contains(&c.generated_id);
                                     rsx! {
                                         div { 
-                                            class: "bg-slate-800/60 border border-indigo-500/15 rounded-xl p-2 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all flex flex-col backdrop-blur-sm",
-                                            onclick: move |_| selected_card_to_add.set(Some(c.clone())),
+                                            class: "bg-slate-800/60 border rounded-xl p-2 cursor-pointer transition-all flex flex-col backdrop-blur-sm relative",
+                                            class: if is_selected { "border-emerald-400/80 bg-emerald-500/20 ring-1 ring-emerald-400" } else { "border-white/30/15 hover:border-white/30/50 hover:bg-slate-800/80" },
+                                            onclick: move |_| {
+                                                if *props.mass_select_mode.read() {
+                                                    let mut current = props.selected_mass_cards.read().clone();
+                                                    if current.contains(&c.generated_id) {
+                                                        current.retain(|id| id != &c.generated_id);
+                                                    } else {
+                                                        current.push(c.generated_id.clone());
+                                                    }
+                                                    props.selected_mass_cards.set(current);
+                                                } else {
+                                                    selected_card_to_add.set(Some(c.clone()));
+                                                }
+                                            },
+                                            // Selection indicator
+                                            if is_selected {
+                                                div { class: "absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-900 z-10",
+                                                    svg { class: "w-4 h-4 text-white", fill: "none", view_box: "0 0 24 24", stroke_width: "3", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" } }
+                                                }
+                                            }
                                             img { 
                                                 src: "{optimized_image_url(&api_card.full_image_url, 400)}", 
                                                 loading: "lazy", decoding: "async",
                                                 width: "400", height: "560",
-                                                class: "w-full rounded-lg mb-2 shadow-sm border border-indigo-500/10 aspect-[63/88] object-cover" 
+                                                class: "w-full rounded-lg mb-2 shadow-sm border border-white/30/10 aspect-[63/88] object-cover" 
                                             }
                                             h2 { class: "text-[11px] font-bold text-center text-slate-200 truncate", "{api_card.name}" }
                                             

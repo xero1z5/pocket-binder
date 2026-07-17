@@ -428,8 +428,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                                             let res = props.collection.write().remove_card(&target_card, &target_owner, 1);
                                                                             if res.is_ok() {
                                                                                 props.toast_message.set(Some(format!("🗑️ Removed {} from {}", c_name, target_owner)));
-                                                                                let mut t = props.toast_message.clone();
-                                                                                spawn(async move { gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await; t.set(None); });
+
                                                                             }
                                                                         },
                                                                         "- Remove"

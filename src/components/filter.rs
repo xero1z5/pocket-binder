@@ -13,15 +13,15 @@ pub fn SearchInput(mut props: SearchInputProps) -> Element {
     let mut raw_input = use_signal(|| props.search_query.read().clone());
 
     rsx! {
-        div { class: "w-full md:w-96",
+        div { class: "w-full md:w-80",
             div { class: "relative group",
-                div { class: "absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 group-focus-within:text-sky-400 transition-colors",
-                    svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-5 h-5",
+                div { class: "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500 group-focus-within:text-sky-400 transition-colors",
+                    svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", class: "w-4 h-4",
                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" }
                     }
                 }
                 input {
-                    class: "w-full bg-slate-900/20 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white focus:outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30 transition-all placeholder-slate-500 backdrop-blur-xl animate-fade-in-slow",
+                    class: "w-full bg-slate-900/20 border border-white/10 rounded-2xl pl-9 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30 transition-all placeholder-slate-500 backdrop-blur-xl animate-fade-in-slow",
                     placeholder: "Search card name...",
                     value: "{raw_input}",
                     oninput: move |evt| {

@@ -5,8 +5,8 @@
 /* === CSS Custom Properties (Design Tokens) === */
 :root {
     --bg-primary: #0c0f1a;
-    --bg-surface: rgba(15, 20, 35, 0.25);
-    --bg-elevated: rgba(22, 28, 48, 0.35);
+    --bg-surface: rgba(0, 0, 0, 0.6);
+    --bg-elevated: rgba(0, 0, 0, 0.7);
     --bg-hover: rgba(255, 255, 255, 0.08);
     --bg-active: rgba(255, 255, 255, 0.1);
     --border-subtle: rgba(255, 255, 255, 0.06);
@@ -112,8 +112,8 @@ body {
 
 .glass-panel {
     background: var(--bg-surface) !important;
-    backdrop-filter: blur(24px) saturate(1.2) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+    backdrop-filter: blur(24px) saturate(1) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1) !important;
     border: 1px solid var(--border-subtle) !important;
     box-shadow: var(--shadow-ambient) !important;
 }

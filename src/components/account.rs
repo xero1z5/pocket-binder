@@ -104,7 +104,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                             props.new_acc_name.set(String::new()); props.new_acc_id.set(String::new()); props.new_acc_is_main.set(true);
                                             show_add_form.set(false);
                                             props.toast_message.set(Some(format!("Account '{}' created", name)));
-                                            let mut t = props.toast_message.clone(); spawn(async move { gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await; t.set(None); });
+                                            
                                         }
                                     },
                                     "Create"
@@ -140,7 +140,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                                     props.collection.write().update_account(&orig, &new_name, &new_id_val, new_main_val);
                                                     editing_account.set(None);
                                                     props.toast_message.set(Some(format!("Account '{}' updated", new_name)));
-                                                    let mut t = props.toast_message.clone(); spawn(async move { gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await; t.set(None); });
+                                                    
                                                 }
                                             },
                                             "Save"
@@ -192,7 +192,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                                     // Delete Button
                                                     button {
                                                         class: "text-slate-600 hover:text-rose-400 transition-colors p-1",
-                                                        onclick: move |_| { props.collection.write().remove_account(&n2); props.toast_message.set(Some(format!("Account deleted"))); let mut t = props.toast_message.clone(); spawn(async move { gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await; t.set(None); }); },
+                                                        onclick: move |_| { props.collection.write().remove_account(&n2); props.toast_message.set(Some(format!("Account deleted")));  },
                                                         svg { class: "w-4 h-4", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" } }
                                                     }
                                                 }

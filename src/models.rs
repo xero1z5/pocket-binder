@@ -193,6 +193,12 @@ impl CardCollection {
         self.wishlist.iter().any(|c| c.id == card_id)
     }
 
+    pub fn remove_wishlist(&mut self, card_id: &str) {
+        if let Some(pos) = self.wishlist.iter().position(|c| c.id == card_id) {
+            self.wishlist.remove(pos);
+        }
+    }
+
     pub fn toggle_tradable(&mut self, card_id: &str) {
         if let Some(pos) = self.tradable.iter().position(|id| id == card_id) {
             self.tradable.remove(pos);

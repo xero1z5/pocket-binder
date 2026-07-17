@@ -457,18 +457,22 @@ fn App() -> Element {
                 CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view, current_view_cards, mass_select_mode, selected_mass_cards }
             }
 
-            // --- Floating Navigation Dock (Bottom) ---
-            FloatingDock {
-                show_account_modal,
-                show_add_modal,
-                show_trade_modal,
-                auth_token,
-                user_email,
-                show_login_modal,
-                collection,
-                sync_status,
-                active_view,
-                pack_db,
+            // --- Floating Navigation Dock (Bottom) --- replaced by the mass action bar while multi-selecting
+            if *mass_select_mode.read() {
+                MassActionBar { selected_mass_cards, mass_select_mode, collection, image_db, toast_message, active_view }
+            } else {
+                FloatingDock {
+                    show_account_modal,
+                    show_add_modal,
+                    show_trade_modal,
+                    auth_token,
+                    user_email,
+                    show_login_modal,
+                    collection,
+                    sync_status,
+                    active_view,
+                    pack_db,
+                }
             }
 
             // --- Filter Drawer ---
@@ -486,7 +490,6 @@ fn App() -> Element {
 
         CardDetailModal { selected_card_id, collection, image_db, toast_message, current_view_cards }
         TradeModal { show_trade_modal, collection, image_db, toast_message }
-        MassActionBar { selected_mass_cards, mass_select_mode, collection, image_db, toast_message }
         Toast { toast_message }
     }
 

@@ -173,8 +173,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                                     match props.collection.write().trade_card(&g, &t, &my_a, &partner_a) {
                                                         Ok(_) => {
                                                             props.toast_message.set(Some("🤝 Trade Successful!".to_string()));
-                                                            let mut t_msg = props.toast_message.clone();
-                                                            spawn(async move { gloo_timers::future::sleep(std::time::Duration::from_secs(3)).await; t_msg.set(None); });
+                                                            
                                                             
                                                             props.show_trade_modal.set(false);
                                                             view_state.set("main".to_string());

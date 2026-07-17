@@ -87,12 +87,8 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
     };
 
     let mut visible_cards: Vec<Card> = base_cards.into_iter().filter(|card| {
-        // Search query only applies to the collection view — not wishlist, tradable, or pack views
-        let matches_search = if active_view_val == "collection" {
-            query.is_empty() || card.name.to_lowercase().contains(&query)
-        } else {
-            true
-        };
+        // Search query applies to every view (collection, wishlist, tradable, pack)
+        let matches_search = query.is_empty() || card.name.to_lowercase().contains(&query);
         let matches_rarity = active_rarities.is_empty() || active_rarities.contains(&card.rarity);
         
         let matches_pack = if active_packs.is_empty() {

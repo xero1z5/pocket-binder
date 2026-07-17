@@ -26,7 +26,7 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
     let mut show_packs = use_signal(|| false);
     
     rsx! {
-        div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-[2rem] px-4 md:px-6 py-2.5 md:py-3 flex items-center gap-2 md:gap-6 shadow-elevated border border-white/10 animate-slide-up backdrop-blur-xl bg-slate-900/40",
+        div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-[2rem] px-3 md:px-4 py-2 md:py-2.5 flex items-center gap-2 md:gap-3 shadow-elevated border border-white/10 animate-slide-up bg-slate-950/80 backdrop-blur-xl",
             
             DockItem {
                 label: "Collection".to_string(),
@@ -148,12 +148,12 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
 
 #[component]
 fn DockItem(label: String, icon: String, is_active: bool, color_theme: String, onclick: EventHandler<MouseEvent>) -> Element {
-    let (bg_glow, text_glow, dot_color) = match color_theme.as_str() {
-        "sky" => ("bg-sky-500/30", "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]", "bg-sky-400"),
-        "pink" => ("bg-pink-500/30", "text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.5)]", "bg-pink-400"),
-        "emerald" => ("bg-emerald-500/30", "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]", "bg-emerald-400"),
-        "fuchsia" => ("bg-fuchsia-500/30", "text-fuchsia-400 drop-shadow-[0_0_8px_rgba(232,121,249,0.5)]", "bg-fuchsia-400"),
-        _ => ("bg-slate-500/30", "text-slate-300 drop-shadow-[0_0_8px_rgba(203,213,225,0.5)]", "bg-slate-300"),
+    let (bg_glow, text_glow) = match color_theme.as_str() {
+        "sky" => ("bg-sky-500/30", "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"),
+        "pink" => ("bg-pink-500/30", "text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.5)]"),
+        "emerald" => ("bg-emerald-500/30", "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]"),
+        "fuchsia" => ("bg-fuchsia-500/30", "text-fuchsia-400 drop-shadow-[0_0_8px_rgba(232,121,249,0.5)]"),
+        _ => ("bg-slate-500/30", "text-slate-300 drop-shadow-[0_0_8px_rgba(203,213,225,0.5)]"),
     };
 
     rsx! {
@@ -176,11 +176,6 @@ fn DockItem(label: String, icon: String, is_active: bool, color_theme: String, o
                     fill: "none", view_box: "0 0 24 24", stroke_width: if is_active { "2" } else { "1.5" }, stroke: "currentColor",
                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "{icon}" }
                 }
-            }
-            
-            // Dot indicator instead of text label to save space
-            div { class: "h-1 w-1 rounded-full mt-1.5 transition-all duration-300",
-                class: if is_active { "{dot_color} scale-100 opacity-100" } else { "bg-slate-400 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-50" }
             }
             
             // Tooltip on hover

@@ -416,7 +416,6 @@ body {
 
 .js-tilt {
     touch-action: pan-y;
-}
     perspective: 800px;
     transform-style: preserve-3d;
 }
@@ -425,7 +424,6 @@ body {
     transition: transform var(--transition-smooth),
                 box-shadow var(--transition-smooth);
     transform-style: preserve-3d;
-    will-change: transform;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -522,30 +520,30 @@ body {
 .bg-blob {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
     opacity: 0.15;
     z-index: 0;
     pointer-events: none;
     animation: float 20s infinite ease-in-out;
+    background: radial-gradient(circle at center, var(--blob-color) 0%, transparent 70%);
 }
 
 .bg-blob-1 {
+    --blob-color: #6366f1; /* Indigo */
     width: 60vw; height: 60vw;
-    background: #6366f1; /* Indigo */
     top: -10%; left: -10%;
     animation-delay: 0s;
 }
 
 .bg-blob-2 {
+    --blob-color: #ec4899; /* Pink */
     width: 50vw; height: 50vw;
-    background: #ec4899; /* Pink */
     bottom: -20%; right: -10%;
     animation-delay: -5s;
 }
 
 .bg-blob-3 {
+    --blob-color: #14b8a6; /* Teal */
     width: 40vw; height: 40vw;
-    background: #14b8a6; /* Teal */
     top: 40%; left: 30%;
     animation-delay: -10s;
 }

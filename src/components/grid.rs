@@ -46,14 +46,14 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
     let active_packs = props.selected_packs.read().clone();
     let active_view_val = props.active_view.read().clone();
 
-    // Read image_db directly during render so we always have the latest state
-    let db_snapshot = props.image_db.read().clone();
+    // Borrow image_db (no clone of the whole map) so we always have the latest state
+    let image_db = props.image_db.read();
 
     let col = props.collection.read();
 
     let base_cards: Vec<Card> = if active_view_val.starts_with("pack:") {
         let pack_code = active_view_val.trim_start_matches("pack:");
-        if let Some(ref api_map) = db_snapshot {
+        if let Some(api_map) = image_db.as_ref() {
             api_map.values()
                 .filter(|c| c.set == pack_code)
                 .map(|c| Card {
@@ -94,7 +94,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
         let matches_pack = if active_packs.is_empty() {
             true
         } else {
-            let card_set = if let Some(ref api_map) = db_snapshot {
+            let card_set = if let Some(api_map) = image_db.as_ref() {
                 api_map.get(&card.id).map(|c| c.set.clone()).unwrap_or_default()
             } else {
                 String::new()
@@ -107,7 +107,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
         } else {
             // Look up type from the image_db if inventory card doesn't have it
             let card_type = if card.card_type.is_empty() {
-                if let Some(ref api_map) = db_snapshot {
+        if let Some(api_map) = image_db.as_ref() {
                     api_map.get(&card.id).map(|c| c.card_type.clone()).unwrap_or_default()
                 } else {
                     String::new()
@@ -139,9 +139,8 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                 {
                     // Clone the ID up front so both closures can own their own copy
                     let card_id_for_click = card.id.clone();
-                    let card_id_for_hover = card.id.clone();
 
-                    let image_url = if let Some(api_map) = &*props.image_db.read() {
+                    let image_url = if let Some(api_map) = image_db.as_ref() {
                         api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
                     } else { None };
 
@@ -161,10 +160,14 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     };
 
                     rsx! {
-                        div { 
-                            class: "js-tilt w-full h-full cursor-pointer relative group animate-fade-in-up hover:-translate-y-2 hover:scale-[1.03] transition-all duration-300 {op}",
-                            style: "animation-delay: {i as f32 * 0.05}s; transform-style: preserve-3d;",
-                            onclick: move |_| {
+                        div {
+                            key: "{card_id_for_click}",
+                            class: "relative",
+                            style: "overflow: visible; padding: 20px 0;",
+                            div {
+                                class: "js-tilt w-full h-full cursor-pointer relative group hover:-translate-y-2 hover:scale-[1.03] hover:z-20 transition-all duration-300 {op}",
+                                style: "transform-style: preserve-3d; transform-origin: center center;",
+                                onclick: move |_| {
                                 if *props.mass_select_mode.read() {
                                     let mut curr = props.selected_mass_cards.read().clone();
                                     if let Some(pos) = curr.iter().position(|id| id == &card_id_for_click) {
@@ -177,29 +180,17 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                     props.selected_card_id.set(Some(card_id_for_click.clone()));
                                 }
                             },
-                            onmouseenter: move |_| {
-                                let cid = card_id_for_hover.clone();
-                                if let Some(api_map) = &*props.image_db.read() {
-                                    if let Some(api_card) = api_map.get(&cid) {
-                                        let detail_url = optimized_image_url(&api_card.full_image_url, 600);
-                                        spawn(async move {
-                                            let _ = reqwest::get(&detail_url).await;
-                                        });
-                                    }
-                                }
-                            },
                             {
                                 let is_selected_for_mass = *props.mass_select_mode.read() && props.selected_mass_cards.read().contains(&card_id_for_click);
                                 let bg_border_class = if is_selected_for_mass {
-                                    "bg-indigo-900/40 backdrop-blur-md border border-indigo-400 ring-2 ring-indigo-400/50 shadow-[0_8px_24px_rgba(99,102,241,0.4)]"
+                                    "bg-indigo-900/40 border border-indigo-400 ring-2 ring-indigo-400/50 shadow-[0_8px_24px_rgba(99,102,241,0.4)]"
                                 } else {
-                                    "bg-slate-900/10 backdrop-blur-md border border-white/5 hover:border-teal-400 shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_24px_rgba(45,212,191,0.25)]"
+                                    "bg-slate-900/20 border border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.1)] group-hover:border-teal-400/80 group-hover:shadow-[0_0_0_1px_rgba(45,212,191,0.75),0_8px_24px_rgba(45,212,191,0.25)]"
                                 };
 
                                 rsx! {
-                                    div { class: "card-3d-element rounded-xl p-2.5 flex flex-col items-center h-full relative overflow-hidden transition-all duration-500 animate-float-bob {bg_border_class}",
-                                          style: "transform: translateZ(20px); animation-delay: {i * 150 % 2000}ms;",
-                                        div { class: "card-shimmer", style: "animation-delay: {i * 200 % 3000}ms;" }
+                                    div { class: "card-3d-element rounded-xl p-2.5 flex flex-col items-center h-full relative transition-all duration-500 overflow-visible {bg_border_class}",
+                                          style: "transform: translateZ(0);",
                                         if is_high_rarity {
                                             div { class: "holo-shimmer" }
                                         }
@@ -244,7 +235,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                                         alt: "{card_name}", 
                                                         loading: "lazy", decoding: "async",
                                                         width: "400", height: "560",
-                                                        class: "w-full rounded-lg mb-3 shadow-md border border-white/5 aspect-[63/88] object-cover relative z-10",
+                                                        class: "w-full rounded-xl mb-3 shadow-md border border-white/5 aspect-[63/88] object-cover relative z-10",
                                                         style: "transform: translateZ(30px);"
                                                     } 
                                                 }
@@ -256,6 +247,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                         div { class: "mt-auto pt-2 relative z-10", style: "transform: translateZ(15px);",
                                             RarityDisplay { rarity_code }
                                         }
+                                    }
                                     }
                                 }
                             }

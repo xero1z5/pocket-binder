@@ -82,8 +82,6 @@ pub struct AddCardModalProps {
     pub collection: Signal<CardCollection>,
     pub image_db: Signal<Option<HashMap<String, OfficialCard>>>,
     pub toast_message: Signal<Option<String>>,
-    pub mass_select_mode: Signal<bool>,
-    pub selected_mass_cards: Signal<Vec<String>>,
 }
 
 #[component]
@@ -91,15 +89,23 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
     let mut show_account_list = use_signal(|| false);
     let mut search_input = use_signal(|| String::new());
+    // Debounced query so we don't filter the entire card database on every keystroke.
+    let mut debounced_query = use_signal(|| String::new());
+    let mut search_token = use_signal(|| 0u32);
+
+    // Multi-select state is LOCAL to this modal so it never touches the
+    // collection grid's selection (independent menus).
+    let mut local_mass_select = use_signal(|| false);
+    let mut local_mass_cards = use_signal(|| Vec::<String>::new());
 
     // Local filter state — isolated from the main collection filters
     let mut local_rarities = use_signal(|| Vec::<String>::new());
     let mut local_types   = use_signal(|| Vec::<String>::new());
     let mut show_local_filters = use_signal(|| false);
 
-    // Memoized filtered results — live search as-you-type
+    // Memoized filtered results — live search as-you-type (driven by the debounced query)
     let filtered_api_cards = use_memo(move || {
-        let query = search_input.read().trim().to_lowercase();
+        let query = debounced_query.read().trim().to_lowercase();
 
         if let Some(api_map) = &*props.image_db.read() {
             let selected_r = local_rarities.read().clone();
@@ -138,7 +144,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         button { 
                             class: "text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition-all", 
                             title: "Close",
-                            onclick: move |_| { props.show_add_modal.set(false); selected_card_to_add.set(None); show_account_list.set(false); }, 
+                            onclick: move |_| { props.show_add_modal.set(false); selected_card_to_add.set(None); show_account_list.set(false); local_mass_select.set(false); local_mass_cards.set(Vec::new()); search_input.set(String::new()); debounced_query.set(String::new()); }, 
                             svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" } }
                         }
                     }
@@ -151,12 +157,23 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                             }
                             input { 
                                 class: "w-full bg-slate-900/80 border border-white/20 rounded-xl pl-10 pr-3 py-2 text-white placeholder-slate-500 focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30 outline-none transition-colors shadow-inner text-sm", 
-                                placeholder: if *props.mass_select_mode.read() { "Filter cards to bulk-select..." } else { "Search by name..." },
+                                placeholder: if *local_mass_select.read() { "Filter cards to bulk-select..." } else { "Search by name..." },
                                 value: "{search_input}", 
                                 oninput: move |evt| {
-                                    search_input.set(evt.value());
+                                    let val = evt.value();
+                                    search_input.set(val.clone());
                                     selected_card_to_add.set(None);
                                     show_account_list.set(false);
+                                    // Debounce the heavy DB filter so typing stays responsive
+                                    search_token.with_mut(|t| *t += 1);
+                                    let token = *search_token.read();
+                                    let mut debounced_query = debounced_query;
+                                    spawn(async move {
+                                        gloo_timers::future::sleep(std::time::Duration::from_millis(160)).await;
+                                        if *search_token.read() == token {
+                                            debounced_query.set(val);
+                                        }
+                                    });
                                 },
                             }
                         }
@@ -164,14 +181,14 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         // Multi-select toggle
                         button {
                             class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all backdrop-blur-md cursor-pointer flex-shrink-0",
-                            class: if *props.mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-white" },
-                            title: if *props.mass_select_mode.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
+                            class: if *local_mass_select.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-white" },
+                            title: if *local_mass_select.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
                             onclick: move |_| {
-                                let curr = *props.mass_select_mode.read();
-                                props.mass_select_mode.set(!curr);
-                                if curr { props.selected_mass_cards.set(Vec::new()); }
+                                let curr = *local_mass_select.read();
+                                local_mass_select.set(!curr);
+                                if curr { local_mass_cards.set(Vec::new()); }
                             },
-                            if *props.mass_select_mode.read() {
+                            if *local_mass_select.read() {
                                 svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2.5", stroke: "currentColor",
                                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" }
                                 }
@@ -388,20 +405,20 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     let c = api_card.clone();
                                     let packs_display = if api_card.packs.is_empty() { "Promo".to_string() } else { api_card.packs.join(", ") };
 
-                                    let is_selected = props.selected_mass_cards.read().contains(&c.generated_id);
+                                    let is_selected = local_mass_cards.read().contains(&c.generated_id);
                                     rsx! {
                                         div { 
                                             class: "bg-slate-800/60 border rounded-xl p-2 cursor-pointer transition-all flex flex-col backdrop-blur-sm relative",
                                             class: if is_selected { "border-indigo-400 ring-2 ring-indigo-400/50 bg-indigo-900/40" } else { "border-white/30/15 hover:border-white/30/50 hover:bg-slate-800/80" },
                                             onclick: move |_| {
-                                                if *props.mass_select_mode.read() {
-                                                    let mut current = props.selected_mass_cards.read().clone();
+                                                if *local_mass_select.read() {
+                                                    let mut current = local_mass_cards.read().clone();
                                                     if current.contains(&c.generated_id) {
                                                         current.retain(|id| id != &c.generated_id);
                                                     } else {
                                                         current.push(c.generated_id.clone());
                                                     }
-                                                    props.selected_mass_cards.set(current);
+                                                    local_mass_cards.set(current);
                                                 } else {
                                                     selected_card_to_add.set(Some(c.clone()));
                                                 }

@@ -363,7 +363,7 @@ fn App() -> Element {
         }
 
         // Forces dx serve reload for animations shrink fix
-        div { class: "bg-[#0c0f1a] text-slate-200 min-h-screen font-sans relative overflow-x-hidden flex selection:bg-indigo-500/30",
+        div { class: "bg-[#0c0f1a] text-slate-200 h-screen font-sans relative overflow-hidden flex flex-col selection:bg-indigo-500/30",
             
             // Script injection for 3D Tilt
             script { src: "https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" }
@@ -451,7 +451,8 @@ fn App() -> Element {
 
             // --- Main Content Area ---
             div { 
-                class: "w-full min-h-screen pt-20 pb-28 px-1 sm:px-2 md:px-4 relative z-10",
+                class: "flex-1 overflow-y-auto overflow-x-hidden pt-20 pb-28 px-1 sm:px-2 md:px-4 relative z-10 overscroll-contain",
+                style: "scrollbar-gutter: stable; -webkit-overflow-scrolling: touch;",
                 
                 // --- THE VISUAL GRID ---
                 CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view, current_view_cards, mass_select_mode, selected_mass_cards }
@@ -482,8 +483,6 @@ fn App() -> Element {
         // --- OVERLAYS & MODALS ---
         AddCardModal { 
             show_add_modal, collection, image_db, toast_message,
-            mass_select_mode: mass_select_mode.clone(),
-            selected_mass_cards: selected_mass_cards.clone(),
         }
         AccountModal { show_account_modal, new_acc_name, new_acc_id, new_acc_is_main, collection, toast_message, auth_token, user_email }
         LoginModal { show_login_modal, user_email, user_password, auth_token, sync_status, collection }

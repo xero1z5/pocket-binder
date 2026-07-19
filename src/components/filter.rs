@@ -9,8 +9,10 @@ pub struct SearchInputProps {
 
 #[component]
 pub fn SearchInput(mut props: SearchInputProps) -> Element {
-    // Local raw input that updates instantly (no lag for the user)
+    // Local raw input that updates instantly so the input never lags behind typing
     let mut raw_input = use_signal(|| props.search_query.read().clone());
+    // Monotonic token used to cancel stale debounce timers (only the last keystroke wins)
+    let mut debounce_token = use_signal(|| 0u32);
 
     rsx! {
         div { class: "w-full md:w-80",
@@ -27,11 +29,22 @@ pub fn SearchInput(mut props: SearchInputProps) -> Element {
                     oninput: move |evt| {
                         let val = evt.value();
                         raw_input.set(val.clone());
-                        // Update live on every keystroke so clearing restores full view
-                        props.search_query.set(val);
+                        // Debounce the global query so the (potentially huge) grid only
+                        // re-renders after the user pauses typing, instead of every keystroke.
+                        debounce_token.with_mut(|t| *t += 1);
+                        let token = *debounce_token.read();
+                        let mut search_query = props.search_query;
+                        spawn(async move {
+                            gloo_timers::future::sleep(std::time::Duration::from_millis(160)).await;
+                            if *debounce_token.read() == token {
+                                search_query.set(val);
+                            }
+                        });
                     },
                     onkeydown: move |evt| {
                         if evt.key() == Key::Enter {
+                            // Apply immediately on Enter
+                            debounce_token.with_mut(|t| *t += 1);
                             props.search_query.set(raw_input.read().clone());
                         }
                     }

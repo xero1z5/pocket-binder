@@ -15,8 +15,28 @@ fn get_client() -> reqwest::Client {
     CLIENT.get_or_init(|| reqwest::Client::new()).clone()
 }
 
+// Send a lightweight ping to wake Supabase if it's paused (free tier sleep)
+pub async fn wake_supabase() {
+    let url = format!("{}/rest/v1/", SUPABASE_URL);
+    for i in 0..3 {
+        if get_client()
+            .get(&url)
+            .header("apikey", SUPABASE_ANON_KEY)
+            .send()
+            .await
+            .is_ok()
+        {
+            return;
+        }
+        if i < 2 {
+            gloo_timers::future::sleep(std::time::Duration::from_millis(2000)).await;
+        }
+    }
+}
+
 // Authenticate (Login or Sign Up)
 pub async fn supabase_auth(email: &str, password: &str, is_signup: bool) -> Result<String, String> {
+    wake_supabase().await;
     let endpoint = if is_signup { "signup" } else { "token?grant_type=password" };
     let url = format!("{}/auth/v1/{}", SUPABASE_URL, endpoint);
     
@@ -46,6 +66,7 @@ pub async fn supabase_auth(email: &str, password: &str, is_signup: bool) -> Resu
 
 // Load the User's Binder
 pub async fn load_from_supabase(token: &str) -> Result<CardCollection, String> {
+    wake_supabase().await;
     let url = format!("{}/rest/v1/binders?select=collection_data", SUPABASE_URL);
     
     let res = get_client().get(&url)
@@ -76,6 +97,7 @@ pub async fn load_from_supabase(token: &str) -> Result<CardCollection, String> {
 
 // Save the Binder (Upsert) - NOW WITH SILENT MICRO-RETRIES
 pub async fn save_to_supabase(collection: CardCollection, token: String) -> Result<(), String> {
+    wake_supabase().await;
     let url = format!("{}/rest/v1/binders?on_conflict=user_id", SUPABASE_URL);
     let client = get_client();
     let payload = serde_json::json!({ "collection_data": collection });

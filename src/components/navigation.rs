@@ -111,7 +111,7 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
         // Sets popup menu
         if *show_packs.read() {
             if let Some(packs) = props.pack_db.read().as_ref() {
-                div { class: "fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-slate-950/90 backdrop-blur-md rounded-2xl p-2 max-h-[60vh] overflow-y-auto shadow-2xl border border-white/10 animate-zoom-in w-64 md:w-80",
+                div { class: "fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-slate-950/90 backdrop-blur-md rounded-2xl p-2 max-h-[60vh] overflow-y-auto shadow-2xl border border-white/10 animate-fade-in-up w-64 md:w-80",
                     div { class: "flex flex-col gap-1",
                         for pack in packs.iter() {
                             {
@@ -149,38 +149,33 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
 
 #[component]
 fn DockItem(label: String, icon: String, is_active: bool, color_theme: String, onclick: EventHandler<MouseEvent>) -> Element {
-    let (bg_glow, text_glow) = match color_theme.as_str() {
-        "sky" => ("bg-sky-500/30", "text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"),
-        "pink" => ("bg-pink-500/30", "text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.5)]"),
-        "emerald" => ("bg-emerald-500/30", "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]"),
-        "fuchsia" => ("bg-fuchsia-500/30", "text-fuchsia-400 drop-shadow-[0_0_8px_rgba(232,121,249,0.5)]"),
-        _ => ("bg-slate-500/30", "text-slate-300 drop-shadow-[0_0_8px_rgba(203,213,225,0.5)]"),
+    let (bg_color, text_color) = match color_theme.as_str() {
+        "sky" => ("bg-sky-500/20", "text-sky-400"),
+        "pink" => ("bg-pink-500/20", "text-pink-400"),
+        "emerald" => ("bg-emerald-500/20", "text-emerald-400"),
+        "fuchsia" => ("bg-fuchsia-500/20", "text-fuchsia-400"),
+        _ => ("bg-slate-500/20", "text-slate-300"),
     };
 
     rsx! {
         button {
-            class: "flex flex-col items-center justify-center group relative transition-all duration-300 outline-none p-2 rounded-2xl",
-            class: if is_active { "bg-white/10" } else { "hover:bg-white/5" },
+            class: "flex flex-col items-center justify-center group relative transition-colors duration-150 outline-none p-2 rounded-2xl",
+            class: if is_active { "{bg_color}" } else { "hover:bg-white/5" },
             onclick: move |e| onclick.call(e),
             
             // Icon
-            div { class: "relative flex items-center justify-center transition-transform duration-300",
-                class: if is_active { "-translate-y-1 scale-110" } else { "group-hover:-translate-y-1 group-hover:scale-110" },
-                
-                // Active glow
-                if is_active {
-                    div { class: "absolute -inset-2 {bg_glow} blur-lg rounded-full" }
-                }
+            div { class: "relative flex items-center justify-center transition-transform duration-150",
+                class: if is_active { "-translate-y-0.5 scale-105" } else { "group-hover:-translate-y-0.5" },
                 
                 svg { class: "w-6 h-6 md:w-7 md:h-7 transition-colors z-10", 
-                    class: if is_active { "{text_glow}" } else { "text-slate-400 group-hover:text-slate-200" }, 
+                    class: if is_active { "{text_color}" } else { "text-slate-400 group-hover:text-slate-200" }, 
                     fill: "none", view_box: "0 0 24 24", stroke_width: if is_active { "2" } else { "1.5" }, stroke: "currentColor",
                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "{icon}" }
                 }
             }
             
             // Tooltip on hover
-            div { class: "absolute -top-10 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded-lg pointer-events-none whitespace-nowrap shadow-xl border border-white/10",
+            div { class: "absolute -top-10 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-150 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg pointer-events-none whitespace-nowrap shadow-md border border-white/10",
                 "{label}"
             }
         }

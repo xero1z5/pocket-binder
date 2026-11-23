@@ -122,6 +122,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
 
     visible_cards.sort_by(|a, b| {
         get_rarity_priority(&a.rarity).cmp(&get_rarity_priority(&b.rarity))
+            .then_with(|| a.id.cmp(&b.id))
     });
 
     // Sync visible cards sequence for swiping in the detail modal
@@ -140,7 +141,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
 
     rsx! {
         div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-4 px-1",
-            for (i, card) in visible_cards.into_iter().enumerate() {
+            for card in visible_cards.into_iter() {
                 {
                     // Clone values needed for closures
                     let card_id_for_click = card.id.clone();
@@ -159,24 +160,23 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     let is_selected_for_mass = mass_set.as_ref().map(|s| s.contains(&card_id_for_click)).unwrap_or(false);
                     
                     let op = if active_view_val.starts_with("pack:") && !is_owned {
-                        "opacity-50 grayscale-[0.8] hover:grayscale-[0.5] hover:opacity-80"
+                        "opacity-50 hover:opacity-75"
                     } else {
-                        "opacity-100 grayscale-0"
+                        "opacity-100"
                     };
 
                     let bg_border_class = if is_selected_for_mass {
                         "bg-indigo-950/60 border border-indigo-400 ring-2 ring-indigo-400/50"
                     } else {
-                        "bg-slate-900/30 border border-white/10 hover:border-white/20 shadow-sm"
+                        "bg-slate-900/30 border border-white/10 hover:border-white/30 hover:bg-slate-900/50 shadow-sm transition-colors duration-150"
                     };
 
                     rsx! {
                         div {
                             key: "{card_id_for_click}",
                             class: "relative py-1",
-                            style: "content-visibility: auto; contain-intrinsic-size: 140px 200px;",
                             div {
-                                class: "w-full h-full cursor-pointer relative group hover:-translate-y-1.5 transition-transform duration-200 {op}",
+                                class: "w-full h-full cursor-pointer relative group {op}",
                                 onclick: move |_| {
                                     if *props.mass_select_mode.read() {
                                         let mut curr = props.selected_mass_cards.read().clone();
@@ -226,7 +226,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                             alt: "{card_name}", 
                                             loading: "lazy", decoding: "async",
                                             width: "400", height: "560",
-                                            class: "w-full rounded-xl mb-3 shadow-md border border-white/5 aspect-[63/88] object-cover relative z-10"
+                                            class: "w-full rounded-xl mb-3 border border-white/5 aspect-[63/88] object-cover relative z-10"
                                         } 
                                     } else {
                                         div { class: "w-full aspect-[63/88] bg-slate-800/50 rounded-lg mb-3 border border-white/5 animate-pulse relative z-10" }

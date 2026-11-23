@@ -84,13 +84,6 @@ fn App() -> Element {
     // EFFECTS & DATA FETCHING
     // =========================================================================
 
-    let any_modal_open = *show_add_modal.read() || 
-        *show_filter_menu.read() || 
-        selected_card_id.read().is_some() || 
-        *show_trade_modal.read() || 
-        *show_login_modal.read() || 
-        *show_account_modal.read();
-
     // Initial Database Load
     use_effect(move || {
         let token = auth_token.read().clone();
@@ -288,16 +281,12 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
 
-        if any_modal_open {
-            style { "body {{ overflow: hidden !important; }}" }
-        }
-
         div { class: "bg-[#0c0f1a] text-slate-200 h-screen font-sans relative overflow-hidden flex flex-col selection:bg-indigo-500/30",
             // Static ambient gradient (zero GPU thrash, crisp glass backdrop blur)
             div { class: "absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.12),rgba(255,255,255,0))] pointer-events-none" }
 
             // --- Floating Action Bar (Top) ---
-            div { class: "fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 glass-panel rounded-2xl px-4 py-2 flex justify-between items-center shadow-lg border border-white/10 animate-fade-in-down backdrop-blur-xl",
+            div { class: "fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 glass-panel rounded-2xl px-4 py-2 flex justify-between items-center shadow-lg border border-white/10",
                 
                 // LEFT: Search Input
                 div { class: "w-full max-w-md",
@@ -331,7 +320,7 @@ fn App() -> Element {
                     }
                     button {
                         class: "group w-11 h-11 md:w-12 md:h-12 flex items-center justify-center border rounded-xl md:rounded-2xl transition-all cursor-pointer",
-                        class: if *mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-400 hover:text-white" },
+                        class: if *mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-md" } else { "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-400 hover:text-white" },
                         title: if *mass_select_mode.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
                         onclick: move |_| {
                             let curr = *mass_select_mode.read();
@@ -356,8 +345,8 @@ fn App() -> Element {
 
             // --- Main Content Area ---
             div { 
-                class: "flex-1 overflow-y-auto overflow-x-hidden pt-20 pb-28 px-1 sm:px-2 md:px-4 relative z-10 overscroll-contain",
-                style: "scrollbar-gutter: stable; -webkit-overflow-scrolling: touch;",
+                class: "flex-1 overflow-y-auto overflow-x-hidden pt-20 pb-28 px-1 sm:px-2 md:px-4 relative z-10",
+                style: "-webkit-overflow-scrolling: touch;",
                 
                 // --- THE VISUAL GRID ---
                 CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view, current_view_cards, mass_select_mode, selected_mass_cards }

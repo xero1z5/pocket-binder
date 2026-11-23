@@ -152,8 +152,8 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     rsx! {
         if *props.show_add_modal.read() {
             // Semi-transparent overlay so the background collection is still visible
-            div { class: "fixed inset-0 bg-slate-950/70 flex flex-col z-50 animate-fade-in-down backdrop-blur-sm",
-                div { class: "glass-panel border-b border-white/10 p-3 flex flex-col gap-3 shadow-2xl z-10 backdrop-blur-2xl",
+            div { class: "fixed inset-0 bg-slate-950/70 flex flex-col z-50 animate-fade-in backdrop-blur-sm",
+                div { class: "glass-panel border-b border-white/10 p-3 flex flex-col gap-3 shadow-2xl z-10",
                     div { class: "flex justify-end",
                         button { 
                             class: "text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition-all", 

@@ -56,7 +56,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
 
     rsx! {
         if *props.show_trade_modal.read() {
-            div { class: "fixed inset-0 bg-slate-950/95 flex flex-col z-50 animate-fade-in-down",
+            div { class: "fixed inset-0 bg-slate-950/95 flex flex-col z-50 animate-fade-in",
                 
                 div { class: "glass-panel border-b border-white/5 p-4 pt-6 flex justify-between items-center shadow-xl z-10",
                     h2 { class: "text-xl font-bold tracking-tight flex items-center gap-2 text-white", 
@@ -81,7 +81,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                             
                             div { class: "flex flex-col md:flex-row gap-6 md:gap-12 items-center w-full",
                                 
-                                div { class: "flex-1 flex flex-col bg-slate-800/40 p-4 md:p-6 rounded-2xl border border-white/30/15 backdrop-blur w-full",
+                                div { class: "flex-1 flex flex-col bg-slate-800/40 p-4 md:p-6 rounded-2xl border border-white/10 w-full",
                                     h3 { class: "text-sm text-white font-bold uppercase tracking-widest mb-4", "Taking From" }
                                     
                                     select {
@@ -115,7 +115,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                     }
                                 }
 
-                                div { class: "flex-1 flex flex-col bg-slate-800/40 p-4 md:p-6 rounded-2xl border border-white/30/15 backdrop-blur w-full",
+                                div { class: "flex-1 flex flex-col bg-slate-800/40 p-4 md:p-6 rounded-2xl border border-white/10 w-full",
                                     h3 { class: "text-sm text-white font-bold uppercase tracking-widest mb-4", "Giving From" }
                                     
                                     select {
@@ -315,7 +315,7 @@ fn PickerSlot(card: Card, image_db: Signal<Option<HashMap<String, OfficialCard>>
 
     rsx! {
         div { 
-            class: "bg-slate-800/60 border border-white/30/15 rounded-xl p-2 cursor-pointer hover:border-white/30/50 hover:bg-slate-800/80 transition-all flex flex-col items-center backdrop-blur-sm",
+            class: "bg-slate-800/80 border border-white/10 rounded-xl p-2 cursor-pointer hover:border-white/30 hover:bg-slate-800 transition-colors flex flex-col items-center",
             onclick: move |e| onclick.call(e),
             if let Some(img_url) = url {
                 img { 

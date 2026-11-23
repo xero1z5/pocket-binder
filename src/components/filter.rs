@@ -94,6 +94,10 @@ const ALL_TYPES: &[&str] = &["Pokémon", "Trainer"];
 
 #[component]
 pub fn FilterTray(mut props: FilterTrayProps) -> Element {
+    if !*props.show_filter_menu.read() {
+        return rsx! {};
+    }
+
     rsx! {
         if *props.show_filter_menu.read() {
             // Backdrop

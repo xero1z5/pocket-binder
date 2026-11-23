@@ -50,7 +50,7 @@ fn slot_transform(rel: i32, frac: f64) -> String {
 fn close_modal_action(mut is_closing: Signal<bool>, mut selected_card: Signal<Option<String>>, mut show_accounts: Signal<bool>) {
     is_closing.set(true);
     spawn(async move {
-        gloo_timers::future::sleep(std::time::Duration::from_millis(300)).await;
+        gloo_timers::future::sleep(std::time::Duration::from_millis(120)).await;
         selected_card.set(None);
         is_closing.set(false);
         show_accounts.set(false);
@@ -140,6 +140,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                         let start = selected_card_id.read().as_ref()
                             .and_then(|id| cards.iter().position(|x| x == id))
                             .unwrap_or(0) as f64;
+                        last_center = start as i32;
                         drop(cards);
                         dragging.set(false);
                         pos.set(start);
@@ -189,10 +190,10 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                         // gentle settle onto the nearest card
                         let nearest = p.round();
                         let diff = nearest - p;
-                        if diff.abs() < 0.001 {
+                        if diff.abs() >= 0.001 {
+                            pos.set(p + diff * 0.35);
+                        } else if p != nearest {
                             pos.set(nearest);
-                        } else {
-                            pos.set(p + diff * 0.25);
                         }
                         vel.set(0.0);
                     }
@@ -225,7 +226,8 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                         settled.set(at_rest);
                     }
 
-                    gloo_timers::future::sleep(std::time::Duration::from_millis(16)).await;
+                    let sleep_ms = if at_rest && (p - p.round()).abs() < 0.001 { 60 } else { 16 };
+                    gloo_timers::future::sleep(std::time::Duration::from_millis(sleep_ms)).await;
                 }
             });
         }
@@ -260,7 +262,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
 
                         rsx! {
                             div {
-                                class: if *is_closing.read() { "fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 transition-all animate-backdrop-exit outline-none" } else { "fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 transition-all animate-backdrop-enter outline-none" },
+                                class: if *is_closing.read() { "fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 animate-backdrop-exit outline-none" } else { "fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 animate-backdrop-enter outline-none" },
                                 tabindex: "0",
                                 autofocus: "true",
                                 onmounted: onmounted_loop,

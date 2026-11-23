@@ -16,6 +16,10 @@ pub struct AccountModalProps {
 
 #[component]
 pub fn AccountModal(mut props: AccountModalProps) -> Element {
+    if !*props.show_account_modal.read() {
+        return rsx! {};
+    }
+
     let mut show_add_form = use_signal(|| false);
 
     // Edit mode state: which account name is being edited

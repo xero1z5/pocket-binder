@@ -16,7 +16,7 @@ pub struct CardDetailModalProps {
 const CARD_STEP: f64 = 180.0;
 const ANGLE_STEP_RAD: f64 = 25.0 * std::f64::consts::PI / 180.0;
 const RADIUS: f64 = 550.0;
-const VISIBLE_RADIUS: i32 = 6;
+const VISIBLE_RADIUS: i32 = 2;
 const N: usize = (2 * VISIBLE_RADIUS + 1) as usize;
 
 // Physics tuning — "slot machine" feel: free fling + gentle settle
@@ -40,11 +40,10 @@ fn slot_transform(rel: i32, frac: f64) -> String {
     let norm = ((cos + 1.0) / 2.0).clamp(0.0, 1.0); // 0 at the far edges, 1 at center
     let scale = (0.42 + 0.58 * norm).powf(1.5) * 1.14; // center ≈ 1.14, sides fall off
     let opacity = (0.22 + 0.78 * norm).clamp(0.0, 1.0);
-    let brightness = (0.32 + 0.68 * norm).clamp(0.0, 1.0);
     let z = ((cos * 50.0) as i32).max(0);
     format!(
-        "transform: translateX({:.2}px) translateZ({:.2}px) rotateY({:.2}deg) scale({:.3}); opacity: {:.3}; filter: brightness({:.2}); z-index: {}; will-change: transform; backface-visibility: hidden;",
-        tx, tz, ry, scale, opacity, brightness, z
+        "transform: translateX({:.2}px) translateZ({:.2}px) rotateY({:.2}deg) scale({:.3}); opacity: {:.3}; z-index: {}; will-change: transform; backface-visibility: hidden;",
+        tx, tz, ry, scale, opacity, z
     )
 }
 
@@ -60,6 +59,10 @@ fn close_modal_action(mut is_closing: Signal<bool>, mut selected_card: Signal<Op
 
 #[component]
 pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
+    if props.selected_card_id.read().is_none() {
+        return rsx! {};
+    }
+
     let CardDetailModalProps { mut selected_card_id, mut collection, image_db, mut toast_message, current_view_cards } = props;
 
     let mut show_accounts = use_signal(|| false);
@@ -364,9 +367,9 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                             {
                                                                 let item_image_url = optimized_image_url(&target_api_card.full_image_url, 400);
                                                                 let img_class = if is_center {
-                                                                    "w-44 md:w-56 rounded-2xl shadow-2xl drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] border-2 border-white/15 object-cover pointer-events-none ring-2 ring-indigo-500/30"
+                                                                    "w-44 md:w-56 rounded-2xl shadow-2xl border-2 border-white/15 object-cover pointer-events-none ring-2 ring-indigo-500/30"
                                                                 } else {
-                                                                    "w-36 md:w-48 rounded-2xl shadow-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] border border-white/5 object-cover pointer-events-none"
+                                                                    "w-36 md:w-48 rounded-2xl shadow-lg border border-white/5 object-cover pointer-events-none"
                                                                 };
                                                                 rsx! {
                                                                     img {
@@ -400,7 +403,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                 src: "https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main/dist/images/sets/LOGO_expansion_{display_api_card.set}_en_US.webp",
                                                 alt: "{c.pack}",
                                                 title: "{c.pack}",
-                                                class: "h-6 w-fit object-contain drop-shadow-md"
+                                                class: "h-6 w-fit object-contain"
                                             }
                                         }
                                     }

@@ -185,55 +185,27 @@ fn App() -> Element {
 
     use_effect(move || {
         spawn(async move {
-            let cache_key = "cached_card_db_v9";
-            let pack_cache_key = "cached_pack_db_v9";
-            
-            // 1. Try to load from LocalStorage cache instantly
-            let cached: Option<Vec<OfficialCard>> = LocalStorage::get(cache_key).ok();
-            
-            let build_db = |cards: Vec<OfficialCard>| -> HashMap<String, OfficialCard> {
-                let mut api_db: HashMap<String, OfficialCard> = HashMap::new();
-                for mut card in cards {
-                    if card.generated_id.is_empty() {
-                        card.generated_id = format!("{}-{:03}", card.set, card.number);
-                    }
-                    if card.full_image_url.is_empty() {
-                        card.full_image_url = format!("https://assets.tcgdex.net/en/tcgp/{}/{:03}/high.webp", card.set, card.number);
-                    }
-                    api_db.insert(card.generated_id.clone(), card);
-                }
-                api_db
-            };
-            
-            if let Some(cards) = cached {
-                image_db.set(Some(build_db(cards)));
-            }
+            let pack_cache_key = "cached_pack_db_v10";
             
             if let Some(packs) = LocalStorage::get::<Vec<PackSet>>(pack_cache_key).ok() {
                 pack_db.set(Some(packs));
             }
 
             // ===================================================================
-            // 2. Background refresh — Flibustier as PRIMARY source
+            // Background refresh — Flibustier database via HTTP cache
             // ===================================================================
             let cdn_base = "https://unpkg.com/pokemon-tcg-pocket-database@latest/dist";
-            
-            // Sets that exist on TCGdex CDN (for high-quality images)
-            let tcgdex_sets: Vec<&str> = vec![
-                "P-A", "A1", "A1a", "A2", "A2a", "A2b", "A3", "A3a", "A3b",
-                "A4", "A4a", "B1", "B1a", "B2", "B2a",
-            ];
             
             // Normalize flibustier set IDs (PROMO-A → P-A) to a common format
             let normalize_set = |s: &str| -> String {
                 match s {
                     "PROMO-A" => "P-A".to_string(),
                     "PROMO-B" => "P-B".to_string(),
+                    "PROMO-C" => "P-C".to_string(),
                     other => other.to_string(),
                 }
             };
             
-            // --- Fetch cards from flibustier (primary, complete list) ---
             let cards_url = format!("{}/cards.json", cdn_base);
             let sets_url = format!("{}/sets.json", cdn_base);
             
@@ -243,24 +215,25 @@ fn App() -> Element {
             // Fetch both in parallel
             let (cards_result, sets_result) = (cards_future.await, sets_future.await);
             
-            // Process cards
+            // Process cards directly into pre-allocated HashMap in a single pass
             if let Ok(cards_resp) = cards_result {
                 if let Ok(flib_cards) = cards_resp.json::<Vec<FlibustierCard>>().await {
-                    let all_cards: Vec<OfficialCard> = flib_cards.into_iter().map(|fc| {
+                    let mut api_db: HashMap<String, OfficialCard> = HashMap::with_capacity(flib_cards.len());
+                    for fc in flib_cards {
                         let set_id = normalize_set(&fc.set);
-                        let generated_id = format!("{}-{:03}", set_id, fc.number);
-                        
-                        // Use LimitlessTCG CDN for all images as requested (fastest updates for new sets)
-                        let image_url = format!("https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/pocket/{}/{}_{:03}_EN.webp", set_id, set_id, fc.number);
-                        
-                        // Detect card type from the image name pattern
+                        let num_str = if fc.number < 0 {
+                            format!("N{:02}", fc.number.abs())
+                        } else {
+                            format!("{:03}", fc.number)
+                        };
+                        let generated_id = format!("{}-{}", set_id, num_str);
+                        let image_url = format!("https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/pocket/{}/{}_{}_EN.webp", set_id, set_id, num_str);
                         let card_type = if fc.image.starts_with("cTR") {
                             "Trainer".to_string()
                         } else {
                             "Pokémon".to_string()
                         };
-                        
-                        OfficialCard {
+                        let card = OfficialCard {
                             set: set_id,
                             number: fc.number,
                             name: fc.name,
@@ -269,12 +242,11 @@ fn App() -> Element {
                             image: fc.image,
                             card_type,
                             full_image_url: image_url,
-                            generated_id,
-                        }
-                    }).collect();
-                    
-                    let _ = LocalStorage::set(cache_key, &all_cards);
-                    image_db.set(Some(build_db(all_cards)));
+                            generated_id: generated_id.clone(),
+                        };
+                        api_db.insert(generated_id, card);
+                    }
+                    image_db.set(Some(api_db));
                 }
             }
             
@@ -306,53 +278,11 @@ fn App() -> Element {
     // =========================================================================
     // 3. UI LAYOUT
     // =========================================================================
-    let vanilla_tilt_js = r#"
-        // Use MutationObserver to initialize vanilla-tilt on new cards automatically
-        const observer = new MutationObserver((mutations) => {
-            let newCards = [];
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) { 
-                        if (node.classList && node.classList.contains('js-tilt')) {
-                            newCards.push(node);
-                        }
-                        if (node.querySelectorAll) {
-                            const children = node.querySelectorAll('.js-tilt');
-                            children.forEach(c => newCards.push(c));
-                        }
-                    }
-                });
-            });
-            const isHoverDevice = window.matchMedia("(hover: hover)").matches;
-            if (newCards.length > 0 && window.VanillaTilt && isHoverDevice) {
-                window.VanillaTilt.init(newCards, {
-                    max: 12,
-                    speed: 400,
-                    glare: true,
-                    "max-glare": 0.35,
-                    scale: 1.05
-                });
-            }
-        });
-        // Initialize observer when document is ready
-        document.addEventListener("DOMContentLoaded", () => {
-            observer.observe(document.body, { childList: true, subtree: true });
-            // init any existing on load
-            const isHoverDevice = window.matchMedia("(hover: hover)").matches;
-            if (window.VanillaTilt && isHoverDevice) {
-                window.VanillaTilt.init(document.querySelectorAll(".js-tilt"), {
-                    max: 12, speed: 400, glare: true, "max-glare": 0.35, scale: 1.05
-                });
-            }
-        });
-    "#;
-
     rsx! {
         document::Meta { name: "viewport", content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" }
 
-        // pre warm the network connections
-        document::Link { rel: "preconnect", href: "https://api.tcgdex.net" }
-        document::Link { rel: "preconnect", href: "https://assets.tcgdex.net" }
+        // Preconnect to Limitless CDN for fast image loading
+        document::Link { rel: "preconnect", href: "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com" }
 
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
@@ -362,34 +292,9 @@ fn App() -> Element {
             style { "body {{ overflow: hidden !important; }}" }
         }
 
-        // Forces dx serve reload for animations shrink fix
         div { class: "bg-[#0c0f1a] text-slate-200 h-screen font-sans relative overflow-hidden flex flex-col selection:bg-indigo-500/30",
-            
-            // Script injection for 3D Tilt
-            script { src: "https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" }
-            script { dangerous_inner_html: "{vanilla_tilt_js}" }
-
-            
-            // --- Ambient Animated Backgrounds ---
-            div { class: "bg-blob bg-blob-1" }
-            div { class: "bg-blob bg-blob-2" }
-            div { class: "bg-blob bg-blob-3" }
-            
-            // --- Floating Particles ---
-            div { class: "particles-container",
-                for i in 0..50 {
-                    div {
-                        class: "particle",
-                        style: format!("left: {}vw; animation-delay: -{}s; animation-duration: {}s; width: {}px; height: {}px;", 
-                            (i as f32 * 7.33) % 100.0, 
-                            (i as f32 * 1.7) % 15.0, 
-                            8.0 + (i as f32 % 10.0),
-                            2.0 + (i as f32 % 3.0),
-                            2.0 + (i as f32 % 3.0)
-                        )
-                    }
-                }
-            }
+            // Static ambient gradient (zero GPU thrash, crisp glass backdrop blur)
+            div { class: "absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.12),rgba(255,255,255,0))] pointer-events-none" }
 
             // --- Floating Action Bar (Top) ---
             div { class: "fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 glass-panel rounded-2xl px-4 py-2 flex justify-between items-center shadow-lg border border-white/10 animate-fade-in-down backdrop-blur-xl",
@@ -425,7 +330,7 @@ fn App() -> Element {
                         }
                     }
                     button {
-                        class: "group w-11 h-11 md:w-12 md:h-12 flex items-center justify-center border rounded-xl md:rounded-2xl transition-all backdrop-blur-md cursor-pointer",
+                        class: "group w-11 h-11 md:w-12 md:h-12 flex items-center justify-center border rounded-xl md:rounded-2xl transition-all cursor-pointer",
                         class: if *mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-400 hover:text-white" },
                         title: if *mass_select_mode.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
                         onclick: move |_| {

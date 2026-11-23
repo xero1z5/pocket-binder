@@ -23,7 +23,7 @@ pub fn SearchInput(mut props: SearchInputProps) -> Element {
                     }
                 }
                 input {
-                    class: "w-full bg-slate-900/20 border border-white/10 rounded-2xl pl-9 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30 transition-all placeholder-slate-500 backdrop-blur-xl animate-fade-in-slow",
+                    class: "w-full bg-slate-900/40 border border-white/10 rounded-2xl pl-9 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30 transition-all placeholder-slate-500",
                     placeholder: "Search card name...",
                     value: "{raw_input}",
                     oninput: move |evt| {
@@ -63,7 +63,7 @@ pub struct FilterButtonProps {
 pub fn FilterButton(mut props: FilterButtonProps) -> Element {
     rsx! {
         button {
-            class: "group w-11 h-11 md:w-12 md:h-12 flex flex-col items-center justify-center bg-white/5 border border-white/10 rounded-xl md:rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all backdrop-blur-md",
+            class: "group w-11 h-11 md:w-12 md:h-12 flex flex-col items-center justify-center bg-white/5 border border-white/10 rounded-xl md:rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all",
             onclick: move |_| {
                 let current = *props.show_filter_menu.read();
                 props.show_filter_menu.set(!current);
@@ -255,6 +255,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                         let flib_code = match pack.code.as_str() {
                                             "P-A" => "PROMO-A",
                                             "P-B" => "PROMO-B",
+                                            "P-C" => "PROMO-C",
                                             other => other,
                                         };
                                         let img_src = format!("https://cdn.jsdelivr.net/gh/flibustier/pokemon-tcg-pocket-database@main/dist/images/sets/LOGO_expansion_{}_en_US.webp", flib_code);

@@ -26,7 +26,7 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
     let mut show_packs = use_signal(|| false);
     
     rsx! {
-        div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-[2rem] px-3 md:px-4 py-2 md:py-2.5 flex items-center gap-2 md:gap-3 shadow-elevated border border-white/10 animate-slide-up bg-slate-950/80 backdrop-blur-xl",
+        div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-[2rem] px-3 md:px-4 py-2 md:py-2.5 flex items-center gap-2 md:gap-3 shadow-elevated border border-white/10 animate-slide-up bg-slate-950/80 backdrop-blur-md",
             
             DockItem {
                 label: "Collection".to_string(),
@@ -111,7 +111,7 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
         // Sets popup menu
         if *show_packs.read() {
             if let Some(packs) = props.pack_db.read().as_ref() {
-                div { class: "fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-slate-950/90 backdrop-blur-3xl rounded-2xl p-2 max-h-[60vh] overflow-y-auto shadow-2xl border border-white/10 animate-zoom-in w-64 md:w-80",
+                div { class: "fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-slate-950/90 backdrop-blur-md rounded-2xl p-2 max-h-[60vh] overflow-y-auto shadow-2xl border border-white/10 animate-zoom-in w-64 md:w-80",
                     div { class: "flex flex-col gap-1",
                         for pack in packs.iter() {
                             {
@@ -119,6 +119,7 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
                                 let flib_code = match pack.code.as_str() {
                                     "P-A" => "PROMO-A",
                                     "P-B" => "PROMO-B",
+                                    "P-C" => "PROMO-C",
                                     other => other,
                                 };
                                 let img_src = format!("https://cdn.jsdelivr.net/gh/flibustier/pokemon-tcg-pocket-database@main/dist/images/sets/LOGO_expansion_{}_en_US.webp", flib_code);

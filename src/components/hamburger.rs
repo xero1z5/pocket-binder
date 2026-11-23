@@ -157,6 +157,7 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                                             let flib_code = match pack.code.as_str() {
                                                 "P-A" => "PROMO-A",
                                                 "P-B" => "PROMO-B",
+                                                "P-C" => "PROMO-C",
                                                 other => other,
                                             };
                                             let img_src = format!("https://cdn.jsdelivr.net/gh/flibustier/pokemon-tcg-pocket-database@main/dist/images/sets/LOGO_expansion_{}_en_US.webp", flib_code);

@@ -56,7 +56,7 @@ pub struct PackSet {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OfficialCard {
     pub set: String,
-    pub number: u32,
+    pub number: i32,
     pub name: String,
     pub rarity: String,
 
@@ -269,59 +269,6 @@ impl CardCollection {
     }
 }
 
-//=================== TCGDEX API RESPONSE MODELS =======================
-
-/// TCGdex: /v2/en/series/tcgp → .sets[]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TcgdexSetBrief {
-    pub id: String,
-    pub name: String,
-    #[serde(default)]
-    pub logo: Option<String>,
-}
-
-/// TCGdex: /v2/en/sets/{id} → full set with cards and boosters
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TcgdexSetDetail {
-    pub id: String,
-    pub name: String,
-    #[serde(default)]
-    pub logo: Option<String>,
-    #[serde(default)]
-    pub cards: Vec<TcgdexCardBrief>,
-    #[serde(default)]
-    pub boosters: Vec<TcgdexBooster>,
-}
-
-/// TCGdex: card entry inside a set response
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TcgdexCardBrief {
-    pub id: String,
-    #[serde(default)]
-    pub name: String,
-    #[serde(default)]
-    pub image: Option<String>,
-    #[serde(rename = "localId")]
-    #[serde(default)]
-    pub local_id: String,
-}
-
-/// TCGdex: booster/pack entry inside a set response
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TcgdexBooster {
-    #[serde(default)]
-    pub id: String,
-    #[serde(default)]
-    pub name: String,
-}
-
-/// TCGdex: /v2/en/series/tcgp response
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TcgdexSeriesResponse {
-    #[serde(default)]
-    pub sets: Vec<TcgdexSetBrief>,
-}
-
 /// Flibustier npm CDN: PRIMARY card data source
 /// Fetched from: https://unpkg.com/pokemon-tcg-pocket-database@latest/dist/cards.json
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -329,7 +276,7 @@ pub struct FlibustierCard {
     #[serde(default)]
     pub set: String,
     #[serde(default)]
-    pub number: u32,
+    pub number: i32,
     #[serde(default)]
     pub rarity: String,
     #[serde(default)]

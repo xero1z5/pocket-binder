@@ -48,7 +48,7 @@ pub fn RarityDisplay(props: RarityDisplayProps) -> Element {
             for _ in 0..count {
                 img { 
                     src: image_asset.clone().unwrap(),
-                    class: "h-3.5 w-auto object-contain drop-shadow-md",
+                    class: "h-3.5 w-auto object-contain",
                     alt: "{label}"
                 }
             }
@@ -86,6 +86,10 @@ pub struct AddCardModalProps {
 
 #[component]
 pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
+    if !*props.show_add_modal.read() {
+        return rsx! {};
+    }
+
     let mut selected_card_to_add = use_signal(|| None::<OfficialCard>);
     let mut show_account_list = use_signal(|| false);
     let mut search_input = use_signal(|| String::new());
@@ -418,8 +422,8 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     let is_selected = local_mass_cards.read().contains(&c.generated_id);
                                     rsx! {
                                         div { 
-                                            class: "bg-slate-800/60 border rounded-xl p-2 cursor-pointer transition-all flex flex-col backdrop-blur-sm relative",
-                                            class: if is_selected { "border-indigo-400 ring-2 ring-indigo-400/50 bg-indigo-900/40" } else { "border-white/30/15 hover:border-white/30/50 hover:bg-slate-800/80" },
+                                            class: "bg-slate-800/80 border rounded-xl p-2 cursor-pointer transition-colors flex flex-col relative",
+                                            class: if is_selected { "border-indigo-400 ring-2 ring-indigo-400/50 bg-indigo-900/60" } else { "border-white/10 hover:border-white/30 hover:bg-slate-800" },
                                             onclick: move |_| {
                                                 if *local_mass_select.read() {
                                                     let mut current = local_mass_cards.read().clone();

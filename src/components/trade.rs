@@ -33,6 +33,10 @@ pub struct TradeModalProps {
 
 #[component]
 pub fn TradeModal(mut props: TradeModalProps) -> Element {
+    if !*props.show_trade_modal.read() {
+        return rsx! {};
+    }
+
     let mut my_acc = use_signal(|| String::new());
     let mut partner_acc = use_signal(|| "Other".to_string());
     

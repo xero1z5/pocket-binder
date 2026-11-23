@@ -112,17 +112,17 @@ body {
    ======================================== */
 
 .glass-panel {
-    background: var(--bg-surface) !important;
-    backdrop-filter: blur(24px) saturate(1) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1) !important;
+    background: rgba(12, 15, 26, 0.75) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
     border: 1px solid var(--border-subtle) !important;
-    box-shadow: var(--shadow-ambient) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
 
 .frosted-card {
-    background: var(--bg-elevated) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
     border: 1px solid var(--border-subtle) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
     transition: transform var(--transition-smooth),
@@ -517,65 +517,7 @@ body {
 }
 
 /* Particles & Blobs — cinematic low opacity */
-.bg-blob {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.15;
-    z-index: 0;
-    pointer-events: none;
-    animation: float 20s infinite ease-in-out;
-    background: radial-gradient(circle at center, var(--blob-color) 0%, transparent 70%);
-}
 
-.bg-blob-1 {
-    --blob-color: #6366f1; /* Indigo */
-    width: 60vw; height: 60vw;
-    top: -10%; left: -10%;
-    animation-delay: 0s;
-}
-
-.bg-blob-2 {
-    --blob-color: #ec4899; /* Pink */
-    width: 50vw; height: 50vw;
-    bottom: -20%; right: -10%;
-    animation-delay: -5s;
-}
-
-.bg-blob-3 {
-    --blob-color: #14b8a6; /* Teal */
-    width: 40vw; height: 40vw;
-    top: 40%; left: 30%;
-    animation-delay: -10s;
-}
-
-@keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(5%, 10%) scale(1.1); }
-    66% { transform: translate(-5%, 5%) scale(0.95); }
-}
-
-.particles-container {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-}
-
-.particle {
-    position: absolute;
-    background: white;
-    border-radius: 50%;
-    opacity: 0.15;
-    animation: particleFloat infinite linear;
-}
-
-@keyframes particleFloat {
-    from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-    10% { opacity: 0.3; }
-    90% { opacity: 0.3; }
-    to { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-}
 
 /* ========================================
    UTILITY ANIMATIONS

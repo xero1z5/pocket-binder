@@ -174,7 +174,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     rsx! {
                         div {
                             key: "{card_id_for_click}",
-                            class: "relative py-1",
+                            class: "relative py-1 card-cell",
                             div {
                                 class: "w-full h-full cursor-pointer relative group {op}",
                                 onclick: move |_| {

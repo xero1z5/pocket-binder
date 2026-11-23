@@ -31,4 +31,3 @@ opt-level = 'z'     # Optimize for size ('z' or 's') rather than execution speed
 lto = true          # Link Time Optimization: Aggressively removes unused code across dependencies
 codegen-units = 1   # Compiles using a single thread to maximize optimization (slower build, faster app)
 panic = 'abort'     # Removes panic unwinding infrastructure, saving binary size
-strip = true        # Strips debug symbols from the final binary

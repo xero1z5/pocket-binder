@@ -188,7 +188,7 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                 }
 
                 if *show_account_picker.read() {
-                    div { class: "absolute bottom-full mb-4 right-0 w-64 bg-slate-950/80 rounded-xl p-2 shadow-2xl border border-white/10 backdrop-blur-xl animate-fade-in-up",
+                    div { class: "absolute bottom-full mb-4 right-0 w-64 bg-slate-950/95 rounded-xl p-2 shadow-2xl border border-white/10 animate-fade-in-up",
                         h4 { class: "text-sm font-bold text-white mb-3 tracking-wide text-center", "Select Account" }
                         div { class: "flex flex-col gap-2 max-h-48 overflow-y-auto",
                             for account in props.collection.read().accounts.iter() {

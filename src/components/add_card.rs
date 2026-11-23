@@ -194,7 +194,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
                         // Multi-select toggle
                         button {
-                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all backdrop-blur-md cursor-pointer flex-shrink-0",
+                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all cursor-pointer flex-shrink-0",
                             class: if *local_mass_select.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-white" },
                             title: if *local_mass_select.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
                             onclick: move |_| {
@@ -215,7 +215,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
                         // Local filter button — does NOT affect the main collection view
                         button {
-                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all backdrop-blur-md cursor-pointer flex-shrink-0",
+                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all cursor-pointer flex-shrink-0",
                             class: if *show_local_filters.read() || !local_rarities.read().is_empty() || !local_types.read().is_empty() { "bg-pink-500/20 border-pink-500/50 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.3)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-pink-400" },
                             title: "Filter by rarity / type (local only)",
                             onclick: move |_| { let v = *show_local_filters.read(); show_local_filters.set(!v); },
@@ -312,7 +312,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                             let c = card.clone();
                                             rsx! {
                                                 button {
-                                                    class: "w-full py-2.5 px-3 md:py-3.5 md:px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] group backdrop-blur-sm mb-1",
+                                                    class: "w-full py-2.5 px-3 md:py-3.5 md:px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] group mb-1",
                                                     class: if is_wishlisted { "bg-pink-500/20 text-pink-400 border border-pink-500/30 hover:bg-pink-500/30" } else { "bg-slate-800/60 text-slate-300 border border-slate-600/30 hover:bg-slate-700/80 hover:text-white" },
                                                     onclick: move |_| {
                                                         let card_to_add = Card { 
@@ -361,7 +361,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                             let is_main = acc.main;
                                                             rsx! {
                                                                 button {
-                                                                    class: "w-full py-2.5 px-3 md:py-3 md:px-4 bg-slate-950/80 hover:bg-slate-900/90 border border-white/20 hover:border-white/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group backdrop-blur-2xl",
+                                                                    class: "w-full py-2.5 px-3 md:py-3 md:px-4 bg-slate-950/80 hover:bg-slate-900/90 border border-white/20 hover:border-white/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group",
                                                                     onclick: move |_| {
                                                                         let card_to_add = Card { 
                                                                             id: c.generated_id.clone(), 
@@ -474,7 +474,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                 } else if local_count == 0 {
                     rsx! {
                         div { class: "fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-center pb-4",
-                            div { class: "flex items-center justify-center bg-slate-950/70 backdrop-blur-xl border border-white/10 rounded-2xl px-3 py-2 shadow-2xl",
+                            div { class: "flex items-center justify-center bg-slate-950/90 border border-white/10 rounded-2xl px-3 py-2 shadow-2xl",
                                 button {
                                     class: "text-rose-400 hover:text-rose-300 flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/10 transition-all",
                                     title: "Cancel multi-select",
@@ -491,7 +491,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                     let has_accounts = !accounts.is_empty();
                     rsx! {
                         div { class: "fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-center pb-4",
-                            div { class: "relative flex items-center justify-center gap-2 md:gap-4 bg-slate-950/70 backdrop-blur-xl border border-white/10 rounded-3xl px-4 py-3 shadow-2xl",
+                            div { class: "relative flex items-center justify-center gap-2 md:gap-4 bg-slate-950/90 border border-white/10 rounded-3xl px-4 py-3 shadow-2xl",
                                 button {
                                     class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-sky-500/15 border border-white/10 hover:border-sky-500/30 text-slate-300 hover:text-sky-300 transition-all shadow-sm active:scale-95",
                                     title: "Add to Account",
@@ -575,7 +575,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     }
                                 }
                                 if *show_add_account_picker.read() {
-                                    div { class: "absolute bottom-full right-0 mb-4 w-64 bg-slate-950/80 rounded-xl p-2 shadow-2xl border border-white/10 backdrop-blur-xl animate-fade-in-up",
+                                    div { class: "absolute bottom-full right-0 mb-4 w-64 bg-slate-950/95 rounded-xl p-2 shadow-2xl border border-white/10 animate-fade-in-up",
                                         h4 { class: "text-sm font-bold text-white mb-3 tracking-wide text-center", "Select Account" }
                                         div { class: "flex flex-col gap-2 max-h-48 overflow-y-auto",
                                             for acc in props.collection.read().accounts.iter() {

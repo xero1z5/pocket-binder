@@ -111,7 +111,8 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
         // Sets popup menu
         if *show_packs.read() {
             if let Some(packs) = props.pack_db.read().as_ref() {
-                div { class: "fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-slate-950/90 backdrop-blur-md rounded-2xl p-2 max-h-[60vh] overflow-y-auto shadow-2xl border border-white/10 animate-fade-in-up w-64 md:w-80",
+                div { class: "fixed inset-0 z-30", onclick: move |_| show_packs.set(false) }
+                div { class: "fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-slate-950/95 rounded-2xl p-2 max-h-[60vh] overflow-y-auto shadow-2xl border border-white/10 animate-fade-in-up w-64 md:w-80",
                     div { class: "flex flex-col gap-1",
                         for pack in packs.iter() {
                             {

@@ -107,7 +107,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
             }
 
             // Drawer
-            div { class: "fixed top-0 right-0 h-full w-80 md:w-96 z-[70] bg-slate-950/80 backdrop-blur-xl border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right",
+            div { class: "fixed top-0 right-0 h-full w-80 md:w-96 z-[70] bg-slate-950/95 border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right",
                 
                 // Header
                 div { class: "flex items-center justify-between p-5 border-b border-white/5",

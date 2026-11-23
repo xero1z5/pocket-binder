@@ -56,14 +56,6 @@ body {
     background: rgba(255, 255, 255, 0.15);
 }
 
-/* Scrollbar gutter so content doesn't shift */
-@supports (scrollbar-gutter: stable) {
-    .overflow-y-auto,
-    .overflow-y-scroll {
-        scrollbar-gutter: stable;
-    }
-}
-
 /* === Selection === */
 ::selection {
     background: rgba(99, 102, 241, 0.3);
@@ -111,11 +103,24 @@ body {
    ======================================== */
 
 .glass-panel {
-    background: rgba(12, 15, 26, 0.8) !important;
+    background: rgba(12, 15, 26, 0.85) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
     border: 1px solid var(--border-subtle) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    transform: translateZ(0);
+}
+
+.modal-panel {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: 1px solid var(--border-medium) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+    transform: translateZ(0);
+}
+
+.card-cell {
+    content-visibility: auto;
+    contain-intrinsic-size: 150px 220px;
 }
 
 .frosted-card {
@@ -190,42 +195,39 @@ body {
 
 /* Fade In Down (modals, toasts) */
 .animate-fade-in-down {
-    animation: fadeInDown 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: transform, opacity;
+    animation: fadeInDown 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes fadeInDown {
     from {
         opacity: 0;
-        transform: translateY(-8px) scale(0.98);
+        transform: translateY(-8px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
 /* Fade In Up (card grid stagger, popups) */
 .animate-fade-in-up {
-    animation: fadeInUp 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: transform, opacity;
+    animation: fadeInUp 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(8px) scale(0.98);
+        transform: translateY(8px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
 /* Slide In Right (drawers) */
 .animate-slide-in-right {
     animation: slideInRight 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: transform, opacity;
 }
 
 @keyframes slideInRight {
@@ -233,37 +235,35 @@ body {
     to { transform: translateX(0); }
 }
 
-/* Card Detail Enter — fast GPU scale + opacity, zero raster blur */
+/* Card Detail Enter — fast GPU translate + opacity, zero raster blur */
 .animate-card-enter {
     animation: cardEnter 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    will-change: transform, opacity;
 }
 
 @keyframes cardEnter {
     from {
         opacity: 0;
-        transform: scale(0.96) translateY(8px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: translateY(0);
     }
 }
 
 /* Card Detail Exit — swift 120ms fade out */
 .animate-card-exit {
     animation: cardExit 120ms cubic-bezier(0.4, 0, 1, 1) both;
-    will-change: transform, opacity;
 }
 
 @keyframes cardExit {
     from {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0);
     }
     to {
         opacity: 0;
-        transform: scale(0.96) translateY(8px);
+        transform: translateY(8px);
     }
 }
 

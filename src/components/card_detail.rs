@@ -290,7 +290,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                 }
 
                                 div {
-                                    class: if *is_closing.read() { "glass-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-card-exit relative z-10" } else { "glass-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-card-enter relative z-10" },
+                                    class: if *is_closing.read() { "modal-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 animate-card-exit relative z-10" } else { "modal-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 animate-card-enter relative z-10" },
 
                                     button {
                                         class: "absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors active:scale-95 border border-white/10 z-30",
@@ -453,8 +453,8 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
 
                                  // --- ACCOUNTS SIDE MENU ---
                                  if *show_accounts.read() {
-                                     div { class: "fixed inset-0 bg-slate-950/50 backdrop-blur-md z-[70] animate-fade-in", onclick: move |_| show_accounts.set(false) }
-                                     div { class: "fixed inset-y-0 right-0 w-80 glass-panel border-l border-white/10 shadow-2xl z-[80] p-6 flex flex-col animate-slide-in-right",
+                                     div { class: "fixed inset-0 bg-slate-950/60 z-[70] animate-fade-in", onclick: move |_| show_accounts.set(false) }
+                                     div { class: "fixed inset-y-0 right-0 w-80 bg-slate-950/95 border-l border-white/10 shadow-2xl z-[80] p-6 flex flex-col animate-slide-in-right",
 
                                         div { class: "flex justify-between items-center mb-6",
                                             h3 { class: "text-lg font-bold text-white", "Inventory" }

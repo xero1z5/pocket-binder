@@ -66,7 +66,7 @@ pub struct AddCardButtonProps {
 pub fn AddCardButton(mut props: AddCardButtonProps) -> Element {
     rsx! {
         button {
-            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-white/30/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-white/40 transition-all shadow-lg backdrop-blur-sm",
+            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-white/30/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-white/40 transition-colors shadow-lg",
             onclick: move |_| props.show_add_modal.set(true),
             svg { class: "w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-white transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                 path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
@@ -152,11 +152,11 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
     rsx! {
         if *props.show_add_modal.read() {
             // Semi-transparent overlay so the background collection is still visible
-            div { class: "fixed inset-0 bg-slate-950/70 flex flex-col z-50 animate-fade-in backdrop-blur-sm",
+            div { class: "fixed inset-0 bg-slate-950/80 flex flex-col z-50 animate-fade-in",
                 div { class: "glass-panel border-b border-white/10 p-3 flex flex-col gap-3 shadow-2xl z-10",
                     div { class: "flex justify-end",
                         button { 
-                            class: "text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition-all", 
+                            class: "text-rose-400 hover:text-rose-300 p-2 rounded-lg hover:bg-rose-500/10 transition-colors", 
                             title: "Close",
                             onclick: move |_| { props.show_add_modal.set(false); selected_card_to_add.set(None); show_account_list.set(false); local_mass_select.set(false); local_mass_cards.set(Vec::new()); search_input.set(String::new()); debounced_query.set(String::new()); }, 
                             svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" } }
@@ -194,8 +194,8 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
                         // Multi-select toggle
                         button {
-                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all cursor-pointer flex-shrink-0",
-                            class: if *local_mass_select.read() { "bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-white" },
+                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-colors cursor-pointer flex-shrink-0",
+                            class: if *local_mass_select.read() { "bg-emerald-500 border-emerald-400 text-white" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-white" },
                             title: if *local_mass_select.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
                             onclick: move |_| {
                                 let curr = *local_mass_select.read();
@@ -215,8 +215,8 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
                         // Local filter button — does NOT affect the main collection view
                         button {
-                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-all cursor-pointer flex-shrink-0",
-                            class: if *show_local_filters.read() || !local_rarities.read().is_empty() || !local_types.read().is_empty() { "bg-pink-500/20 border-pink-500/50 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.3)]" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-pink-400" },
+                            class: "w-12 h-12 flex items-center justify-center border rounded-xl transition-colors cursor-pointer flex-shrink-0",
+                            class: if *show_local_filters.read() || !local_rarities.read().is_empty() || !local_types.read().is_empty() { "bg-pink-500/20 border-pink-500/50 text-pink-400" } else { "bg-slate-900/80 border-white/20 hover:bg-white/10 hover:border-white/30 text-slate-400 hover:text-pink-400" },
                             title: "Filter by rarity / type (local only)",
                             onclick: move |_| { let v = *show_local_filters.read(); show_local_filters.set(!v); },
                             svg { xmlns: "http://www.w3.org/2000/svg", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor", class: "w-5 h-5",
@@ -236,7 +236,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                         let is_active = local_rarities.read().contains(&r);
                                         rsx! {
                                             button {
-                                                class: "px-2.5 py-1 rounded-lg border transition-all flex items-center",
+                                                class: "px-2.5 py-1 rounded-lg border transition-colors flex items-center",
                                                 class: if is_active { "bg-indigo-500/30 border-indigo-400/60" } else { "bg-slate-800/60 border-white/10 hover:border-white/30" },
                                                 onclick: move |_| {
                                                     let mut v = local_rarities.read().clone();
@@ -257,7 +257,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                         let is_active = local_types.read().contains(&t);
                                         rsx! {
                                             button {
-                                                class: "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all",
+                                                class: "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors",
                                                 class: if is_active { "bg-emerald-500/30 border-emerald-400/60 text-emerald-300" } else { "bg-slate-800/60 border-white/10 text-slate-400 hover:border-white/30 hover:text-white" },
                                                 onclick: move |_| {
                                                     let mut v = local_types.read().clone();
@@ -294,7 +294,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     div { class: "flex flex-col items-center gap-3 flex-shrink-0",
                                         img { 
                                             src: "{optimized_image_url(&card.full_image_url, 600)}", 
-                                            class: "w-32 md:w-56 rounded-2xl border border-white/30/20 shadow-2xl transition-all" 
+                                            class: "w-32 md:w-56 rounded-2xl border border-white/30/20 shadow-2xl" 
                                         }
                                         
                                         // Card info below image
@@ -312,7 +312,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                             let c = card.clone();
                                             rsx! {
                                                 button {
-                                                    class: "w-full py-2.5 px-3 md:py-3.5 md:px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] group mb-1",
+                                                    class: "w-full py-2.5 px-3 md:py-3.5 md:px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors active:scale-[0.97] group mb-1",
                                                     class: if is_wishlisted { "bg-pink-500/20 text-pink-400 border border-pink-500/30 hover:bg-pink-500/30" } else { "bg-slate-800/60 text-slate-300 border border-slate-600/30 hover:bg-slate-700/80 hover:text-white" },
                                                     onclick: move |_| {
                                                         let card_to_add = Card { 
@@ -324,7 +324,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                         };
                                                         props.collection.write().toggle_wishlist(card_to_add);
                                                     },
-                                                    svg { class: "w-5 h-5 flex-shrink-0 transition-all", class: if is_wishlisted { "fill-pink-400 text-pink-400" } else { "fill-none text-slate-400 group-hover:text-pink-400" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                    svg { class: "w-5 h-5 flex-shrink-0", class: if is_wishlisted { "fill-pink-400 text-pink-400" } else { "fill-none text-slate-400 group-hover:text-pink-400" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
                                                     }
                                                     span { class: "text-sm", if is_wishlisted { "Wishlisted" } else { "Add to Wishlist" } }
@@ -334,7 +334,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
 
                                         if !*show_account_list.read() {
                                             button {
-                                                class: "w-full py-2.5 px-3 md:py-3.5 md:px-4 bg-white/30 hover:bg-white text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.97] shadow-lg shadow-white/30/20",
+                                                class: "w-full py-2.5 px-3 md:py-3.5 md:px-4 bg-white/30 hover:bg-white text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors active:scale-[0.97] shadow-lg",
                                                 onclick: move |_| show_account_list.set(true),
                                                 svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
@@ -348,7 +348,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                 div { class: "flex items-center justify-between mb-2 mt-1",
                                                     span { class: "text-[10px] text-slate-500 uppercase font-black tracking-widest", "Select Account" }
                                                     button {
-                                                        class: "text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all px-2 py-1 rounded-lg",
+                                                        class: "text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors px-2 py-1 rounded-lg",
                                                         onclick: move |_| show_account_list.set(false),
                                                         "Cancel"
                                                     }
@@ -361,7 +361,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                             let is_main = acc.main;
                                                             rsx! {
                                                                 button {
-                                                                    class: "w-full py-2.5 px-3 md:py-3 md:px-4 bg-slate-950/80 hover:bg-slate-900/90 border border-white/20 hover:border-white/40 rounded-xl text-white font-medium flex items-center gap-3 transition-all active:scale-[0.97] group",
+                                                                    class: "w-full py-2.5 px-3 md:py-3 md:px-4 bg-slate-950/80 hover:bg-slate-900/90 border border-white/20 hover:border-white/40 rounded-xl text-white font-medium flex items-center gap-3 transition-colors active:scale-[0.97] group",
                                                                     onclick: move |_| {
                                                                         let card_to_add = Card { 
                                                                             id: c.generated_id.clone(), 
@@ -401,7 +401,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                         }
                                         
                                         button { 
-                                            class: "text-slate-500 hover:text-rose-400 text-sm mt-4 py-1.5 transition-all border border-slate-700/50 hover:border-rose-500/30 rounded-xl", 
+                                            class: "text-slate-500 hover:text-rose-400 text-sm mt-4 py-1.5 transition-colors border border-slate-700/50 hover:border-rose-500/30 rounded-xl", 
                                             onclick: move |_| {
                                                 selected_card_to_add.set(None);
                                                 show_account_list.set(false);
@@ -422,7 +422,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     let is_selected = local_mass_cards.read().contains(&c.generated_id);
                                     rsx! {
                                         div { 
-                                            class: "bg-slate-800/80 border rounded-xl p-2 cursor-pointer transition-colors flex flex-col relative",
+                                            class: "bg-slate-800/80 border rounded-xl p-2 cursor-pointer flex flex-col relative",
                                             class: if is_selected { "border-indigo-400 ring-2 ring-indigo-400/50 bg-indigo-900/60" } else { "border-white/10 hover:border-white/30 hover:bg-slate-800" },
                                             onclick: move |_| {
                                                 if *local_mass_select.read() {
@@ -476,7 +476,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         div { class: "fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-center pb-4",
                             div { class: "flex items-center justify-center bg-slate-950/90 border border-white/10 rounded-2xl px-3 py-2 shadow-2xl",
                                 button {
-                                    class: "text-rose-400 hover:text-rose-300 flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/10 transition-all",
+                                    class: "text-rose-400 hover:text-rose-300 flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/10 transition-colors",
                                     title: "Cancel multi-select",
                                     onclick: move |_| { local_mass_cards.set(Vec::new()); local_mass_select.set(false); show_add_account_picker.set(false); },
                                     svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
@@ -493,7 +493,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                         div { class: "fixed bottom-0 left-0 right-0 z-[60] flex items-center justify-center pb-4",
                             div { class: "relative flex items-center justify-center gap-2 md:gap-4 bg-slate-950/90 border border-white/10 rounded-3xl px-4 py-3 shadow-2xl",
                                 button {
-                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-sky-500/15 border border-white/10 hover:border-sky-500/30 text-slate-300 hover:text-sky-300 transition-all shadow-sm active:scale-95",
+                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-sky-500/15 border border-white/10 hover:border-sky-500/30 text-slate-300 hover:text-sky-300 transition-colors shadow-sm active:scale-95",
                                     title: "Add to Account",
                                     onclick: move |_| {
                                         let curr = *show_add_account_picker.read();
@@ -504,7 +504,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     }
                                 }
                                 button {
-                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-pink-500/15 border border-white/10 hover:border-pink-500/30 text-slate-300 hover:text-pink-300 transition-all shadow-sm active:scale-95",
+                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-pink-500/15 border border-white/10 hover:border-pink-500/30 text-slate-300 hover:text-pink-300 transition-colors shadow-sm active:scale-95",
                                     title: "Add to Wishlist",
                                     onclick: move |_| {
                                         let cards = local_mass_cards.read().clone();
@@ -541,7 +541,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     }
                                 }
                                 button {
-                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-500/30 text-slate-300 hover:text-emerald-300 transition-all shadow-sm active:scale-95",
+                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-500/30 text-slate-300 hover:text-emerald-300 transition-colors shadow-sm active:scale-95",
                                     title: "Add to Tradable",
                                     onclick: move |_| {
                                         let cards = local_mass_cards.read().clone();
@@ -567,7 +567,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                     }
                                 }
                                 button {
-                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-all shadow-sm active:scale-95",
+                                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors shadow-sm active:scale-95",
                                     title: "Cancel",
                                     onclick: move |_| { local_mass_cards.set(Vec::new()); local_mass_select.set(false); show_add_account_picker.set(false); },
                                     svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
@@ -584,7 +584,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                     let cards_to_add = local_mass_cards.read().clone();
                                                     rsx! {
                                                         button {
-                                                            class: "w-full text-left px-4 py-3 bg-white/5 hover:bg-sky-500/20 border border-white/5 hover:border-sky-500/40 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-all",
+                                                            class: "w-full text-left px-4 py-3 bg-white/5 hover:bg-sky-500/20 border border-white/5 hover:border-sky-500/40 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-colors",
                                                             onclick: move |_| {
                                                                 if let Some(db) = props.image_db.read().as_ref() {
                                                                     let mut updated = props.collection.read().clone();

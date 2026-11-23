@@ -26,7 +26,8 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
     let mut show_packs = use_signal(|| false);
     
     rsx! {
-        div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-[2rem] px-3 md:px-4 py-2 md:py-2.5 flex items-center gap-2 md:gap-3 shadow-elevated border border-white/10 animate-slide-up bg-slate-950/80 backdrop-blur-md",
+        div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-[2rem] px-3 md:px-4 py-2 md:py-2.5 flex items-center gap-2 md:gap-3 shadow-elevated border border-white/10 animate-slide-up bg-slate-950/92",
+            style: "transform: translateX(-50%) translateZ(0);",
             
             DockItem {
                 label: "Collection".to_string(),
@@ -129,7 +130,7 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
                                 
                                 rsx! {
                                     button {
-                                        class: "flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group",
+                                        class: "flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left group",
                                         class: if is_active { "bg-fuchsia-500/10 border-fuchsia-400/30 border" } else { "hover:bg-white/5 border border-transparent" },
                                         onclick: move |_| {
                                             props.active_view.set(format!("pack:{}", code_for_click));
@@ -160,15 +161,14 @@ fn DockItem(label: String, icon: String, is_active: bool, color_theme: String, o
 
     rsx! {
         button {
-            class: "flex flex-col items-center justify-center group relative transition-colors duration-150 outline-none p-2 rounded-2xl",
+            class: "flex flex-col items-center justify-center group relative outline-none p-2 rounded-2xl",
             class: if is_active { "{bg_color}" } else { "hover:bg-white/5" },
             onclick: move |e| onclick.call(e),
             
             // Icon
-            div { class: "relative flex items-center justify-center transition-transform duration-150",
-                class: if is_active { "-translate-y-0.5 scale-105" } else { "group-hover:-translate-y-0.5" },
+            div { class: "relative flex items-center justify-center",
                 
-                svg { class: "w-6 h-6 md:w-7 md:h-7 transition-colors z-10", 
+                svg { class: "w-6 h-6 md:w-7 md:h-7 z-10", 
                     class: if is_active { "{text_color}" } else { "text-slate-400 group-hover:text-slate-200" }, 
                     fill: "none", view_box: "0 0 24 24", stroke_width: if is_active { "2" } else { "1.5" }, stroke: "currentColor",
                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "{icon}" }
@@ -176,7 +176,7 @@ fn DockItem(label: String, icon: String, is_active: bool, color_theme: String, o
             }
             
             // Tooltip on hover
-            div { class: "absolute -top-10 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-150 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg pointer-events-none whitespace-nowrap shadow-md border border-white/10",
+            div { class: "absolute -top-10 hidden group-hover:block bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg pointer-events-none whitespace-nowrap shadow-md border border-white/10",
                 "{label}"
             }
         }

@@ -37,9 +37,9 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
         // Instruction state (no cards selected yet) — just a cancel button, no words.
         return rsx! {
             div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none",
-                div { class: "bg-slate-950/80 rounded-[2rem] px-4 py-3 flex items-center justify-center shadow-elevated border border-white/10 pointer-events-auto backdrop-blur-xl",
+                div { class: "bg-slate-950/92 rounded-[2rem] px-4 py-3 flex items-center justify-center shadow-elevated border border-white/10 pointer-events-auto",
                     button {
-                        class: "text-rose-400 hover:text-rose-300 flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/10 transition-all",
+                        class: "text-rose-400 hover:text-rose-300 flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/10 transition-colors",
                         title: "Cancel multi-select",
                         onclick: move |_| props.mass_select_mode.set(false),
                         svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
@@ -53,11 +53,11 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
 
     rsx! {
         div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none",
-            div { class: "relative group pointer-events-auto rounded-[2rem] px-4 md:px-6 py-2.5 md:py-3 flex items-center gap-2 md:gap-4 shadow-elevated border border-white/10 backdrop-blur-xl bg-slate-950/80",
+            div { class: "relative group pointer-events-auto rounded-[2rem] px-4 md:px-6 py-2.5 md:py-3 flex items-center gap-2 md:gap-4 shadow-elevated border border-white/10 bg-slate-950/92",
 
                 // Bulk Add Account Button
                 button {
-                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-sky-500/15 border border-white/10 hover:border-sky-500/30 text-slate-300 hover:text-sky-300 transition-all shadow-sm active:scale-95",
+                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-sky-500/15 border border-white/10 hover:border-sky-500/30 text-slate-300 hover:text-sky-300 transition-colors shadow-sm active:scale-95",
                     title: "Add to Account",
                     onclick: move |_| {
                         let curr = *show_account_picker.read();
@@ -123,60 +123,61 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                     }
                 }
 
-                // Bulk Tradable (adds in collection view, removes in tradable view)
-                button {
-                    class: if in_tradable_view {
-                        "w-11 h-11 flex items-center justify-center rounded-2xl bg-emerald-500/30 border border-emerald-400/60 text-emerald-200 transition-all shadow-sm active:scale-95"
-                    } else {
-                        "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-500/30 text-slate-300 hover:text-emerald-300 transition-all shadow-sm active:scale-95"
-                    },
-                    title: if in_tradable_view { "Remove from Tradable" } else { "Add to Tradable" },
-                    onclick: move |_| {
-                        let cards = props.selected_mass_cards.read().clone();
-                        let mut updated = props.collection.read().clone();
-                        let mut changed = 0;
-                        if in_tradable_view {
-                            for id in cards.iter() {
-                                if updated.is_tradable(id) {
-                                    updated.toggle_tradable(id);
-                                    changed += 1;
+                // Bulk Tradable (only in collection or tradable view)
+                if !in_wishlist_view && !props.active_view.read().starts_with("pack:") {
+                    button {
+                        class: if in_tradable_view {
+                            "w-11 h-11 flex items-center justify-center rounded-2xl bg-emerald-500/30 border border-emerald-400/60 text-emerald-200 transition-colors shadow-sm active:scale-95"
+                        } else {
+                            "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-500/30 text-slate-300 hover:text-emerald-300 transition-colors shadow-sm active:scale-95"
+                        },
+                        title: if in_tradable_view { "Remove from Tradable" } else { "Add to Tradable" },
+                        onclick: move |_| {
+                            let cards = props.selected_mass_cards.read().clone();
+                            let mut updated = props.collection.read().clone();
+                            let mut changed = 0;
+                            if in_tradable_view {
+                                for id in cards.iter() {
+                                    if updated.is_tradable(id) {
+                                        updated.toggle_tradable(id);
+                                        changed += 1;
+                                    }
+                                }
+                            } else {
+                                for id in cards.iter() {
+                                    if !updated.is_tradable(id) {
+                                        updated.toggle_tradable(id);
+                                        changed += 1;
+                                    }
                                 }
                             }
-                        } else {
-                            for id in cards.iter() {
-                                if !updated.is_tradable(id) {
-                                    updated.toggle_tradable(id);
-                                    changed += 1;
-                                }
+                            if changed > 0 {
+                                props.collection.set(updated);
+                                props.toast_message.set(Some(if in_tradable_view {
+                                    format!("Removed {} cards from Tradable", changed)
+                                } else {
+                                    format!("Added {} cards to Tradable", changed)
+                                }));
+
+                                props.selected_mass_cards.set(Vec::new());
+                                props.mass_select_mode.set(false);
+                            } else {
+                                props.toast_message.set(Some(if in_tradable_view {
+                                    "Cards were not tradable".to_string()
+                                } else {
+                                    "Cards were already tradable".to_string()
+                                }));
                             }
+                        },
+                        svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
                         }
-                        if changed > 0 {
-                            props.collection.set(updated);
-                            props.toast_message.set(Some(if in_tradable_view {
-                                format!("Removed {} cards from Tradable", changed)
-                            } else {
-                                format!("Added {} cards to Tradable", changed)
-                            }));
-
-                            props.selected_mass_cards.set(Vec::new());
-                            props.mass_select_mode.set(false);
-                        } else {
-                            props.toast_message.set(Some(if in_tradable_view {
-                                "Cards were not tradable".to_string()
-                            } else {
-                                "Cards were already tradable".to_string()
-                            }));
-
-                        }
-                    },
-                    svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
-                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
                     }
                 }
 
                 // Cancel
                 button {
-                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-all shadow-sm active:scale-95",
+                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors shadow-sm active:scale-95",
                     title: "Cancel",
                     onclick: move |_| {
                         props.selected_mass_cards.set(Vec::new());
@@ -196,7 +197,7 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                                     let acc_name = account.name.clone();
                                     rsx! {
                                         button {
-                                            class: "w-full text-left px-4 py-3 bg-white/5 hover:bg-sky-500/20 border border-white/5 hover:border-sky-500/40 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-all",
+                                            class: "w-full text-left px-4 py-3 bg-white/5 hover:bg-sky-500/20 border border-white/5 hover:border-sky-500/40 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-colors",
                                             onclick: move |_| {
                                                 let cards = props.selected_mass_cards.read().clone();
                                                 if let Some(db) = props.image_db.read().as_ref() {

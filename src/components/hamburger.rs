@@ -27,7 +27,7 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
     rsx! {
         // Hamburger Toggle Button
         button {
-            class: "group w-11 h-11 flex flex-col items-center justify-center gap-[5px] bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all backdrop-blur-md",
+            class: "group w-11 h-11 flex flex-col items-center justify-center gap-[5px] bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-colors",
             onclick: move |_| props.is_open.set(true),
             span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-white transition-colors rounded-full" }
             span { class: "block w-5 h-[2px] bg-slate-400 group-hover:bg-white transition-colors rounded-full" }
@@ -37,12 +37,12 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
         if *props.is_open.read() {
             // Backdrop overlay
             div {
-                class: "fixed inset-0 bg-black/50 z-40 backdrop-blur-sm animate-fade-in",
+                class: "fixed inset-0 bg-black/60 z-40 animate-fade-in",
                 onclick: move |_| props.is_open.set(false),
             }
 
             // Slide-out sidebar panel
-            div { class: "fixed top-0 right-0 h-full w-72 md:w-80 glass-panel border-l border-white/10 z-50 flex flex-col shadow-2xl animate-slide-in-right",
+            div { class: "fixed top-0 right-0 h-full w-72 md:w-80 bg-slate-950/95 border-l border-white/10 z-50 flex flex-col shadow-2xl animate-slide-in-right",
 
                 // Header area
                 div { class: "flex items-center justify-between p-5 border-b border-white/8",
@@ -136,7 +136,7 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                     if let Some(packs) = props.pack_db.read().as_ref() {
                         div { class: "flex flex-col",
                             button { 
-                                class: "px-4 py-3 hover:bg-white/5 rounded-xl transition-all flex items-center justify-between cursor-pointer",
+                                class: "px-4 py-3 hover:bg-white/5 rounded-xl transition-colors flex items-center justify-between cursor-pointer",
                                 onclick: move |_| show_packs.set(!show_packs()),
                                 div { class: "flex items-center gap-3 text-slate-300",
                                     svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
@@ -167,7 +167,7 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
                                             
                                             rsx! {
                                                 button {
-                                                    class: "flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 text-slate-400 hover:text-white transition-all text-sm rounded-lg text-left",
+                                                    class: "flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 text-slate-400 hover:text-white transition-colors text-sm rounded-lg text-left",
                                                     onclick: move |_| {
                                                         props.active_view.set(format!("pack:{}", code_for_click));
                                                         props.is_open.set(false);
@@ -255,9 +255,9 @@ pub fn HamburgerMenu(mut props: HamburgerMenuProps) -> Element {
 fn MenuItemButton(label: String, icon_path: String, onclick: EventHandler<MouseEvent>) -> Element {
     rsx! {
         button {
-            class: "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group",
+            class: "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors group",
             onclick: move |e| onclick.call(e),
-            div { class: "w-8 h-8 rounded-lg bg-white/5 group-hover:bg-indigo-500/15 flex items-center justify-center transition-all flex-shrink-0",
+            div { class: "w-8 h-8 rounded-lg bg-white/5 group-hover:bg-indigo-500/15 flex items-center justify-center transition-colors flex-shrink-0",
                 svg { class: "w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "{icon_path}" }
                 }

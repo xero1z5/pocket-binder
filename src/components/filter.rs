@@ -102,7 +102,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
         if *props.show_filter_menu.read() {
             // Backdrop
             div { 
-                class: "fixed inset-0 bg-slate-950/40 z-[60] backdrop-blur-sm animate-fade-in",
+                class: "fixed inset-0 bg-slate-950/60 z-[60] animate-fade-in",
                 onclick: move |_| props.show_filter_menu.set(false),
             }
 
@@ -118,7 +118,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                         h2 { class: "text-lg font-bold text-white tracking-tight", "Filters" }
                     }
                     button {
-                        class: "p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all",
+                        class: "p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors",
                         onclick: move |_| props.show_filter_menu.set(false),
                         svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                             path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" }
@@ -165,7 +165,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                     let is_active = props.selected_rarities.read().contains(&code_str);
                                     let is_sar = *code == "SAR";
                                     
-                                    let base = "flex items-center gap-1 px-3 py-2 rounded-xl border transition-all text-xs font-bold shadow-sm";
+                                    let base = "flex items-center gap-1 px-3 py-2 rounded-xl border transition-colors text-xs font-bold shadow-sm";
                                     let state_class = match (is_sar, is_active) {
                                         (true, true) => "sar-chip-active scale-105",
                                         (true, false) => "sar-chip hover:scale-105",
@@ -217,7 +217,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                     
                                     rsx! {
                                         button {
-                                            class: "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-all text-sm font-bold shadow-sm",
+                                            class: "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-colors text-sm font-bold shadow-sm",
                                             class: if is_active { "bg-blue-600/80 border-blue-400/50 text-white shadow-md" } else { "bg-slate-900/60 border-white/10 text-slate-400 hover:border-white/30 hover:bg-slate-800/80 hover:text-slate-200" },
                                             onclick: move |_| {
                                                 let mut current = props.selected_types.read().clone();
@@ -268,7 +268,7 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                         
                                         rsx! {
                                             button {
-                                                class: "relative overflow-hidden rounded-xl border transition-all h-14 flex items-center justify-center p-2 shadow-sm",
+                                                class: "relative overflow-hidden rounded-xl border transition-colors h-14 flex items-center justify-center p-2 shadow-sm",
                                                 class: if is_active { "bg-emerald-500/15 border-emerald-400/30 ring-2 ring-emerald-500/20" } else { "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10 grayscale opacity-60 hover:grayscale-0 hover:opacity-100" },
                                                 onclick: move |_| {
                                                     let mut current = props.selected_packs.read().clone();

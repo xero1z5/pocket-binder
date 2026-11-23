@@ -11,6 +11,7 @@ pub struct CardDetailModalProps {
     pub image_db: Signal<Option<HashMap<String, OfficialCard>>>,
     pub toast_message: Signal<Option<String>>,
     pub current_view_cards: Signal<Vec<String>>,
+    pub active_view: Signal<String>,
 }
 
 const CARD_STEP: f64 = 180.0;
@@ -63,9 +64,10 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
         return rsx! {};
     }
 
-    let CardDetailModalProps { mut selected_card_id, mut collection, image_db, mut toast_message, current_view_cards } = props;
+    let CardDetailModalProps { mut selected_card_id, mut collection, image_db, mut toast_message, current_view_cards, active_view } = props;
 
     let mut show_accounts = use_signal(|| false);
+    let mut show_add_picker = use_signal(|| false);
     let mut is_closing = use_signal(|| false);
 
     // Continuous carousel position (in card units). Increasing = next cards to the left.
@@ -226,7 +228,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                         settled.set(at_rest);
                     }
 
-                    let sleep_ms = if at_rest && (p - p.round()).abs() < 0.001 { 60 } else { 16 };
+                    let sleep_ms = if at_rest && (p - p.round()).abs() < 0.001 { 150 } else { 16 };
                     gloo_timers::future::sleep(std::time::Duration::from_millis(sleep_ms)).await;
                 }
             });
@@ -293,7 +295,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                     class: if *is_closing.read() { "modal-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 animate-card-exit relative z-10" } else { "modal-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 animate-card-enter relative z-10" },
 
                                     button {
-                                        class: "absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors active:scale-95 border border-white/10 z-30",
+                                        class: "absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center active:scale-95 border border-white/10 z-30",
                                         onpointerdown: move |evt| { evt.stop_propagation(); },
                                         onclick: move |_| close_modal_action(is_closing, selected_card_id, show_accounts),
                                         "✕"
@@ -411,38 +413,105 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                     }
 
                                     // Action Buttons Row
-                                    div { class: "grid grid-cols-3 gap-3 w-full mt-2",
-                                        button {
-                                            class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all active:scale-[0.95] border",
-                                            class: if is_wishlisted { "bg-pink-500/15 text-pink-400 border-pink-500/20 hover:bg-pink-500/25" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
-                                            onpointerdown: move |evt| { evt.stop_propagation(); },
-                                            onclick: move |_| { collection.write().toggle_wishlist(c_wishlist.clone()); },
-                                            svg { class: "w-5 h-5 transition-all", class: if is_wishlisted { "fill-pink-400 text-pink-400" } else { "fill-none text-current" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
-                                            }
-                                            span { class: "text-[10px] font-bold tracking-wide uppercase", "Wishlist" }
-                                        }
+                                    {
+                                        let current_v = active_view.read().clone();
+                                        let is_wishlist_or_pack = current_v == "wishlist" || current_v.starts_with("pack:");
+                                        let c_add = c.clone();
 
-                                        button {
-                                            class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all active:scale-[0.95] border",
-                                            class: if is_tradable { "bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/25" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
-                                            onpointerdown: move |evt| { evt.stop_propagation(); },
-                                            onclick: move |_| { collection.write().toggle_tradable(&c_id_tradable.clone()); },
-                                            svg { class: "w-5 h-5 transition-all", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
-                                            }
-                                            span { class: "text-[10px] font-bold tracking-wide uppercase", "Tradable" }
-                                        }
+                                        rsx! {
+                                            div { class: "grid grid-cols-3 gap-3 w-full mt-2 relative",
+                                                button {
+                                                    class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border",
+                                                    class: if is_wishlisted { "bg-pink-500/15 text-pink-400 border-pink-500/20 hover:bg-pink-500/25" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
+                                                    onpointerdown: move |evt| { evt.stop_propagation(); },
+                                                    onclick: move |_| { collection.write().toggle_wishlist(c_wishlist.clone()); },
+                                                    svg { class: "w-5 h-5", class: if is_wishlisted { "fill-pink-400 text-pink-400" } else { "fill-none text-current" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
+                                                    }
+                                                    span { class: "text-[10px] font-bold tracking-wide uppercase", "Wishlist" }
+                                                }
 
-                                        button {
-                                            class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all active:scale-[0.95] border",
-                                            class: if *show_accounts.read() { "bg-sky-500/15 text-sky-400 border-sky-500/20" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
-                                            onpointerdown: move |evt| { evt.stop_propagation(); },
-                                            onclick: move |_| { show_accounts.set(!show_accounts()); },
-                                            svg { class: "w-5 h-5 transition-all", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" }
+                                                if is_wishlist_or_pack {
+                                                    div { class: "relative w-full",
+                                                        button {
+                                                            class: "w-full flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/25",
+                                                            onpointerdown: move |evt| { evt.stop_propagation(); },
+                                                            onclick: move |_| {
+                                                                let accounts = collection.read().accounts.clone();
+                                                                if accounts.is_empty() {
+                                                                    toast_message.set(Some("Create an account first in Accounts menu".to_string()));
+                                                                } else if accounts.len() == 1 {
+                                                                    let target_acc = accounts[0].name.clone();
+                                                                    collection.write().add_card(c_add.clone(), &target_acc, 1);
+                                                                    toast_message.set(Some(format!("Added {} to {}", c_add.name, target_acc)));
+                                                                    let mut t = toast_message.clone();
+                                                                    spawn(async move {
+                                                                        gloo_timers::future::sleep(std::time::Duration::from_secs(2)).await;
+                                                                        t.set(None);
+                                                                    });
+                                                                } else {
+                                                                    show_add_picker.set(!show_add_picker());
+                                                                }
+                                                            },
+                                                            svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
+                                                            }
+                                                            span { class: "text-[10px] font-bold tracking-wide uppercase", "Add Card" }
+                                                        }
+                                                        if *show_add_picker.read() {
+                                                            div { class: "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 rounded-2xl p-2 shadow-2xl z-40 flex flex-col gap-1 min-w-[170px] animate-fade-in-up",
+                                                                span { class: "text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider text-center", "Select Account" }
+                                                                for acc in collection.read().accounts.iter() {
+                                                                    {
+                                                                        let target_acc = acc.name.clone();
+                                                                        let c_add_inner = c_add.clone();
+                                                                        let is_main = acc.main;
+                                                                        rsx! {
+                                                                            button {
+                                                                                class: "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-white bg-white/5 hover:bg-emerald-500/20 border border-transparent hover:border-emerald-500/30 transition-colors text-left",
+                                                                                onclick: move |_| {
+                                                                                    collection.write().add_card(c_add_inner.clone(), &target_acc, 1);
+                                                                                    toast_message.set(Some(format!("Added {} to {}", c_add_inner.name, target_acc)));
+                                                                                    show_add_picker.set(false);
+                                                                                    let mut t = toast_message.clone();
+                                                                                    spawn(async move {
+                                                                                        gloo_timers::future::sleep(std::time::Duration::from_secs(2)).await;
+                                                                                        t.set(None);
+                                                                                    });
+                                                                                },
+                                                                                span { if is_main { "⭐" } else { "👤" } }
+                                                                                span { class: "truncate flex-1", "{acc.name}" }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                } else {
+                                                    button {
+                                                        class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border",
+                                                        class: if is_tradable { "bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/25" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
+                                                        onpointerdown: move |evt| { evt.stop_propagation(); },
+                                                        onclick: move |_| { collection.write().toggle_tradable(&c_id_tradable.clone()); },
+                                                        svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
+                                                        }
+                                                        span { class: "text-[10px] font-bold tracking-wide uppercase", "Tradable" }
+                                                    }
+                                                }
+
+                                                button {
+                                                    class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border",
+                                                    class: if *show_accounts.read() { "bg-sky-500/15 text-sky-400 border-sky-500/20" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
+                                                    onpointerdown: move |evt| { evt.stop_propagation(); },
+                                                    onclick: move |_| { show_accounts.set(!show_accounts()); },
+                                                    svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" }
+                                                    }
+                                                    span { class: "text-[10px] font-bold tracking-wide uppercase", "Accounts" }
+                                                }
                                             }
-                                            span { class: "text-[10px] font-bold tracking-wide uppercase", "Accounts" }
                                         }
                                     }
                                                 }
@@ -474,24 +543,37 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                         {
                                                             let target_card = entry.card.clone();
                                                             let target_owner = owner.clone();
+                                                            let add_card = target_card.clone();
+                                                            let add_owner = target_owner.clone();
                                                             let c_name = target_card.name.clone();
+                                                            let add_c_name = c_name.clone();
 
                                                             rsx! {
-                                                                div { class: "flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-md",
+                                                                div { class: "flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10",
                                                                     div { class: "flex flex-col",
                                                                         span { class: "text-sm font-bold text-white", "{owner}" }
                                                                         span { class: "text-sky-400 text-xs font-mono", "Qty: {count}" }
                                                                     }
 
-                                                                    button {
-                                                                        class: "bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95",
-                                                                        onclick: move |_| {
-                                                                            let res = collection.write().remove_card(&target_card, &target_owner, 1);
-                                                                            if res.is_ok() {
-                                                                                toast_message.set(Some(format!("🗑️ Removed {} from {}", c_name, target_owner)));
-                                                                            }
-                                                                        },
-                                                                        "- Remove"
+                                                                    div { class: "flex items-center gap-1.5",
+                                                                        button {
+                                                                            class: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95",
+                                                                            onclick: move |_| {
+                                                                                collection.write().add_card(add_card.clone(), &add_owner, 1);
+                                                                                toast_message.set(Some(format!("Added {} to {}", add_c_name, add_owner)));
+                                                                            },
+                                                                            "+ Add"
+                                                                        }
+                                                                        button {
+                                                                            class: "bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95",
+                                                                            onclick: move |_| {
+                                                                                let res = collection.write().remove_card(&target_card, &target_owner, 1);
+                                                                                if res.is_ok() {
+                                                                                    toast_message.set(Some(format!("🗑️ Removed {} from {}", c_name, target_owner)));
+                                                                                }
+                                                                            },
+                                                                            "- Remove"
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -500,11 +582,33 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                 }
                                             }
                                         } else {
-                                            div { class: "flex flex-col items-center justify-center flex-1 text-center opacity-70",
-                                                svg { class: "w-12 h-12 text-slate-500 mb-2", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" }
+                                            div { class: "flex flex-col gap-3 overflow-y-auto",
+                                                span { class: "text-xs text-slate-400 mb-1", "Not in collection yet. Add to account:" }
+                                                for acc in collection.read().accounts.iter() {
+                                                    {
+                                                        let target_card = c.clone();
+                                                        let target_owner = acc.name.clone();
+                                                        let c_name = target_card.name.clone();
+                                                        rsx! {
+                                                            div { class: "flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10",
+                                                                span { class: "text-sm font-bold text-white", "{acc.name}" }
+                                                                button {
+                                                                    class: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95",
+                                                                    onclick: move |_| {
+                                                                        collection.write().add_card(target_card.clone(), &target_owner, 1);
+                                                                        toast_message.set(Some(format!("Added {} to {}", c_name, target_owner)));
+                                                                    },
+                                                                    "+ Add"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                 }
-                                                span { class: "text-sm text-slate-400", "No accounts currently own this card." }
+                                                if collection.read().accounts.is_empty() {
+                                                    div { class: "flex flex-col items-center justify-center flex-1 text-center opacity-70 py-6",
+                                                        span { class: "text-sm text-slate-400", "No accounts created yet." }
+                                                    }
+                                                }
                                             }
                                         }
                                     }

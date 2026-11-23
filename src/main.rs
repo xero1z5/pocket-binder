@@ -319,7 +319,7 @@ fn App() -> Element {
                         }
                     }
                     button {
-                        class: "group w-11 h-11 md:w-12 md:h-12 flex items-center justify-center border rounded-xl md:rounded-2xl transition-all cursor-pointer",
+                        class: "group w-11 h-11 md:w-12 md:h-12 flex items-center justify-center border rounded-xl md:rounded-2xl transition-colors cursor-pointer",
                         class: if *mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-md" } else { "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-400 hover:text-white" },
                         title: if *mass_select_mode.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
                         onclick: move |_| {
@@ -346,7 +346,7 @@ fn App() -> Element {
             // --- Main Content Area ---
             div { 
                 class: "flex-1 overflow-y-auto overflow-x-hidden pt-20 pb-28 px-1 sm:px-2 md:px-4 relative z-10",
-                style: "-webkit-overflow-scrolling: touch;",
+
                 
                 // --- THE VISUAL GRID ---
                 CardGrid { collection, search_query, selected_account_filter, selected_rarities, selected_types, selected_packs, image_db, selected_card_id, active_view, current_view_cards, mass_select_mode, selected_mass_cards }
@@ -381,7 +381,7 @@ fn App() -> Element {
         AccountModal { show_account_modal, new_acc_name, new_acc_id, new_acc_is_main, collection, toast_message, auth_token, user_email }
         LoginModal { show_login_modal, user_email, user_password, auth_token, sync_status, collection }
 
-        CardDetailModal { selected_card_id, collection, image_db, toast_message, current_view_cards }
+        CardDetailModal { selected_card_id, collection, image_db, toast_message, current_view_cards, active_view }
         TradeModal { show_trade_modal, collection, image_db, toast_message }
         Toast { toast_message }
     }

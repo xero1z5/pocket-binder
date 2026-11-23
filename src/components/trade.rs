@@ -13,10 +13,10 @@ pub struct TradeButtonProps {
 pub fn TradeButton(mut props: TradeButtonProps) -> Element {
     rsx! {
         button {
-            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-white/30/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-white/40 transition-all shadow-lg backdrop-blur-sm",
+            class: "group w-11 h-11 md:w-14 md:h-14 flex items-center justify-center bg-slate-800/60 border border-white/30/20 rounded-xl md:rounded-2xl hover:bg-slate-700/80 hover:border-white/40 transition-colors shadow-lg",
             onclick: move |_| props.show_trade_modal.set(true),
             title: "Trade Cards",
-            svg { class: "w-5 h-5 md:w-6 md:h-6 text-white group-hover:text-purple-300 group-hover:scale-110 transition-all duration-200", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+            svg { class: "w-5 h-5 md:w-6 md:h-6 text-white group-hover:text-purple-300 transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                 path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
             }
         }
@@ -315,7 +315,7 @@ fn PickerSlot(card: Card, image_db: Signal<Option<HashMap<String, OfficialCard>>
 
     rsx! {
         div { 
-            class: "bg-slate-800/80 border border-white/10 rounded-xl p-2 cursor-pointer hover:border-white/30 hover:bg-slate-800 transition-colors flex flex-col items-center",
+            class: "bg-slate-800/80 border border-white/10 rounded-xl p-2 cursor-pointer hover:border-white/30 hover:bg-slate-800 flex flex-col items-center",
             onclick: move |e| onclick.call(e),
             if let Some(img_url) = url {
                 img { 
@@ -325,7 +325,7 @@ fn PickerSlot(card: Card, image_db: Signal<Option<HashMap<String, OfficialCard>>
                     class: "w-full rounded-lg mb-2 shadow-md aspect-[63/88] object-cover" 
                 }
             } else {
-                div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-white/30/10 animate-pulse" }
+                div { class: "w-full aspect-[63/88] bg-slate-700/50 rounded-lg mb-2 border border-white/30/10 shimmer" }
             }
             h2 { class: "text-[11px] font-bold text-center text-slate-200 truncate w-full px-1", "{card.name}" }
             div { class: "mt-1 mb-1", RarityDisplay { rarity_code: card.rarity } }

@@ -31,7 +31,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
     rsx! {
         if *props.show_account_modal.read() {
             div { class: "fixed inset-0 flex items-center justify-center p-4 z-50",
-                div { class: "absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-fade-in", onclick: move |_| props.show_account_modal.set(false) }
+                div { class: "absolute inset-0 bg-slate-950/70 animate-fade-in", onclick: move |_| props.show_account_modal.set(false) }
                 div { class: "modal-panel rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 animate-fade-in-down",
                     
                     // Header
@@ -100,7 +100,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                             div { class: "flex gap-2 mt-2",
                                 button { class: "flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 transition-colors", onclick: move |_| show_add_form.set(false), "Cancel" }
                                 button {
-                                    class: "flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-white/20 hover:bg-white/30 transition-all shadow-md",
+                                    class: "flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-white/20 hover:bg-white/30 transition-colors shadow-md",
                                     onclick: move |_| {
                                         let name = props.new_acc_name.read().clone();
                                         if !name.is_empty() {
@@ -135,7 +135,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                                     div { class: "flex gap-2 mt-2",
                                         button { class: "flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 transition-colors", onclick: move |_| editing_account.set(None), "Cancel" }
                                         button {
-                                            class: "flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-white/20 hover:bg-white/30 transition-all shadow-md",
+                                            class: "flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-white/20 hover:bg-white/30 transition-colors shadow-md",
                                             onclick: move |_| {
                                                 let new_name = edit_name.read().clone();
                                                 let new_id_val = edit_id.read().clone();

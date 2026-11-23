@@ -125,8 +125,8 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
             .then_with(|| a.id.cmp(&b.id))
     });
 
-    // Sync visible cards sequence for swiping in the detail modal
-    let visible_ids: Vec<String> = visible_cards.iter().map(|c| c.id.clone()).collect();
+    // Sync visible cards sequence for swiping in the detail modal (Rc wrapped to avoid cloning 250k strings during render)
+    let visible_ids = std::rc::Rc::new(visible_cards.iter().map(|c| c.id.clone()).collect::<Vec<String>>());
 
     // Precompute lookup sets for instant O(1) membership checks (eliminates 100k+ iterations per render)
     let owned_ids: std::collections::HashSet<&str> = col.inventory.iter().map(|e| e.card.id.as_str()).collect();
@@ -145,7 +145,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                 {
                     // Clone values needed for closures
                     let card_id_for_click = card.id.clone();
-                    let visible_ids_for_click = visible_ids.clone();
+                    let visible_ids_rc = visible_ids.clone();
 
                     let image_url = if let Some(api_map) = image_db.as_ref() {
                         api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
@@ -168,7 +168,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     let bg_border_class = if is_selected_for_mass {
                         "bg-indigo-950/60 border border-indigo-400 ring-2 ring-indigo-400/50"
                     } else {
-                        "bg-slate-900/30 border border-white/10 hover:border-white/30 hover:bg-slate-900/50 shadow-sm transition-colors duration-150"
+                        "bg-slate-900/30 border border-white/10 hover:border-white/30 hover:bg-slate-900/50 shadow-sm"
                     };
 
                     rsx! {
@@ -187,7 +187,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                         }
                                         props.selected_mass_cards.set(curr);
                                     } else {
-                                        props.current_view_cards.set(visible_ids_for_click.clone());
+                                        props.current_view_cards.set((*visible_ids_rc).clone());
                                         props.selected_card_id.set(Some(card_id_for_click.clone()));
                                     }
                                 },
@@ -229,9 +229,9 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                                             class: "w-full rounded-xl mb-3 border border-white/5 aspect-[63/88] object-cover relative z-10"
                                         } 
                                     } else {
-                                        div { class: "w-full aspect-[63/88] bg-slate-800/50 rounded-lg mb-3 border border-white/5 animate-pulse relative z-10" }
+                                        div { class: "w-full aspect-[63/88] bg-slate-800/50 rounded-lg mb-3 border border-white/5 shimmer relative z-10" }
                                     }
-                                    h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-white transition-colors tracking-tight relative z-10", "{card_name}" }
+                                    h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-white tracking-tight relative z-10", "{card_name}" }
                                     div { class: "mt-auto pt-2 relative z-10",
                                         RarityDisplay { rarity_code }
                                     }

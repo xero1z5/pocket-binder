@@ -107,7 +107,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
         } else {
             // Look up type from the image_db if inventory card doesn't have it
             let card_type = if card.card_type.is_empty() {
-        if let Some(api_map) = image_db.as_ref() {
+                if let Some(api_map) = image_db.as_ref() {
                     api_map.get(&card.id).map(|c| c.card_type.clone()).unwrap_or_default()
                 } else {
                     String::new()
@@ -139,100 +139,118 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
         None
     };
 
+    // View heading: what this screen shows and how many cards match.
+    let visible_count = visible_cards.len();
+    let count_label = if visible_count == 1 { "1 card".to_string() } else { format!("{} cards", visible_count) };
+    let account_label = if selected_acc != "All" && !active_view_val.starts_with("pack:") && active_view_val != "wishlist" { format!(" in {}", selected_acc) } else { String::new() };
+    let view_title = match active_view_val.as_str() {
+        "wishlist" => "Wishlist",
+        "tradable" => "Tradable",
+        "collection" => "Collection",
+        _ => "",
+    };
+    let pack_logo = active_view_val.strip_prefix("pack:").map(|code| {
+        let flib_code = match code { "P-A" => "PROMO-A", "P-B" => "PROMO-B", "P-C" => "PROMO-C", other => other };
+        (code.to_string(), format!("https://cdn.jsdelivr.net/gh/flibustier/pokemon-tcg-pocket-database@main/dist/images/sets/LOGO_expansion_{}_en_US.webp", flib_code))
+    });
+    let inventory_empty = col.inventory.is_empty();
+    let wishlist_empty = col.wishlist.is_empty();
+
     rsx! {
-        div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-4 px-1",
-            for card in visible_cards.into_iter() {
-                {
-                    // Clone values needed for closures
-                    let card_id_for_click = card.id.clone();
-                    let visible_ids_rc = visible_ids.clone();
+        div { class: "max-w-[1400px] mx-auto",
+            div { class: "flex items-end justify-between gap-4 mb-5 md:mb-7 px-1",
+                if let Some((code, logo)) = pack_logo {
+                    img { src: "{logo}", alt: "Set {code}", class: "h-10 md:h-12 w-auto object-contain" }
+                } else {
+                    h1 { class: "text-2xl md:text-3xl font-semibold tracking-tight text-white", "{view_title}" }
+                }
+                span { class: "text-sm text-slate-400 pb-1 whitespace-nowrap", "{count_label}{account_label}" }
+            }
 
-                    let image_url = if let Some(api_map) = image_db.as_ref() {
-                        api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
-                    } else { None };
+            div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-1.5 gap-y-4 md:gap-x-3.5 md:gap-y-6",
+                for card in visible_cards.into_iter() {
+                    {
+                        // Clone values needed for closures
+                        let card_id_for_click = card.id.clone();
+                        let visible_ids_rc = visible_ids.clone();
 
-                    let card_name = card.name.clone();
-                    let rarity_code = card.rarity.clone();
+                        let image_url = if let Some(api_map) = image_db.as_ref() {
+                            api_map.get(&card.id).map(|c| optimized_image_url(&c.full_image_url, 400))
+                        } else { None };
 
-                    let is_wishlisted = wishlist_ids.contains(card_id_for_click.as_str());
-                    let is_tradable = tradable_ids.contains(card_id_for_click.as_str());
-                    let is_owned = owned_ids.contains(card_id_for_click.as_str());
-                    let is_selected_for_mass = mass_set.as_ref().map(|s| s.contains(&card_id_for_click)).unwrap_or(false);
-                    
-                    let op = if active_view_val.starts_with("pack:") && !is_owned {
-                        "opacity-50 hover:opacity-75"
-                    } else {
-                        "opacity-100"
-                    };
+                        let card_name = card.name.clone();
+                        let rarity_code = card.rarity.clone();
 
-                    let bg_border_class = if is_selected_for_mass {
-                        "bg-indigo-950/60 border border-indigo-400 ring-2 ring-indigo-400/50"
-                    } else {
-                        "bg-slate-900/30 border border-white/10 hover:border-white/30 hover:bg-slate-900/50 shadow-sm"
-                    };
+                        let is_wishlisted = wishlist_ids.contains(card_id_for_click.as_str());
+                        let is_tradable = tradable_ids.contains(card_id_for_click.as_str());
+                        let is_owned = owned_ids.contains(card_id_for_click.as_str());
+                        let is_selected_for_mass = mass_set.as_ref().map(|s| s.contains(&card_id_for_click)).unwrap_or(false);
+                        let is_missing = active_view_val.starts_with("pack:") && !is_owned;
 
-                    rsx! {
-                        div {
-                            key: "{card_id_for_click}",
-                            class: "relative py-1 card-cell",
+                        rsx! {
                             div {
-                                class: "w-full h-full cursor-pointer relative group {op}",
-                                onclick: move |_| {
-                                    if *props.mass_select_mode.read() {
-                                        let mut curr = props.selected_mass_cards.read().clone();
-                                        if let Some(pos) = curr.iter().position(|id| id == &card_id_for_click) {
-                                            curr.remove(pos);
+                                key: "{card_id_for_click}",
+                                class: "card-cell",
+                                div {
+                                    class: "card-tile",
+                                    class: if is_selected_for_mass { "is-selected" },
+                                    class: if is_missing { "is-missing" },
+                                    onclick: move |_| {
+                                        if *props.mass_select_mode.read() {
+                                            let mut curr = props.selected_mass_cards.read().clone();
+                                            if let Some(pos) = curr.iter().position(|id| id == &card_id_for_click) {
+                                                curr.remove(pos);
+                                            } else {
+                                                curr.push(card_id_for_click.clone());
+                                            }
+                                            props.selected_mass_cards.set(curr);
                                         } else {
-                                            curr.push(card_id_for_click.clone());
+                                            props.current_view_cards.set((*visible_ids_rc).clone());
+                                            props.selected_card_id.set(Some(card_id_for_click.clone()));
                                         }
-                                        props.selected_mass_cards.set(curr);
-                                    } else {
-                                        props.current_view_cards.set((*visible_ids_rc).clone());
-                                        props.selected_card_id.set(Some(card_id_for_click.clone()));
-                                    }
-                                },
-                                div { class: "rounded-xl p-2.5 flex flex-col items-center h-full relative {bg_border_class}",
-                                    div { class: "absolute top-3 right-3 flex flex-col gap-1.5 z-20",
-                                        if is_mass_mode {
-                                            div {
-                                                class: "w-6 h-6 rounded-full border-2 flex items-center justify-center shadow-md transition-all",
-                                                class: if is_selected_for_mass { "bg-indigo-500 border-indigo-300" } else { "bg-slate-900/90 border-white/30" },
-                                                if is_selected_for_mass {
-                                                    svg { class: "w-4 h-4 text-white", fill: "none", view_box: "0 0 24 24", stroke_width: "3", stroke: "currentColor",
-                                                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" }
-                                                    }
-                                                }
+                                    },
+                                    div { class: "card-art",
+                                        if let Some(url) = image_url {
+                                            img {
+                                                src: "{url}",
+                                                alt: "{card_name}",
+                                                loading: "lazy", decoding: "async",
+                                                width: "400", height: "560",
                                             }
                                         } else {
-                                            if is_wishlisted {
-                                                div { class: "w-5 h-5 rounded-full bg-pink-500/90 border border-pink-400 flex items-center justify-center shadow-md",
-                                                    svg { class: "w-3 h-3 text-white fill-current", view_box: "0 0 24 24",
-                                                        path { d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
+                                            div { class: "w-full aspect-[63/88] shimmer" }
+                                        }
+                                        div { class: "absolute top-1.5 right-1.5 flex flex-col gap-1",
+                                            if is_mass_mode {
+                                                div {
+                                                    class: "mark mark-select",
+                                                    class: if is_selected_for_mass { "is-on" },
+                                                    if is_selected_for_mass {
+                                                        svg { class: "w-3.5 h-3.5", fill: "none", view_box: "0 0 24 24", stroke_width: "3.5", stroke: "currentColor",
+                                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                            if is_tradable {
-                                                div { class: "w-5 h-5 rounded-full bg-emerald-500/90 border border-emerald-400 flex items-center justify-center shadow-md",
-                                                    svg { class: "w-3 h-3 text-white", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
-                                                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
+                                            } else {
+                                                if is_wishlisted {
+                                                    div { class: "mark mark-wish", title: "On your wishlist",
+                                                        svg { class: "w-3 h-3 fill-current", view_box: "0 0 24 24",
+                                                            path { d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
+                                                        }
+                                                    }
+                                                }
+                                                if is_tradable {
+                                                    div { class: "mark mark-trade", title: "Tradable",
+                                                        svg { class: "w-3 h-3", fill: "none", view_box: "0 0 24 24", stroke_width: "2.5", stroke: "currentColor",
+                                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
-                                    if let Some(url) = image_url {
-                                        img { 
-                                            src: "{url}", 
-                                            alt: "{card_name}", 
-                                            loading: "lazy", decoding: "async",
-                                            width: "400", height: "560",
-                                            class: "w-full rounded-xl mb-3 border border-white/5 aspect-[63/88] object-cover relative z-10"
-                                        } 
-                                    } else {
-                                        div { class: "w-full aspect-[63/88] bg-slate-800/50 rounded-lg mb-3 border border-white/5 shimmer relative z-10" }
-                                    }
-                                    h2 { class: "font-semibold text-[10px] md:text-xs text-center truncate w-full text-slate-200 group-hover:text-white tracking-tight relative z-10", "{card_name}" }
-                                    div { class: "mt-auto pt-2 relative z-10",
+                                    div { class: "card-name", "{card_name}" }
+                                    div { class: "flex justify-center mt-1",
                                         RarityDisplay { rarity_code }
                                     }
                                 }
@@ -241,21 +259,26 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                     }
                 }
             }
-        }
-        
-        if props.collection.read().inventory.is_empty() && active_view_val == "collection" {
-            div { class: "flex flex-col items-center justify-center mt-20 text-slate-500",
-                svg { class: "w-12 h-12 mb-3 opacity-50", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" }
+
+            if inventory_empty && active_view_val == "collection" {
+                div { class: "flex flex-col items-center text-center mt-20 gap-2",
+                    div { class: "brand-ball w-10 h-10 border-[3px] mb-3 opacity-80" }
+                    span { class: "text-base font-medium text-white", "No cards yet" }
+                    span { class: "text-sm text-slate-400", "Tap the Poké Ball below to add your first card." }
                 }
-                span { class: "text-sm font-medium", "No cards found." }
-            }
-        } else if props.collection.read().wishlist.is_empty() && active_view_val == "wishlist" {
-            div { class: "flex flex-col items-center justify-center mt-20 text-slate-500",
-                svg { class: "w-12 h-12 mb-3 opacity-50 text-pink-400", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
+            } else if wishlist_empty && active_view_val == "wishlist" {
+                div { class: "flex flex-col items-center text-center mt-20 gap-2",
+                    svg { class: "w-10 h-10 mb-3 text-[#ff5a7a]", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                        path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
+                    }
+                    span { class: "text-base font-medium text-white", "Your wishlist is empty" }
+                    span { class: "text-sm text-slate-400", "Open any card and tap Wishlist to save it here." }
                 }
-                span { class: "text-sm font-medium", "Your wishlist is empty." }
+            } else if visible_count == 0 && image_db.is_some() {
+                div { class: "flex flex-col items-center text-center mt-20 gap-2",
+                    span { class: "text-base font-medium text-white", "No cards match" }
+                    span { class: "text-sm text-slate-400", "Try a different search or clear some filters." }
+                }
             }
         }
     }

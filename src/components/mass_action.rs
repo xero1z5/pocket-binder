@@ -34,13 +34,14 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
     let in_tradable_view = *props.active_view.read() == "tradable";
 
     if count == 0 {
-        // Instruction state (no cards selected yet) — just a cancel button, no words.
+        // Instruction state (no cards selected yet).
         return rsx! {
-            div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none",
-                div { class: "bg-slate-950/92 rounded-[2rem] px-4 py-3 flex items-center justify-center shadow-elevated border border-white/10 pointer-events-auto",
+            div { class: "fixed bottom-4 md:bottom-6 inset-x-0 z-[60] flex justify-center px-3 pointer-events-none",
+                div { class: "acrylic pointer-events-auto rounded-[1.75rem] pl-5 pr-1.5 py-1.5 flex items-center gap-3 animate-slide-up",
+                    span { class: "text-sm text-slate-300", "Tap cards to select them" }
                     button {
-                        class: "text-rose-400 hover:text-rose-300 flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-500/10 transition-colors",
-                        title: "Cancel multi-select",
+                        class: "icon-btn is-bare is-danger",
+                        title: "Stop selecting",
                         onclick: move |_| props.mass_select_mode.set(false),
                         svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                             path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" }
@@ -52,13 +53,15 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
     }
 
     rsx! {
-        div { class: "fixed bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none",
-            div { class: "relative group pointer-events-auto rounded-[2rem] px-4 md:px-6 py-2.5 md:py-3 flex items-center gap-2 md:gap-4 shadow-elevated border border-white/10 bg-slate-950/92",
+        div { class: "fixed bottom-4 md:bottom-6 inset-x-0 z-[60] flex justify-center px-3 pointer-events-none",
+            div { class: "acrylic relative pointer-events-auto rounded-[1.75rem] pl-5 pr-1.5 py-1.5 flex items-center gap-1.5 md:gap-2",
+                span { class: "text-sm font-medium text-white mr-2 whitespace-nowrap", "{count} selected" }
 
                 // Bulk Add Account Button
                 button {
-                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-sky-500/15 border border-white/10 hover:border-sky-500/30 text-slate-300 hover:text-sky-300 transition-colors shadow-sm active:scale-95",
-                    title: "Add to Account",
+                    class: "icon-btn",
+                    class: if *show_account_picker.read() { "is-on" },
+                    title: "Add to an account",
                     onclick: move |_| {
                         let curr = *show_account_picker.read();
                         show_account_picker.set(!curr);
@@ -71,9 +74,9 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                 // Wishlist / Remove from Wishlist (depending on active view)
                 button {
                     class: if in_wishlist_view {
-                        "w-11 h-11 flex items-center justify-center rounded-2xl bg-pink-500/30 border border-pink-400/60 text-pink-200 transition-all shadow-sm active:scale-95"
+                        "icon-btn bg-[#ff5a7a]/20 border-[#ff5a7a]/50 text-[#ff8fa6]"
                     } else {
-                        "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-pink-500/15 border border-white/10 hover:border-pink-500/30 text-slate-300 hover:text-pink-300 transition-all shadow-sm active:scale-95"
+                        "icon-btn is-wish"
                     },
                     title: if in_wishlist_view { "Remove from Wishlist" } else { "Add to Wishlist" },
                     onclick: move |_| {
@@ -127,9 +130,9 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                 if !in_wishlist_view && !props.active_view.read().starts_with("pack:") {
                     button {
                         class: if in_tradable_view {
-                            "w-11 h-11 flex items-center justify-center rounded-2xl bg-emerald-500/30 border border-emerald-400/60 text-emerald-200 transition-colors shadow-sm active:scale-95"
+                            "icon-btn bg-[#2fcf7f]/20 border-[#2fcf7f]/50 text-[#4ade9a]"
                         } else {
-                            "w-11 h-11 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-500/30 text-slate-300 hover:text-emerald-300 transition-colors shadow-sm active:scale-95"
+                            "icon-btn is-trade"
                         },
                         title: if in_tradable_view { "Remove from Tradable" } else { "Add to Tradable" },
                         onclick: move |_| {
@@ -177,8 +180,8 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
 
                 // Cancel
                 button {
-                    class: "w-11 h-11 flex items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors shadow-sm active:scale-95",
-                    title: "Cancel",
+                    class: "icon-btn is-bare is-danger",
+                    title: "Stop selecting",
                     onclick: move |_| {
                         props.selected_mass_cards.set(Vec::new());
                         props.mass_select_mode.set(false);
@@ -189,15 +192,15 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                 }
 
                 if *show_account_picker.read() {
-                    div { class: "absolute bottom-full mb-4 right-0 w-64 bg-slate-950/95 rounded-xl p-2 shadow-2xl border border-white/10 animate-fade-in-up",
-                        h4 { class: "text-sm font-bold text-white mb-3 tracking-wide text-center", "Select Account" }
-                        div { class: "flex flex-col gap-2 max-h-48 overflow-y-auto",
+                    div { class: "acrylic-strong absolute bottom-full mb-3 right-0 w-64 rounded-3xl p-2 animate-fade-in-up",
+                        h4 { class: "text-xs font-medium text-slate-400 px-3 pt-2 pb-2", "Add to account" }
+                        div { class: "flex flex-col gap-1 max-h-56 overflow-y-auto",
                             for account in props.collection.read().accounts.iter() {
                                 {
                                     let acc_name = account.name.clone();
                                     rsx! {
                                         button {
-                                            class: "w-full text-left px-4 py-3 bg-white/5 hover:bg-sky-500/20 border border-white/5 hover:border-sky-500/40 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-colors",
+                                            class: "row is-plain font-medium",
                                             onclick: move |_| {
                                                 let cards = props.selected_mass_cards.read().clone();
                                                 if let Some(db) = props.image_db.read().as_ref() {
@@ -231,7 +234,7 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                                 }
                             }
                             if props.collection.read().accounts.is_empty() {
-                                div { class: "text-center text-slate-400 text-xs py-2", "No accounts found. Create one first." }
+                                div { class: "text-center text-slate-400 text-xs px-3 py-3", "No accounts yet. Add one from the Account menu." }
                             }
                         }
                     }

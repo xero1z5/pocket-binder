@@ -1,8 +1,4 @@
 use dioxus::prelude::*;
-use std::collections::HashMap;
-use gloo_storage::{LocalStorage, Storage};
-use crate::models::*;
-use crate::supabase::*;
 use gloo_timers::future::sleep;
 
 #[derive(PartialEq, Clone, Props)]
@@ -37,13 +33,10 @@ pub fn Toast(props: ToastProps) -> Element {
     rsx! {
         if let Some(msg) = props.toast_message.read().clone() {
             div { class: format!(
-                    "fixed bottom-6 right-6 text-white font-medium px-5 py-3.5 rounded-xl shadow-2xl border border-white/10 z-50 flex items-center gap-3 backdrop-blur-2xl transition-opacity duration-300 {}",
+                    "acrylic-strong fixed top-20 inset-x-0 mx-auto w-fit max-w-[90vw] text-sm text-white font-medium pl-4 pr-5 py-3 rounded-2xl z-[90] flex items-center gap-3 transition-opacity duration-300 {}",
                     if *visible.read() { "opacity-100" } else { "opacity-0" }
                 ),
-                span { class: "flex h-3 w-3 relative",
-                    span { class: "animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" }
-                    span { class: "relative inline-flex rounded-full h-3 w-3 bg-white/30" }
-                }
+                span { class: "w-2 h-2 rounded-full bg-accent flex-shrink-0" }
                 "{msg}"
             }
         }

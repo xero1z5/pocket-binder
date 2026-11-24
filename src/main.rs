@@ -26,7 +26,6 @@ use crate::components::{
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
-const HEADER_SVG: Asset = asset!("/assets/header.svg");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 fn main() {
@@ -57,7 +56,6 @@ fn App() -> Element {
     let mut search_query = use_signal(|| String::new());
     let mut show_add_modal = use_signal(|| false);
     let mut show_filter_menu = use_signal(|| false);
-    let mut show_hamburger_menu = use_signal(|| false);
     let mut selected_card_id = use_signal(|| None::<String>);
     let mut current_view_cards = use_signal(|| Vec::<String>::new());
     let mut mass_select_mode = use_signal(|| false);
@@ -281,71 +279,77 @@ fn App() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_CSS } 
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
 
-        div { class: "bg-[#0c0f1a] text-slate-200 h-screen font-sans relative overflow-hidden flex flex-col selection:bg-indigo-500/30",
-            // Static ambient gradient (zero GPU thrash, crisp glass backdrop blur)
-            div { class: "absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.12),rgba(255,255,255,0))] pointer-events-none" }
+        div { class: "app-bg text-slate-200 h-screen font-sans relative overflow-hidden flex flex-col",
 
-            // --- Floating Action Bar (Top) ---
-            div { class: "fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-4xl z-40 glass-panel rounded-2xl px-4 py-2 flex justify-between items-center shadow-lg border border-white/10",
-                
-                // LEFT: Search Input
-                div { class: "w-full max-w-md",
-                    SearchInput { search_query }
-                }
+            // --- Top bar ---
+            div { class: "fixed top-3 inset-x-0 z-40 flex justify-center px-3 md:px-6 pointer-events-none",
+                div { class: "acrylic pointer-events-auto w-full max-w-[1400px] rounded-2xl pl-4 pr-2 py-2 flex items-center gap-3",
 
-                // RIGHT: Filter & Status
-                div { class: "flex items-center gap-3",
-                    if !sync_status.read().is_empty() {
-                        {
-                            let is_syncing = sync_status.read().contains("Syncing") || sync_status.read().contains("Downloading");
-                            let is_error = sync_status.read().contains("Failed") || sync_status.read().contains("expired") || sync_status.read().contains("❌");
-                            let color_class = if is_error { "text-rose-400" } else if is_syncing { "text-sky-400" } else { "text-emerald-400" };
-                            
-                            rsx! {
-                                div {
-                                    class: "flex items-center justify-center w-11 h-11 md:w-12 md:h-12 transition-all {color_class}",
-                                    title: "{sync_status}",
-                                    if is_syncing {
-                                        svg { class: "w-5 h-5 md:w-6 md:h-6 animate-spin", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
-                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.016 4.356v4.992" }
-                                        }
-                                    } else {
-                                        svg { class: "w-5 h-5 md:w-6 md:h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
-                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" }
+                    // Brand
+                    div { class: "flex items-center gap-2.5 flex-shrink-0",
+                        div { class: "brand-ball" }
+                        span { class: "hidden md:block text-[15px] font-semibold tracking-tight text-white", "Pocket Binder" }
+                    }
+
+                    // Search
+                    div { class: "flex-1 min-w-0 md:max-w-md md:ml-4",
+                        SearchInput { search_query }
+                    }
+
+                    // Status & tools
+                    div { class: "flex items-center gap-1.5 ml-auto",
+                        if !sync_status.read().is_empty() {
+                            {
+                                let is_syncing = sync_status.read().contains("Syncing") || sync_status.read().contains("Downloading");
+                                let is_error = sync_status.read().contains("Failed") || sync_status.read().contains("expired") || sync_status.read().contains("❌");
+                                let color_class = if is_error { "text-rose-400" } else if is_syncing { "text-sky-300" } else { "text-emerald-400" };
+
+                                rsx! {
+                                    div {
+                                        class: "hidden sm:flex items-center justify-center w-11 h-11 {color_class}",
+                                        title: "{sync_status}",
+                                        if is_syncing {
+                                            svg { class: "w-5 h-5 animate-spin", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M20.016 4.356v4.992" }
+                                            }
+                                        } else {
+                                            svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.75", stroke: "currentColor",
+                                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" }
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    button {
-                        class: "group w-11 h-11 md:w-12 md:h-12 flex items-center justify-center border rounded-xl md:rounded-2xl transition-colors cursor-pointer",
-                        class: if *mass_select_mode.read() { "bg-emerald-500 border-emerald-400 text-white shadow-md" } else { "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate-400 hover:text-white" },
-                        title: if *mass_select_mode.read() { "Exit multi-select mode" } else { "Multi-select: pick many cards at once" },
-                        onclick: move |_| {
-                            let curr = *mass_select_mode.read();
-                            mass_select_mode.set(!curr);
-                            if curr {
-                                selected_mass_cards.set(Vec::new());
-                            }
-                        },
-                        if *mass_select_mode.read() {
-                            svg { class: "w-5 h-5 md:w-6 md:h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2.5", stroke: "currentColor",
-                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" }
-                            }
-                        } else {
-                            svg { class: "w-5 h-5 md:w-5 md:h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
-                                path { stroke_linecap: "round", stroke_linejoin: "round", d: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" }
+                        button {
+                            class: "icon-btn",
+                            class: if *mass_select_mode.read() { "is-on" },
+                            title: if *mass_select_mode.read() { "Stop selecting" } else { "Select cards" },
+                            onclick: move |_| {
+                                let curr = *mass_select_mode.read();
+                                mass_select_mode.set(!curr);
+                                if curr {
+                                    selected_mass_cards.set(Vec::new());
+                                }
+                            },
+                            if *mass_select_mode.read() {
+                                svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2.5", stroke: "currentColor",
+                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M4.5 12.75l6 6 9-13.5" }
+                                }
+                            } else {
+                                svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.75", stroke: "currentColor",
+                                    path { stroke_linecap: "round", stroke_linejoin: "round", d: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" }
+                                }
                             }
                         }
+                        FilterButton { show_filter_menu }
                     }
-                    FilterButton { show_filter_menu }
                 }
             }
 
             // --- Main Content Area ---
             div { 
-                class: "flex-1 overflow-y-auto overflow-x-hidden pt-20 pb-28 px-1 sm:px-2 md:px-4 relative z-10",
+                class: "flex-1 overflow-y-auto overflow-x-hidden pt-[5.5rem] pb-32 px-3 md:px-6 relative z-10",
 
                 
                 // --- THE VISUAL GRID ---

@@ -264,7 +264,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
 
                         rsx! {
                             div {
-                                class: if *is_closing.read() { "fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 animate-backdrop-exit outline-none" } else { "fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50 animate-backdrop-enter outline-none" },
+                                class: if *is_closing.read() { "fixed inset-0 scrim flex items-center justify-center p-4 z-50 animate-backdrop-exit outline-none" } else { "fixed inset-0 scrim flex items-center justify-center p-4 z-50 animate-backdrop-enter outline-none" },
                                 tabindex: "0",
                                 autofocus: "true",
                                 onmounted: onmounted_loop,
@@ -292,13 +292,16 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                 }
 
                                 div {
-                                    class: if *is_closing.read() { "modal-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 animate-card-exit relative z-10" } else { "modal-panel rounded-3xl w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-6 animate-card-enter relative z-10" },
+                                    class: if *is_closing.read() { "acrylic-strong rounded-[2rem] w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-5 animate-card-exit relative z-10" } else { "acrylic-strong rounded-[2rem] w-full max-w-lg p-6 md:p-8 flex flex-col items-center gap-5 animate-card-enter relative z-10" },
 
                                     button {
-                                        class: "absolute top-4 right-4 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center active:scale-95 border border-white/10 z-30",
+                                        class: "icon-btn is-bare absolute top-3 right-3 z-30",
+                                        title: "Close",
                                         onpointerdown: move |evt| { evt.stop_propagation(); },
                                         onclick: move |_| close_modal_action(is_closing, selected_card_id, show_accounts),
-                                        "✕"
+                                        svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
+                                            path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" }
+                                        }
                                     }
 
                                     // Infinite horizontal film strip (slot-machine coverflow)
@@ -371,9 +374,9 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                             {
                                                                 let item_image_url = optimized_image_url(&target_api_card.full_image_url, 400);
                                                                 let img_class = if is_center {
-                                                                    "w-44 md:w-56 rounded-2xl shadow-2xl border-2 border-white/15 object-cover pointer-events-none ring-2 ring-indigo-500/30"
+                                                                    "w-44 md:w-56 rounded-[4.5%/3.2%] object-cover pointer-events-none shadow-[0_24px_60px_rgba(2,6,18,0.65)]"
                                                                 } else {
-                                                                    "w-36 md:w-48 rounded-2xl shadow-lg border border-white/5 object-cover pointer-events-none"
+                                                                    "w-36 md:w-48 rounded-[4.5%/3.2%] object-cover pointer-events-none shadow-lg"
                                                                 };
                                                                 rsx! {
                                                                     img {
@@ -399,7 +402,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                 rsx! {
                                     // Title & Pack info
                                     div { class: "flex flex-col items-center w-full gap-1",
-                                        h2 { class: "text-2xl font-black text-white text-center tracking-tight", "{display_api_card.name}" }
+                                        h2 { class: "text-2xl font-semibold text-white text-center tracking-tight", "{display_api_card.name}" }
                                         div { class: "flex items-center gap-3",
                                             RarityDisplay { rarity_code: display_api_card.rarity.clone() }
                                             div { class: "w-1 h-1 rounded-full bg-slate-600" }
@@ -421,20 +424,20 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                         rsx! {
                                             div { class: "grid grid-cols-3 gap-3 w-full mt-2 relative",
                                                 button {
-                                                    class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border",
-                                                    class: if is_wishlisted { "bg-pink-500/15 text-pink-400 border-pink-500/20 hover:bg-pink-500/25" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
+                                                    class: "btn flex-col min-h-0 py-3 gap-1.5",
+                                                    class: if is_wishlisted { "bg-[#ff5a7a]/15 border-[#ff5a7a]/40 text-[#ff8fa6]" } else { "btn-glass text-slate-300" },
                                                     onpointerdown: move |evt| { evt.stop_propagation(); },
                                                     onclick: move |_| { collection.write().toggle_wishlist(c_wishlist.clone()); },
-                                                    svg { class: "w-5 h-5", class: if is_wishlisted { "fill-pink-400 text-pink-400" } else { "fill-none text-current" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                    svg { class: "w-5 h-5", class: if is_wishlisted { "fill-current" } else { "fill-none" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
                                                     }
-                                                    span { class: "text-[10px] font-bold tracking-wide uppercase", "Wishlist" }
+                                                    span { class: "text-xs font-medium", "Wishlist" }
                                                 }
 
                                                 if is_wishlist_or_pack {
                                                     div { class: "relative w-full",
                                                         button {
-                                                            class: "w-full flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/25",
+                                                            class: "btn btn-primary w-full flex-col min-h-0 py-3 gap-1.5",
                                                             onpointerdown: move |evt| { evt.stop_propagation(); },
                                                             onclick: move |_| {
                                                                 let accounts = collection.read().accounts.clone();
@@ -456,11 +459,11 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                             svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                                                 path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }
                                                             }
-                                                            span { class: "text-[10px] font-bold tracking-wide uppercase", "Add Card" }
+                                                            span { class: "text-xs font-medium", "Add" }
                                                         }
                                                         if *show_add_picker.read() {
-                                                            div { class: "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 border border-white/10 rounded-2xl p-2 shadow-2xl z-40 flex flex-col gap-1 min-w-[170px] animate-fade-in-up",
-                                                                span { class: "text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider text-center", "Select Account" }
+                                                            div { class: "acrylic-strong absolute bottom-full mb-2 left-1/2 -translate-x-1/2 rounded-2xl p-2 z-40 flex flex-col gap-1 min-w-[190px] animate-fade-in-up",
+                                                                span { class: "text-xs font-medium text-slate-400 px-2 py-1", "Add to account" }
                                                                 for acc in collection.read().accounts.iter() {
                                                                     {
                                                                         let target_acc = acc.name.clone();
@@ -468,7 +471,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                                         let is_main = acc.main;
                                                                         rsx! {
                                                                             button {
-                                                                                class: "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-white bg-white/5 hover:bg-emerald-500/20 border border-transparent hover:border-emerald-500/30 transition-colors text-left",
+                                                                                class: "row is-plain",
                                                                                 onclick: move |_| {
                                                                                     collection.write().add_card(c_add_inner.clone(), &target_acc, 1);
                                                                                     toast_message.set(Some(format!("Added {} to {}", c_add_inner.name, target_acc)));
@@ -479,8 +482,10 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                                                         t.set(None);
                                                                                     });
                                                                                 },
-                                                                                span { if is_main { "⭐" } else { "👤" } }
                                                                                 span { class: "truncate flex-1", "{acc.name}" }
+                                                                                if is_main {
+                                                                                    span { class: "text-[11px] font-medium text-accent", "Main" }
+                                                                                }
                                                                             }
                                                                         }
                                                                     }
@@ -490,26 +495,26 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                     }
                                                 } else {
                                                     button {
-                                                        class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border",
-                                                        class: if is_tradable { "bg-emerald-500/15 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/25" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
+                                                        class: "btn flex-col min-h-0 py-3 gap-1.5",
+                                                        class: if is_tradable { "bg-[#2fcf7f]/15 border-[#2fcf7f]/40 text-[#4ade9a]" } else { "btn-glass text-slate-300" },
                                                         onpointerdown: move |evt| { evt.stop_propagation(); },
                                                         onclick: move |_| { collection.write().toggle_tradable(&c_id_tradable.clone()); },
                                                         svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                                             path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
                                                         }
-                                                        span { class: "text-[10px] font-bold tracking-wide uppercase", "Tradable" }
+                                                        span { class: "text-xs font-medium", "Tradable" }
                                                     }
                                                 }
 
                                                 button {
-                                                    class: "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-colors active:scale-[0.95] border",
-                                                    class: if *show_accounts.read() { "bg-sky-500/15 text-sky-400 border-sky-500/20" } else { "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-200" },
+                                                    class: "btn flex-col min-h-0 py-3 gap-1.5",
+                                                    class: if *show_accounts.read() { "bg-accent/15 border-accent/50 text-accent" } else { "btn-glass text-slate-300" },
                                                     onpointerdown: move |evt| { evt.stop_propagation(); },
                                                     onclick: move |_| { show_accounts.set(!show_accounts()); },
                                                     svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" }
                                                     }
-                                                    span { class: "text-[10px] font-bold tracking-wide uppercase", "Accounts" }
+                                                    span { class: "text-xs font-medium", "Copies" }
                                                 }
                                             }
                                         }
@@ -522,13 +527,14 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
 
                                  // --- ACCOUNTS SIDE MENU ---
                                  if *show_accounts.read() {
-                                     div { class: "fixed inset-0 bg-slate-950/60 z-[70] animate-fade-in", onclick: move |_| show_accounts.set(false) }
-                                     div { class: "fixed inset-y-0 right-0 w-80 bg-slate-950/95 border-l border-white/10 shadow-2xl z-[80] p-6 flex flex-col animate-slide-in-right",
+                                     div { class: "fixed inset-0 scrim z-[70] animate-fade-in", onclick: move |_| show_accounts.set(false) }
+                                     div { class: "acrylic-strong fixed top-3 bottom-3 right-3 w-80 max-w-[calc(100vw-1.5rem)] rounded-3xl z-[80] p-5 flex flex-col animate-slide-in-right",
 
-                                        div { class: "flex justify-between items-center mb-6",
-                                            h3 { class: "text-lg font-bold text-white", "Inventory" }
+                                        div { class: "flex justify-between items-center mb-5 pl-1",
+                                            h3 { class: "text-lg font-semibold tracking-tight text-white", "Copies by account" }
                                             button {
-                                                class: "text-slate-400 hover:text-white p-1",
+                                                class: "icon-btn is-bare",
+                                                title: "Close",
                                                 onclick: move |_| show_accounts.set(false),
                                                 svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                                     path { stroke_linecap: "round", stroke_linejoin: "round", d: "M6 18L18 6M6 6l12 12" }
@@ -549,30 +555,30 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                             let add_c_name = c_name.clone();
 
                                                             rsx! {
-                                                                div { class: "flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10",
+                                                                div { class: "row justify-between py-3",
                                                                     div { class: "flex flex-col",
-                                                                        span { class: "text-sm font-bold text-white", "{owner}" }
-                                                                        span { class: "text-sky-400 text-xs font-mono", "Qty: {count}" }
+                                                                        span { class: "text-sm font-medium text-white", "{owner}" }
+                                                                        span { class: "text-xs text-slate-400", "{count} owned" }
                                                                     }
 
                                                                     div { class: "flex items-center gap-1.5",
                                                                         button {
-                                                                            class: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95",
+                                                                            class: "btn btn-glass min-h-0 h-9 px-3 text-xs",
                                                                             onclick: move |_| {
                                                                                 collection.write().add_card(add_card.clone(), &add_owner, 1);
                                                                                 toast_message.set(Some(format!("Added {} to {}", add_c_name, add_owner)));
                                                                             },
-                                                                            "+ Add"
+                                                                            "Add one"
                                                                         }
                                                                         button {
-                                                                            class: "bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95",
+                                                                            class: "btn btn-danger min-h-0 h-9 px-3 text-xs",
                                                                             onclick: move |_| {
                                                                                 let res = collection.write().remove_card(&target_card, &target_owner, 1);
                                                                                 if res.is_ok() {
-                                                                                    toast_message.set(Some(format!("🗑️ Removed {} from {}", c_name, target_owner)));
+                                                                                    toast_message.set(Some(format!("Removed {} from {}", c_name, target_owner)));
                                                                                 }
                                                                             },
-                                                                            "- Remove"
+                                                                            "Remove one"
                                                                         }
                                                                     }
                                                                 }
@@ -583,22 +589,22 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                             }
                                         } else {
                                             div { class: "flex flex-col gap-3 overflow-y-auto",
-                                                span { class: "text-xs text-slate-400 mb-1", "Not in collection yet. Add to account:" }
+                                                span { class: "text-sm text-slate-400 mb-1 px-1", "You don't own this card yet. Add it to an account:" }
                                                 for acc in collection.read().accounts.iter() {
                                                     {
                                                         let target_card = c.clone();
                                                         let target_owner = acc.name.clone();
                                                         let c_name = target_card.name.clone();
                                                         rsx! {
-                                                            div { class: "flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10",
-                                                                span { class: "text-sm font-bold text-white", "{acc.name}" }
+                                                            div { class: "row justify-between py-3",
+                                                                span { class: "text-sm font-medium text-white", "{acc.name}" }
                                                                 button {
-                                                                    class: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors active:scale-95",
+                                                                    class: "btn btn-primary min-h-0 h-9 px-3 text-xs",
                                                                     onclick: move |_| {
                                                                         collection.write().add_card(target_card.clone(), &target_owner, 1);
                                                                         toast_message.set(Some(format!("Added {} to {}", c_name, target_owner)));
                                                                     },
-                                                                    "+ Add"
+                                                                    "Add"
                                                                 }
                                                             }
                                                         }
@@ -606,7 +612,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                 }
                                                 if collection.read().accounts.is_empty() {
                                                     div { class: "flex flex-col items-center justify-center flex-1 text-center opacity-70 py-6",
-                                                        span { class: "text-sm text-slate-400", "No accounts created yet." }
+                                                        span { class: "text-sm text-slate-400", "No accounts yet. Add one from the Account menu." }
                                                     }
                                                 }
                                             }

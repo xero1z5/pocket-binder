@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use std::collections::HashMap;
 use gloo_storage::{LocalStorage, Storage};
 use crate::models::*;
 use crate::supabase::*;
@@ -19,25 +18,29 @@ pub fn LoginModal(mut props: LoginModalProps) -> Element {
     rsx! {
         if *props.show_login_modal.read() {
             div { class: "fixed inset-0 flex items-center justify-center p-4 z-50",
-                div { class: "absolute inset-0 bg-slate-950/70 animate-fade-in", onclick: move |_| props.show_login_modal.set(false) }
-                div { class: "modal-panel rounded-xl p-6 w-full max-w-md flex flex-col gap-4 animate-fade-in-down",
-                    h2 { class: "text-2xl font-bold text-white", "Welcome to Pocket Binder" }
+                div { class: "absolute inset-0 scrim animate-fade-in", onclick: move |_| props.show_login_modal.set(false) }
+                div { class: "acrylic-strong relative rounded-[1.75rem] p-7 w-full max-w-md flex flex-col gap-4 animate-fade-in-down",
+                    div { class: "flex items-center gap-3",
+                        div { class: "brand-ball w-9 h-9 border-[3px]" }
+                        h2 { class: "text-2xl font-semibold tracking-tight text-white", "Pocket Binder" }
+                    }
+                    p { class: "text-sm text-slate-400 -mt-1 mb-1", "Sign in to keep your binder synced across devices." }
                     div { class: "flex flex-col gap-1.5",
-                        label { class: "text-xs text-slate-400 font-bold uppercase", "Email Address" }
-                        input { r#type: "email", class: "bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-white/30 focus:ring-1 focus:ring-white/30/30 outline-none transition-colors", placeholder: "you@example.com", value: "{props.user_email}", oninput: move |evt| props.user_email.set(evt.value()) }
+                        label { class: "field-label", "Email" }
+                        input { r#type: "email", class: "field", placeholder: "you@example.com", value: "{props.user_email}", oninput: move |evt| props.user_email.set(evt.value()) }
                     }
                     div { class: "flex flex-col gap-1.5",
-                        label { class: "text-xs text-slate-400 font-bold uppercase", "Password" }
-                        input { r#type: "password", class: "bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-white/30 focus:ring-1 focus:ring-white/30/30 outline-none transition-colors", placeholder: "••••••••", value: "{props.user_password}", oninput: move |evt| props.user_password.set(evt.value()) }
+                        label { class: "field-label", "Password" }
+                        input { r#type: "password", class: "field", placeholder: "••••••••", value: "{props.user_password}", oninput: move |evt| props.user_password.set(evt.value()) }
                     }
 
                     if !props.sync_status.read().is_empty() {
-                        div { class: "text-center text-sm font-mono mt-2 p-2 rounded-lg bg-slate-800/60 text-white border border-white/30/20", "{props.sync_status}" }
+                        div { class: "text-center text-sm mt-1 px-3 py-2 rounded-xl bg-white/5 text-slate-200 border border-white/10", "{props.sync_status}" }
                     }
 
-                    div { class: "flex gap-2 mt-4",
+                    div { class: "flex gap-2 mt-3",
                         button {
-                            class: "bg-emerald-500/80 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl flex-1 transition-colors border border-emerald-400/50",
+                            class: "btn btn-primary flex-1",
                             onclick: move |_| {
                                 let email = props.user_email.read().clone();
                                 let pass = props.user_password.read().clone();
@@ -64,11 +67,11 @@ pub fn LoginModal(mut props: LoginModalProps) -> Element {
                                     });
                                 }
                             },
-                            "Sign In"
+                            "Sign in"
                         }
                         
                         button {
-                            class: "bg-sky-500/80 hover:bg-sky-500 text-white font-bold py-3 px-4 rounded-xl flex-1 transition-colors active:scale-95 border border-sky-400/50",
+                            class: "btn btn-glass flex-1",
                             onclick: move |_| {
                                 let email = props.user_email.read().clone();
                                 let pass = props.user_password.read().clone();
@@ -89,7 +92,7 @@ pub fn LoginModal(mut props: LoginModalProps) -> Element {
                                     });
                                 }
                             },
-                            "Sign Up"
+                            "Create account"
                         }
                     }
                 }

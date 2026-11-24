@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
-/* Night Pokédex: slate is retuned to card-back navy so every existing slate-* class follows the theme. */
+/* Sleeve graphite: slate is retuned to neutral near-black so every existing slate-* class follows the theme. */
 @theme {
   --font-sans: 'Lexend', ui-sans-serif, system-ui, sans-serif;
 
-  --color-slate-50: #f4f7ff;
-  --color-slate-100: #e6ecfa;
-  --color-slate-200: #cdd6ec;
-  --color-slate-300: #aab6d3;
-  --color-slate-400: #8e9bbb;
-  --color-slate-500: #74819f;
-  --color-slate-600: #4f5b78;
-  --color-slate-700: #333e5a;
-  --color-slate-800: #1d2742;
-  --color-slate-900: #121b33;
-  --color-slate-950: #0a1428;
+  --color-slate-50: #f6f6f7;
+  --color-slate-100: #ecedef;
+  --color-slate-200: #d4d6da;
+  --color-slate-300: #b5b8be;
+  --color-slate-400: #a3a7af;
+  --color-slate-500: #6e727b;
+  --color-slate-600: #4a4d54;
+  --color-slate-700: #33353a;
+  --color-slate-800: #202226;
+  --color-slate-900: #17181b;
+  --color-slate-950: #0f1012;
 
   --color-accent: #ffcb05;
   --color-accent-soft: #ffe066;

@@ -425,7 +425,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                             div { class: "grid grid-cols-3 gap-3 w-full mt-2 relative",
                                                 button {
                                                     class: "btn flex-col min-h-0 py-3 gap-1.5",
-                                                    class: if is_wishlisted { "bg-[#ff5a7a]/15 border-[#ff5a7a]/40 text-[#ff8fa6]" } else { "btn-glass text-slate-300" },
+                                                    class: if is_wishlisted { "bg-[#e8798c]/15 border-[#e8798c]/40 text-[#f0a0ae]" } else { "btn-glass text-slate-300" },
                                                     onpointerdown: move |evt| { evt.stop_propagation(); },
                                                     onclick: move |_| { collection.write().toggle_wishlist(c_wishlist.clone()); },
                                                     svg { class: "w-5 h-5", class: if is_wishlisted { "fill-current" } else { "fill-none" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
@@ -484,7 +484,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                                                 },
                                                                                 span { class: "truncate flex-1", "{acc.name}" }
                                                                                 if is_main {
-                                                                                    span { class: "text-[11px] font-medium text-accent", "Main" }
+                                                                                    span { class: "text-[11px] text-slate-500", "Main" }
                                                                                 }
                                                                             }
                                                                         }
@@ -496,7 +496,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                 } else {
                                                     button {
                                                         class: "btn flex-col min-h-0 py-3 gap-1.5",
-                                                        class: if is_tradable { "bg-[#2fcf7f]/15 border-[#2fcf7f]/40 text-[#4ade9a]" } else { "btn-glass text-slate-300" },
+                                                        class: if is_tradable { "bg-[#5fbf8a]/15 border-[#5fbf8a]/40 text-[#7fd3a4]" } else { "btn-glass text-slate-300" },
                                                         onpointerdown: move |evt| { evt.stop_propagation(); },
                                                         onclick: move |_| { collection.write().toggle_tradable(&c_id_tradable.clone()); },
                                                         svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",

@@ -74,7 +74,7 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                 // Wishlist / Remove from Wishlist (depending on active view)
                 button {
                     class: if in_wishlist_view {
-                        "icon-btn bg-[#ff5a7a]/20 border-[#ff5a7a]/50 text-[#ff8fa6]"
+                        "icon-btn bg-[#e8798c]/20 border-[#e8798c]/50 text-[#f0a0ae]"
                     } else {
                         "icon-btn is-wish"
                     },
@@ -130,7 +130,7 @@ pub fn MassActionBar(mut props: MassActionBarProps) -> Element {
                 if !in_wishlist_view && !props.active_view.read().starts_with("pack:") {
                     button {
                         class: if in_tradable_view {
-                            "icon-btn bg-[#2fcf7f]/20 border-[#2fcf7f]/50 text-[#4ade9a]"
+                            "icon-btn bg-[#5fbf8a]/20 border-[#5fbf8a]/50 text-[#7fd3a4]"
                         } else {
                             "icon-btn is-trade"
                         },

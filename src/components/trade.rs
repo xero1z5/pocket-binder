@@ -89,7 +89,7 @@ pub fn TradeModal(mut props: TradeModalProps) -> Element {
                                     }
                                 }
 
-                                div { class: "flex-shrink-0 w-14 h-14 rounded-full bg-accent text-slate-950 flex items-center justify-center shadow-[0_8px_24px_rgba(255,203,5,0.25)] z-10 -my-3 md:my-0 md:-mx-9",
+                                div { class: "flex-shrink-0 w-14 h-14 rounded-full bg-slate-800 border border-white/10 text-slate-200 flex items-center justify-center z-10 -my-3 md:my-0 md:-mx-9",
                                     svg { class: "w-6 h-6", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
                                     }

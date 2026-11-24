@@ -3,29 +3,31 @@
 
 /* ==========================================================
    POCKET BINDER — Night Pokédex
-   Card-back navy, frosted acrylic panels, one yellow accent.
+   Sleeve graphite surfaces, frosted acrylic, card art carries the color.
    ========================================================== */
 
 :root {
-    --navy: #0a1428;
-    --navy-raised: #121b33;
-    --ink: #10182e;
-    --frost: #eef3ff;
-    --frost-dim: rgba(238, 243, 255, 0.65);
+    --bg: #0f1012;
+    --raised: #17181b;
+    --ink: #0f1012;
+    --frost: #ecedef;
+    --frost-dim: #a3a7af;
     --accent: #ffcb05;
     --accent-soft: #ffe066;
     --poke: #e3350d;
     --line: rgba(255, 255, 255, 0.08);
     --line-strong: rgba(255, 255, 255, 0.16);
+    --muted: #6e727b;
+    --wish: #e8798c;
+    --trade: #5fbf8a;
+    --danger: #ef6b73;
     --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-    /* Static grain keeps the acrylic from looking like flat plastic. */
-    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");
 }
 
 /* === Base === */
 body {
     margin: 0;
-    background: var(--navy);
+    background: var(--bg);
     color: var(--frost);
     font-family: 'Lexend', ui-sans-serif, system-ui, sans-serif;
     overflow-x: hidden;
@@ -53,13 +55,11 @@ a:focus-visible,
 
 @layer components {
 
-    /* === Backdrop: navy, two soft glows and a faint Poké Ball line drawing for the glass to blur === */
+    /* === Backdrop: near-black and a faint Poké Ball line drawing for the glass to blur === */
     .app-bg {
         background:
             url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='white' stroke-opacity='.045' stroke-width='3'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M4 100h66M130 100h66'/%3E%3Ccircle cx='100' cy='100' r='30'/%3E%3Ccircle cx='100' cy='100' r='16'/%3E%3C/svg%3E") no-repeat right -18vmin bottom -22vmin / 80vmin 80vmin,
-            radial-gradient(ellipse 70% 55% at 10% -10%, rgba(61, 125, 202, 0.28), transparent 70%),
-            radial-gradient(ellipse 55% 45% at 100% 0%, rgba(255, 203, 5, 0.06), transparent 70%),
-            var(--navy);
+            var(--bg);
     }
 
     /* === Acrylic surfaces === */
@@ -70,30 +70,30 @@ a:focus-visible,
     }
 
     .acrylic {
-        background: var(--grain), rgba(18, 27, 51, 0.94);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px rgba(2, 6, 18, 0.45);
+        background: rgba(23, 24, 27, 0.94);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 30px rgba(0, 0, 0, 0.45);
     }
 
     .acrylic-strong {
-        background: var(--grain), rgba(16, 24, 46, 0.97);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 30px 80px rgba(2, 6, 18, 0.6);
+        background: rgba(20, 21, 24, 0.97);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.6);
     }
 
     /* Blur only on the few panels; never per card, which would tank scrolling. */
     @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
         .acrylic {
-            background: var(--grain), rgba(18, 27, 51, 0.62);
+            background: rgba(23, 24, 27, 0.62);
             -webkit-backdrop-filter: blur(20px) saturate(150%);
             backdrop-filter: blur(20px) saturate(150%);
         }
         .acrylic-strong {
-            background: var(--grain), rgba(16, 24, 46, 0.78);
+            background: rgba(20, 21, 24, 0.78);
             -webkit-backdrop-filter: blur(28px) saturate(150%);
             backdrop-filter: blur(28px) saturate(150%);
         }
     }
 
-    .scrim { background: rgba(4, 9, 22, 0.62); }
+    .scrim { background: rgba(6, 7, 8, 0.62); }
 
     /* === Buttons === */
     .btn {
@@ -113,15 +113,15 @@ a:focus-visible,
     .btn:active:not(:disabled) { transform: scale(0.97); }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    .btn-primary { background: var(--accent); color: var(--ink); }
-    .btn-primary:hover:not(:disabled) { background: var(--accent-soft); }
-    .btn-primary:disabled { opacity: 1; background: rgba(255, 255, 255, 0.06); border-color: var(--line); color: #74819f; }
+    .btn-primary { background: var(--frost); color: var(--ink); }
+    .btn-primary:hover:not(:disabled) { background: #fff; }
+    .btn-primary:disabled { opacity: 1; background: rgba(255, 255, 255, 0.06); border-color: var(--line); color: var(--muted); }
 
     .btn-glass { background: rgba(255, 255, 255, 0.05); border-color: var(--line); color: var(--frost); }
     .btn-glass:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: var(--line-strong); }
 
-    .btn-danger { background: transparent; color: #fb7185; }
-    .btn-danger:hover:not(:disabled) { background: rgba(251, 113, 133, 0.1); }
+    .btn-danger { background: transparent; color: var(--danger); }
+    .btn-danger:hover:not(:disabled) { background: rgba(239, 107, 115, 0.1); }
 
     /* Square icon button; .is-on marks a toggled state. */
     .icon-btn {
@@ -143,10 +143,10 @@ a:focus-visible,
     .icon-btn.is-bare { background: transparent; border-color: transparent; }
     .icon-btn.is-bare:hover { background: rgba(255, 255, 255, 0.08); }
     .icon-btn.is-on { background: var(--accent); border-color: var(--accent); color: var(--ink); }
-    .icon-btn.is-wish:hover { color: #ff7a9a; }
-    .icon-btn.is-trade:hover { color: #4ade9a; }
-    .icon-btn.is-danger { color: #fb7185; }
-    .icon-btn.is-danger:hover { background: rgba(251, 113, 133, 0.1); }
+    .icon-btn.is-wish:hover { color: var(--wish); }
+    .icon-btn.is-trade:hover { color: var(--trade); }
+    .icon-btn.is-danger { color: var(--danger); }
+    .icon-btn.is-danger:hover { background: rgba(239, 107, 115, 0.1); }
 
     /* === Chips (filters) === */
     .chip {
@@ -171,10 +171,12 @@ a:focus-visible,
     .text-link {
         font-size: 0.75rem;
         font-weight: 500;
-        color: var(--accent);
+        color: var(--frost-dim);
+        text-decoration: underline;
+        text-underline-offset: 3px;
         cursor: pointer;
     }
-    .text-link:hover { color: var(--accent-soft); }
+    .text-link:hover { color: var(--frost); }
 
     /* === Form fields === */
     .field {
@@ -183,18 +185,18 @@ a:focus-visible,
         padding: 0 0.875rem;
         border-radius: 0.875rem;
         border: 1px solid var(--line);
-        background: rgba(4, 9, 22, 0.45);
+        background: rgba(0, 0, 0, 0.3);
         color: var(--frost);
         font-size: 0.875rem;
         outline: none;
         transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
     }
-    .field::placeholder { color: #74819f; }
+    .field::placeholder { color: var(--muted); }
     .field:focus { border-color: rgba(255, 203, 5, 0.6); box-shadow: 0 0 0 3px rgba(255, 203, 5, 0.15); }
     select.field { cursor: pointer; }
-    select.field option { background: var(--navy-raised); }
+    select.field option { background: var(--raised); }
 
-    .field-label { font-size: 0.75rem; font-weight: 500; color: #8e9bbb; }
+    .field-label { font-size: 0.75rem; font-weight: 500; color: var(--frost-dim); }
 
     /* List row inside panels (accounts, pickers). */
     .row {
@@ -233,7 +235,7 @@ a:focus-visible,
         border-radius: 4.5% / 3.2%;
         overflow: hidden;
         background: rgba(255, 255, 255, 0.04);
-        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 6px 16px rgba(2, 6, 18, 0.45);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 6px 16px rgba(0, 0, 0, 0.45);
         transition: transform 200ms var(--ease), box-shadow 200ms var(--ease), filter 200ms var(--ease), opacity 200ms var(--ease);
     }
     .card-art img { display: block; width: 100%; height: auto; aspect-ratio: 63 / 88; object-fit: cover; }
@@ -241,11 +243,11 @@ a:focus-visible,
     @media (hover: hover) and (pointer: fine) {
         .card-tile:hover .card-art {
             transform: translateY(-3px);
-            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 10px 18px rgba(2, 6, 18, 0.55);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 10px 18px rgba(0, 0, 0, 0.55);
         }
     }
 
-    .card-tile.is-selected .card-art { box-shadow: 0 0 0 3px var(--accent), 0 10px 24px rgba(2, 6, 18, 0.5); }
+    .card-tile.is-selected .card-art { box-shadow: 0 0 0 3px var(--accent), 0 10px 24px rgba(0, 0, 0, 0.5); }
 
     /* Unowned cards in a set view read like unseen Pokédex entries. */
     .card-tile.is-missing .card-art { filter: grayscale(1) brightness(0.85); opacity: 0.6; }
@@ -255,7 +257,7 @@ a:focus-visible,
         margin-top: 0.5rem;
         font-size: 0.75rem;
         font-weight: 500;
-        color: #cdd6ec;
+        color: #d4d6da;
         text-align: center;
         white-space: nowrap;
         overflow: hidden;
@@ -271,10 +273,10 @@ a:focus-visible,
         height: 1.375rem;
         border-radius: 999px;
         border: 1.5px solid var(--ink);
-        box-shadow: 0 2px 6px rgba(2, 6, 18, 0.5);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
     }
-    .mark-wish { background: #ff5a7a; color: #fff; }
-    .mark-trade { background: #2fcf7f; color: var(--ink); }
+    .mark-wish { background: var(--wish); color: #fff; }
+    .mark-trade { background: var(--trade); color: var(--ink); }
     .mark-select { background: rgba(10, 20, 40, 0.75); border-color: rgba(255, 255, 255, 0.5); }
     .mark-select.is-on { background: var(--accent); border-color: var(--ink); color: var(--ink); }
 
@@ -287,7 +289,7 @@ a:focus-visible,
         width: 2.75rem;
         height: 2.75rem;
         border-radius: 0.875rem;
-        color: #8e9bbb;
+        color: var(--frost-dim);
         cursor: pointer;
         transition: color 150ms var(--ease), background-color 150ms var(--ease);
     }
@@ -308,7 +310,7 @@ a:focus-visible,
         bottom: calc(100% + 10px);
         padding: 0.25rem 0.5rem;
         border-radius: 0.5rem;
-        background: var(--navy-raised);
+        background: var(--raised);
         border: 1px solid var(--line);
         color: var(--frost);
         font-size: 0.6875rem;
@@ -336,7 +338,7 @@ a:focus-visible,
         border-radius: 999px;
         border: 3px solid var(--ink);
         background: linear-gradient(to bottom, var(--poke) 0 44%, var(--ink) 44% 56%, #f4f7ff 56% 100%);
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 10px 24px rgba(227, 53, 13, 0.3);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 8px 20px rgba(0, 0, 0, 0.45);
         cursor: pointer;
         transition: transform 200ms var(--ease);
     }
@@ -361,10 +363,6 @@ a:focus-visible,
         box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
         flex-shrink: 0;
     }
-
-    /* === Rarity: SAR keeps a quiet rainbow edge instead of an animated fill === */
-    .chip-sar { border-image: none; background: linear-gradient(rgba(18, 27, 51, 0.9), rgba(18, 27, 51, 0.9)) padding-box, linear-gradient(90deg, #f87171, #fbbf24, #4ade80, #38bdf8, #f472b6) border-box; border-color: transparent; }
-    .chip-sar.is-on { background: linear-gradient(rgba(64, 54, 16, 0.95), rgba(64, 54, 16, 0.95)) padding-box, linear-gradient(90deg, #f87171, #fbbf24, #4ade80, #38bdf8, #f472b6) border-box; }
 
     /* === Loading skeleton === */
     .shimmer {

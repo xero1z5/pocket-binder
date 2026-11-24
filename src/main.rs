@@ -302,7 +302,7 @@ fn App() -> Element {
                             {
                                 let is_syncing = sync_status.read().contains("Syncing") || sync_status.read().contains("Downloading");
                                 let is_error = sync_status.read().contains("Failed") || sync_status.read().contains("expired") || sync_status.read().contains("❌");
-                                let color_class = if is_error { "text-rose-400" } else if is_syncing { "text-sky-300" } else { "text-emerald-400" };
+                                let color_class = if is_error { "text-[#ef6b73]" } else if is_syncing { "text-slate-300" } else { "text-[#5fbf8a]" };
 
                                 rsx! {
                                     div {

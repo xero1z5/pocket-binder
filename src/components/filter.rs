@@ -156,12 +156,10 @@ pub fn FilterTray(mut props: FilterTrayProps) -> Element {
                                     let code_str = code.to_string();
                                     let code_for_click = code_str.clone();
                                     let is_active = props.selected_rarities.read().contains(&code_str);
-                                    let is_sar = *code == "SAR";
 
                                     rsx! {
                                         button {
                                             class: "chip",
-                                            class: if is_sar { "chip-sar" },
                                             class: if is_active { "is-on" },
                                             onclick: move |_| {
                                                 let mut current = props.selected_rarities.read().clone();

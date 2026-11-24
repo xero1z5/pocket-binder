@@ -296,7 +296,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                             rsx! {
                                                 button {
                                                     class: "btn w-full group",
-                                                    class: if is_wishlisted { "bg-[#ff5a7a]/15 border-[#ff5a7a]/40 text-[#ff8fa6]" } else { "btn-glass" },
+                                                    class: if is_wishlisted { "bg-[#e8798c]/15 border-[#e8798c]/40 text-[#f0a0ae]" } else { "btn-glass" },
                                                     onclick: move |_| {
                                                         let card_to_add = Card { 
                                                             id: c.generated_id.clone(), 
@@ -307,7 +307,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                         };
                                                         props.collection.write().toggle_wishlist(card_to_add);
                                                     },
-                                                    svg { class: "w-5 h-5 flex-shrink-0", class: if is_wishlisted { "fill-current" } else { "fill-none text-slate-400 group-hover:text-[#ff8fa6]" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                    svg { class: "w-5 h-5 flex-shrink-0", class: if is_wishlisted { "fill-current" } else { "fill-none text-slate-400 group-hover:text-[#f0a0ae]" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
                                                     }
                                                     span { if is_wishlisted { "On your wishlist" } else { "Add to wishlist" } }
@@ -366,7 +366,7 @@ pub fn AddCardModal(mut props: AddCardModalProps) -> Element {
                                                                     },
                                                                     span { class: "font-medium", "{acc.name}" }
                                                                     if is_main {
-                                                                        span { class: "text-[11px] font-medium text-accent", "Main" }
+                                                                        span { class: "text-[11px] text-slate-500", "Main" }
                                                                     }
                                                                     svg { class: "w-4 h-4 text-slate-500 group-hover:text-accent ml-auto transition-colors", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor",
                                                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M12 4.5v15m7.5-7.5h-15" }

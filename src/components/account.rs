@@ -65,7 +65,7 @@ pub fn AccountModal(mut props: AccountModalProps) -> Element {
                     if !*show_add_form.read() && editing_account.read().is_none() {
                         div { class: "row justify-between py-3",
                             div { class: "flex items-center gap-3 min-w-0",
-                                div { class: "w-9 h-9 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0",
+                                div { class: "w-9 h-9 rounded-full bg-white/5 text-slate-300 flex items-center justify-center flex-shrink-0",
                                     svg { class: "w-4 h-4", fill: "none", view_box: "0 0 24 24", stroke_width: "2", stroke: "currentColor", path { stroke_linecap: "round", stroke_linejoin: "round", d: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" } }
                                 }
                                 div { class: "flex flex-col min-w-0",

@@ -141,7 +141,7 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
 
     // View heading: what this screen shows and how many cards match.
     let visible_count = visible_cards.len();
-    let count_label = if visible_count == 1 { "1 card".to_string() } else { format!("{} cards", visible_count) };
+    let count_noun = if visible_count == 1 { " card" } else { " cards" };
     let account_label = if selected_acc != "All" && !active_view_val.starts_with("pack:") && active_view_val != "wishlist" { format!(" in {}", selected_acc) } else { String::new() };
     let view_title = match active_view_val.as_str() {
         "wishlist" => "Wishlist",
@@ -164,11 +164,15 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                 } else {
                     h1 { class: "text-2xl md:text-3xl font-semibold tracking-tight text-white", "{view_title}" }
                 }
-                span { class: "text-sm text-slate-400 pb-1 whitespace-nowrap", "{count_label}{account_label}" }
+                span { class: "text-sm text-slate-400 pb-1 whitespace-nowrap tabular-nums",
+                    // The number is drawn by CSS so it can tween between values.
+                    span { class: "count", style: "--count: {visible_count}" }
+                    "{count_noun}{account_label}"
+                }
             }
 
             div { class: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-x-1.5 gap-y-4 md:gap-x-3.5 md:gap-y-6",
-                for card in visible_cards.into_iter() {
+                for (idx, card) in visible_cards.into_iter().enumerate() {
                     {
                         // Clone values needed for closures
                         let card_id_for_click = card.id.clone();
@@ -186,11 +190,15 @@ pub fn CardGrid(mut props: CardGridProps) -> Element {
                         let is_owned = owned_ids.contains(card_id_for_click.as_str());
                         let is_selected_for_mass = mass_set.as_ref().map(|s| s.contains(&card_id_for_click)).unwrap_or(false);
                         let is_missing = active_view_val.starts_with("pack:") && !is_owned;
+                        // Only the first screenful is dealt in; the rest mount without animation.
+                        let deal_style = if idx < 24 { format!("--i: {idx}") } else { String::new() };
 
                         rsx! {
                             div {
                                 key: "{card_id_for_click}",
                                 class: "card-cell",
+                                class: if idx < 24 { "is-dealt" },
+                                style: "{deal_style}",
                                 div {
                                     class: "card-tile",
                                     class: if is_selected_for_mass { "is-selected" },

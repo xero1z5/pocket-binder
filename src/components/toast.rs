@@ -33,7 +33,7 @@ pub fn Toast(props: ToastProps) -> Element {
     rsx! {
         if let Some(msg) = props.toast_message.read().clone() {
             div { class: format!(
-                    "acrylic-strong fixed top-20 inset-x-0 mx-auto w-fit max-w-[90vw] text-sm text-white font-medium pl-4 pr-5 py-3 rounded-2xl z-[90] flex items-center gap-3 transition-opacity duration-300 {}",
+                    "acrylic-strong animate-toast fixed top-20 inset-x-0 mx-auto w-fit max-w-[90vw] text-sm text-white font-medium pl-4 pr-5 py-3 rounded-2xl z-[90] flex items-center gap-3 transition-opacity duration-300 {}",
                     if *visible.read() { "opacity-100" } else { "opacity-0" }
                 ),
                 span { class: "w-2 h-2 rounded-full bg-accent flex-shrink-0" }

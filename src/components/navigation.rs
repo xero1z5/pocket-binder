@@ -21,10 +21,28 @@ pub struct NavigationProps {
 #[component]
 pub fn FloatingDock(mut props: NavigationProps) -> Element {
     let mut show_packs = use_signal(|| false);
+    let mut catching = use_signal(|| false);
+
+    // Dock slot of the active view (the Poké Ball is slot 3), so one dot can glide between items.
+    let active_slot = {
+        let v = props.active_view.read();
+        match v.as_str() {
+            "collection" => Some(0),
+            "wishlist" => Some(1),
+            "tradable" => Some(2),
+            _ if v.starts_with("pack:") => Some(5),
+            _ => None,
+        }
+    };
+    let dot_x = if active_slot.unwrap_or(0) > 3 { 16 } else { 0 };
 
     rsx! {
         div { class: "fixed bottom-4 md:bottom-6 inset-x-0 z-50 flex justify-center px-3 pointer-events-none",
-            div { class: "acrylic pointer-events-auto rounded-[1.75rem] px-2 py-1.5 flex items-center gap-0.5 sm:gap-1.5 animate-slide-up",
+            div { class: "dock acrylic pointer-events-auto rounded-[1.75rem] px-2 py-1.5 animate-slide-up",
+
+                if let Some(slot) = active_slot {
+                    div { class: "dock-dot", style: "--s: {slot}; --x: {dot_x}px" }
+                }
 
                 DockItem {
                     label: "Collection".to_string(),
@@ -59,7 +77,17 @@ pub fn FloatingDock(mut props: NavigationProps) -> Element {
                 // Add cards: the Poké Ball
                 button {
                     class: "pokeball",
-                    onclick: move |_| props.show_add_modal.set(true),
+                    class: if *catching.read() { "is-catching" },
+                    onclick: move |_| {
+                        if *catching.read() { return; }
+                        // Let the capture wobble play, then open the add screen.
+                        catching.set(true);
+                        spawn(async move {
+                            gloo_timers::future::sleep(std::time::Duration::from_millis(340)).await;
+                            catching.set(false);
+                            props.show_add_modal.set(true);
+                        });
+                    },
                     span { class: "dock-tip", "Add cards" }
                 }
 

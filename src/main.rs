@@ -15,7 +15,7 @@ use crate::components::{
     add_card::AddCardModal,
     account::AccountModal,
     login::LoginModal,
-    card_detail::CardDetailModal,
+    card_detail::{CardDetailModal, HOLO_JS},
     trade::TradeModal,
     toast::Toast,
     navigation::FloatingDock,
@@ -81,6 +81,9 @@ fn App() -> Element {
     // =========================================================================
     // EFFECTS & DATA FETCHING
     // =========================================================================
+
+    // Attach the card-detail holo tilt listener once.
+    use_effect(|| { document::eval(HOLO_JS); });
 
     // Initial Database Load
     use_effect(move || {

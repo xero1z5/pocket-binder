@@ -14,6 +14,30 @@ pub struct CardDetailModalProps {
     pub active_view: Signal<String>,
 }
 
+// Holo tilt: one passive pointer listener, throttled to animation frames, writes CSS variables
+// on the centre card. Runs outside Dioxus so tilting never re-renders the modal.
+pub const HOLO_JS: &str = r#"
+if (!window.__pbHolo && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  window.__pbHolo = true;
+  let ev = null, raf = 0;
+  const apply = () => {
+    raf = 0;
+    const el = document.querySelector('.holo');
+    if (!el || !ev) return;
+    const r = el.getBoundingClientRect();
+    const x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+    if (x < -0.15 || x > 1.15 || y < -0.15 || y > 1.15) { el.classList.remove('is-active'); return; }
+    const cx = Math.min(Math.max(x, 0), 1), cy = Math.min(Math.max(y, 0), 1);
+    el.classList.add('is-active');
+    el.style.setProperty('--mx', (cx * 100) + '%');
+    el.style.setProperty('--my', (cy * 100) + '%');
+    el.style.setProperty('--rx', ((0.5 - cy) * 18) + 'deg');
+    el.style.setProperty('--ry', ((cx - 0.5) * 22) + 'deg');
+  };
+  document.addEventListener('pointermove', (e) => { ev = e; if (!raf) raf = requestAnimationFrame(apply); }, { passive: true });
+}
+"#;
+
 const CARD_STEP: f64 = 180.0;
 const ANGLE_STEP_RAD: f64 = 25.0 * std::f64::consts::PI / 180.0;
 const RADIUS: f64 = 550.0;
@@ -373,16 +397,25 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                         if let Some(target_api_card) = api_map.get(&target_id) {
                                                             {
                                                                 let item_image_url = optimized_image_url(&target_api_card.full_image_url, 400);
-                                                                let img_class = if is_center {
-                                                                    "w-44 md:w-56 rounded-[4.5%/3.2%] object-cover pointer-events-none shadow-[0_24px_60px_rgba(2,6,18,0.65)]"
-                                                                } else {
-                                                                    "w-36 md:w-48 rounded-[4.5%/3.2%] object-cover pointer-events-none shadow-lg"
-                                                                };
+                                                                // Star, crown and shiny rarities get the rainbow foil; diamonds a plain gloss.
+                                                                let is_rare = matches!(target_api_card.rarity.as_str(), "AR" | "SR" | "SAR" | "IM" | "UR" | "S" | "SSR");
                                                                 rsx! {
-                                                                    img {
-                                                                        src: "{item_image_url}",
-                                                                        class: "{img_class}",
-                                                                        width: "400", height: "560",
+                                                                    if is_center {
+                                                                        // Tilted by HOLO_JS through CSS variables, outside the render loop.
+                                                                        div { class: "holo w-44 md:w-56", class: if is_rare { "is-rare" },
+                                                                            img {
+                                                                                src: "{item_image_url}",
+                                                                                class: "w-full object-cover shadow-[0_24px_60px_rgba(0,0,0,0.65)]",
+                                                                                width: "400", height: "560",
+                                                                            }
+                                                                            div { class: "holo-shine" }
+                                                                        }
+                                                                    } else {
+                                                                        img {
+                                                                            src: "{item_image_url}",
+                                                                            class: "w-36 md:w-48 rounded-[4.5%/3.2%] object-cover pointer-events-none shadow-lg",
+                                                                            width: "400", height: "560",
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -428,7 +461,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                     class: if is_wishlisted { "bg-[#e8798c]/15 border-[#e8798c]/40 text-[#f0a0ae]" } else { "btn-glass text-slate-300" },
                                                     onpointerdown: move |evt| { evt.stop_propagation(); },
                                                     onclick: move |_| { collection.write().toggle_wishlist(c_wishlist.clone()); },
-                                                    svg { class: "w-5 h-5", class: if is_wishlisted { "fill-current" } else { "fill-none" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                    svg { class: "w-5 h-5", class: if is_wishlisted { "fill-current pop" } else { "fill-none" }, view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                                         path { stroke_linecap: "round", stroke_linejoin: "round", d: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
                                                     }
                                                     span { class: "text-xs font-medium", "Wishlist" }
@@ -499,7 +532,7 @@ pub fn CardDetailModal(mut props: CardDetailModalProps) -> Element {
                                                         class: if is_tradable { "bg-[#5fbf8a]/15 border-[#5fbf8a]/40 text-[#7fd3a4]" } else { "btn-glass text-slate-300" },
                                                         onpointerdown: move |evt| { evt.stop_propagation(); },
                                                         onclick: move |_| { collection.write().toggle_tradable(&c_id_tradable.clone()); },
-                                                        svg { class: "w-5 h-5", fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
+                                                        svg { class: "w-5 h-5", class: if is_tradable { "pop" }, fill: "none", view_box: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor",
                                                             path { stroke_linecap: "round", stroke_linejoin: "round", d: "M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" }
                                                         }
                                                         span { class: "text-xs font-medium", "Tradable" }

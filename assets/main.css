@@ -53,6 +53,12 @@ a:focus-visible,
     outline-offset: 2px;
 }
 
+@property --count {
+    syntax: '<integer>';
+    initial-value: 0;
+    inherits: false;
+}
+
 @layer components {
 
     /* === Backdrop: near-black and a faint Poké Ball line drawing for the glass to blur === */
@@ -295,14 +301,29 @@ a:focus-visible,
     }
     .dock-item:hover { color: var(--frost); background: rgba(255, 255, 255, 0.06); }
     .dock-item.is-on { color: var(--accent); }
-    .dock-item.is-on::after {
-        content: '';
+
+    .dock {
+        position: relative;
+        display: flex;
+        align-items: center;
+        --gap: 2px;
+        gap: var(--gap);
+    }
+    @media (min-width: 640px) { .dock { --gap: 6px; } }
+
+    /* One dot glides between items. Slot width is a 2.75rem item plus the gap; slots after
+       the Poké Ball (slot 3) add --x, its extra 16px (3.25rem + 2 x 0.25rem margin - 2.75rem). */
+    .dock-dot {
         position: absolute;
-        bottom: 3px;
+        left: 0;
+        bottom: 9px;
         width: 4px;
         height: 4px;
         border-radius: 999px;
         background: var(--accent);
+        pointer-events: none;
+        transform: translateX(calc(0.5rem + var(--s) * (2.75rem + var(--gap)) + 1.375rem - 2px + var(--x, 0px)));
+        transition: transform 420ms cubic-bezier(0.3, 1.25, 0.5, 1);
     }
 
     .dock-tip {
@@ -350,8 +371,16 @@ a:focus-visible,
         background: #f4f7ff;
         border: 3px solid var(--ink);
     }
-    .pokeball:hover { transform: rotate(-14deg); }
-    .pokeball:active { transform: rotate(-14deg) scale(0.94); }
+    .pokeball:hover { transform: translateY(-1px) scale(1.04); }
+    .pokeball:active { transform: scale(0.94); }
+    .pokeball.is-catching { animation: catch 340ms ease-in-out; }
+    @keyframes catch {
+        0%, 100% { transform: rotate(0); }
+        20% { transform: rotate(-18deg); }
+        45% { transform: rotate(14deg); }
+        70% { transform: rotate(-8deg); }
+        88% { transform: rotate(3deg); }
+    }
 
     /* === Brand mark (top bar) === */
     .brand-ball {
@@ -401,5 +430,70 @@ a:focus-visible,
             transition-duration: 0.01ms !important;
         }
     }
+
+
+    /* === Deal-in: the first screenful of cards is dealt when a view mounts === */
+    .card-cell.is-dealt {
+        animation: deal 460ms var(--ease) both;
+        animation-delay: calc(var(--i, 0) * 22ms);
+    }
+    @keyframes deal {
+        from { opacity: 0; transform: translateY(18px) rotate(-3deg) scale(0.96); }
+        to { opacity: 1; transform: none; }
+    }
+
+    /* === Card count drawn from a tweened integer === */
+    .count {
+        transition: --count 600ms var(--ease);
+        counter-reset: count var(--count);
+    }
+    .count::before { content: counter(count); }
+
+    /* === Feedback pops, once, when a state turns on === */
+    .pop,
+    .mark-select.is-on svg { animation: pop 300ms var(--ease); }
+    @keyframes pop {
+        0% { transform: scale(0.6); }
+        60% { transform: scale(1.18); }
+        100% { transform: scale(1); }
+    }
+
+    /* Transform only: the toast fades out through its opacity transition. */
+    .animate-toast { animation: toastIn 280ms cubic-bezier(0.3, 1.25, 0.5, 1); }
+    @keyframes toastIn {
+        from { transform: translateY(-10px) scale(0.97); }
+        to { transform: none; }
+    }
+
+    /* === Holo: centre card in detail tilts toward the pointer, light follows === */
+    .holo {
+        position: relative;
+        border-radius: 4.5% / 3.2%;
+        overflow: hidden;
+        pointer-events: none;
+        transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+        transition: transform 600ms var(--ease);
+        will-change: transform;
+    }
+    .holo.is-active { transition: transform 90ms linear; }
+    .holo img { display: block; }
+    .holo-shine {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        mix-blend-mode: soft-light;
+        background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 55%);
+        transition: opacity 300ms var(--ease);
+    }
+    .holo.is-active .holo-shine { opacity: 1; }
+    .holo.is-rare .holo-shine {
+        mix-blend-mode: color-dodge;
+        background:
+            radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 50%),
+            linear-gradient(115deg, transparent 25%, rgba(255, 92, 160, 0.3) 38%, rgba(255, 214, 90, 0.3) 46%, rgba(90, 255, 190, 0.3) 54%, rgba(90, 180, 255, 0.3) 62%, transparent 75%);
+        background-size: 100% 100%, 250% 250%;
+        background-position: center, var(--mx, 50%) var(--my, 50%);
+    }
+    .holo.is-rare.is-active .holo-shine { opacity: 0.75; }
 
 }
